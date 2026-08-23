@@ -1,3 +1,137 @@
 /* You can add global styles to this file, and also import other style files */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+@import "tailwindcss";
 
-@import 'tailwindcss';
+@theme {
+  --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif;
+
+  --color-gr-primary:     #3C5A44;
+  --color-gr-primary-dark:#2E4434;
+  --color-gr-primary-mid: #567A5F;
+  --color-gr-primary-lite:#EBF2EC;
+  --color-gr-gold:        #C49A1A;
+  --color-gr-gold-dark:   #8B6E10;
+  --color-gr-gold-lite:   #FBF5E0;
+
+  --color-gr-bg:          #F5F7F4;
+  --color-gr-surface:     #FFFFFF;
+  --color-gr-border:      #D8E2D9;
+  --color-gr-border-lite: #EAF0EB;
+
+  --color-gr-text:        #1D2B1F;
+  --color-gr-sub:         #52665A;
+  --color-gr-muted:       #8AA08A;
+
+  --color-gr-success:     #2E7D52;
+  --color-gr-success-bg:  #E6F4EE;
+  --color-gr-warning:     #A05C0A;
+  --color-gr-warning-bg:  #FEF3DC;
+  --color-gr-danger:      #B53D35;
+  --color-gr-danger-bg:   #FBEBEA;
+  --color-gr-info:        #1D6FA4;
+  --color-gr-info-bg:     #E3F2FC;
+
+  --radius-sm:   6px;
+  --radius-md:   10px;
+  --radius-lg:   14px;
+  --radius-xl:   20px;
+  --radius-full: 9999px;
+}
+
+@layer base {
+  *, *::before, *::after { box-sizing: border-box; }
+  html, body { height: 100%; }
+  body {
+    background: var(--color-gr-bg);
+    color: var(--color-gr-text);
+    font-family: var(--font-sans);
+    font-size: 15px;
+    -webkit-font-smoothing: antialiased;
+  }
+  :focus-visible {
+    outline: 2px solid var(--color-gr-primary);
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+  ::-webkit-scrollbar { width: 5px; height: 5px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--color-gr-border); border-radius: 99px; }
+  @media print {
+    /* Ocultar controles y navegación */
+    .no-print, .no-print * { display: none !important; visibility: hidden !important; }
+    nav.fixed, .fixed[class*="bottom-0"] { display: none !important; }
+
+    /* Forzar impresión de colores/fondos (Chrome/Edge/Safari los omite por defecto) */
+    *, *::before, *::after {
+      -webkit-print-color-adjust: exact !important;
+      print-color-adjust: exact !important;
+      color-adjust: exact !important;
+    }
+
+    /* Reset del layout de la app: no heredar alturas fijas ni scroll interno
+       (h-screen + overflow-hidden hacen que Chrome genere una hoja extra). */
+    html, body {
+      background: white !important;
+      height: auto !important;
+      overflow: visible !important;
+    }
+    body > *,
+    body > * > *,
+    .flex.h-screen,
+    main,
+    main > div {
+      height: auto !important;
+      min-height: 0 !important;
+      overflow: visible !important;
+      max-width: 100% !important;
+    }
+    main > div { padding: 0 !important; margin: 0 !important; }
+
+    /* Contenedor del documento imprimible */
+    .print-only-target {
+      position: static !important;
+      padding: 0 !important;
+      margin: 0 !important;
+      max-width: 100% !important;
+      width: 100% !important;
+    }
+    /* Anular márgenes residuales de space-y-* que quedaron al ocultar el header */
+    .print-only-target,
+    .print-only-target > * { margin-top: 0 !important; }
+
+    /* Evitar que el documento se parta a la mitad */
+    .print-only-target > *,
+    .print-combined > * {
+      break-inside: avoid;
+      page-break-inside: avoid;
+    }
+
+    .print-combined { display: grid !important; grid-template-columns: 1fr 1fr !important; gap: 8mm; }
+    .print-page-break { page-break-after: always; }
+
+    @page { size: A4; margin: 10mm; }
+  }
+}
+
+@keyframes slideIn { from { opacity: 0; transform: translateX(16px); } to { opacity: 1; transform: translateX(0); } }
+@keyframes fadeUp  { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes spin    { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
+@layer utilities {
+  .animate-slide-in { animation: slideIn 0.25s ease; }
+  .animate-fade-up  { animation: fadeUp 0.2s ease; }
+  .animate-spin-slow { animation: spin 1s linear infinite; }
+
+  .card {
+    background: var(--color-gr-surface);
+    border: 1px solid var(--color-gr-border);
+    border-radius: var(--radius-lg);
+    padding: 20px;
+  }
+  .card-no-pad {
+    background: var(--color-gr-surface);
+    border: 1px solid var(--color-gr-border);
+    border-radius: var(--radius-lg);
+    overflow: clip;
+  }
+}

@@ -1,0 +1,25 @@
+<div class="flex h-screen w-full overflow-hidden bg-gr-bg">
+  <!-- Fixed sidebar — tablet y desktop (colapsable) -->
+  <app-sidebar class="hidden shrink-0 md:block" />
+
+  <!-- Drawer — solo celular -->
+  @if (drawerOpen()) {
+  <div class="fixed inset-0 z-40 bg-gr-text/50 md:hidden" (click)="closeSidebar()"></div>
+  }
+  <div
+    class="fixed inset-y-0 left-0 z-50 -translate-x-full transition-transform duration-200 md:hidden"
+    [class.translate-x-0]="drawerOpen()"
+  >
+    <app-sidebar [showClose]="true" (closeSidebar)="closeSidebar()" />
+  </div>
+
+  <!-- Main content area -->
+  <div class="flex min-w-0 flex-1 flex-col overflow-hidden">
+    <app-header (openSidebar)="openSidebar()" />
+    <main class="flex-1 overflow-y-auto">
+      <div class="p-6">
+        <router-outlet />
+      </div>
+    </main>
+  </div>
+</div>
