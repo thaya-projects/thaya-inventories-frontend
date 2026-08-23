@@ -1,0 +1,36 @@
+<header class="sticky top-0 z-10 flex min-h-14 items-center justify-between border-b border-gr-border bg-gr-surface px-6 py-3.5">
+
+  <!-- Hamburger: solo celular, abre el drawer -->
+  <button
+    type="button"
+    (click)="openSidebar.emit()"
+    aria-label="Abrir menú"
+    class="mr-3 -ml-1 shrink-0 cursor-pointer rounded-lg p-1.5 text-gr-sub transition-colors hover:bg-gr-bg md:hidden"
+  >
+    <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+      <line x1="3" y1="6" x2="21" y2="6"/>
+      <line x1="3" y1="12" x2="21" y2="12"/>
+      <line x1="3" y1="18" x2="21" y2="18"/>
+    </svg>
+  </button>
+
+  <!-- Breadcrumb -->
+  <div class="flex flex-1 items-center gap-1.5 text-[13.5px]">
+    <span class="font-medium text-gr-muted">THAYA</span>
+    <svg class="h-3.5 w-3.5 text-gr-muted" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+      <polyline points="9 6 15 12 9 18"/>
+    </svg>
+    <span class="font-bold text-gr-text">{{ pageName() }}</span>
+  </div>
+
+  <!-- Right side -->
+  <div class="flex items-center gap-4">
+    <span class="hidden text-[13px] text-gr-muted sm:block">{{ today }}</span>
+    <div
+      class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gr-primary-dark text-[12px] font-bold text-gr-primary-lite"
+      [title]="userName"
+    >
+      {{ getInitial() }}
+    </div>
+  </div>
+</header>
