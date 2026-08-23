@@ -1,0 +1,137 @@
+<aside
+  class="relative z-10 flex h-screen flex-col bg-gr-primary-dark px-4 text-gr-primary-lite transition-[width] duration-200"
+  [class.w-64]="!collapsed()"
+  [class.w-20]="collapsed()"
+>
+
+  <!-- Wordmark: texto por ahora; reemplazar por <img> si más adelante usan el isotipo completo -->
+  <div
+    class="relative flex items-center justify-center"
+    [class.h-15]="collapsed()"
+    [class.h-23]="!collapsed()"
+  >
+    @if (!collapsed()) {
+      <span class="text-xl font-extrabold tracking-widest text-gr-primary-lite">
+        THAYA
+      </span>
+    }
+
+    <!-- Retraer: colapsa el rail en tablet/desktop, cierra el drawer en celular. -->
+    <!-- Posición absoluta a propósito: así nunca desplaza al logo. -->
+    <button
+      type="button"
+      (click)="showClose ? closeSidebar.emit() : toggleCollapsed()"
+      [attr.aria-label]="showClose ? 'Cerrar menú' : (collapsed() ? 'Expandir menú' : 'Colapsar menú')"
+      class="absolute top-1/2 shrink-0 -translate-y-1/2 cursor-pointer rounded-lg p-1.5 text-gr-primary-lite/70 transition-colors hover:bg-gr-primary-lite/10 hover:text-gr-primary-lite"
+      [class]="collapsed() ? 'left-1/2 -translate-x-1/2' : 'right-3'"
+    >
+      <svg
+        class="h-5 w-5 transition-transform duration-200"
+        [class.rotate-180]="collapsed()"
+        fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+      >
+        <polyline points="15 6 9 12 15 18"/>
+      </svg>
+    </button>
+  </div>
+
+  <!-- Divisor bajo el logo -->
+  <div class="-mx-4 mb-4 border-t border-gr-primary-lite/10"></div>
+
+  <!-- Navigation -->
+  <nav class="flex flex-1 flex-col gap-1">
+    @for (item of navItems; track item.label) {
+      @if (item.children) {
+        <button
+          type="button"
+          (click)="toggleGroup(item)"
+          class="group relative flex w-full items-center rounded-xl border-l-2 border-transparent text-[15px] font-medium text-gr-primary-lite/75 transition-all hover:bg-gr-primary-lite/6 hover:text-gr-primary-lite"
+          [class]="collapsed() ? 'justify-center px-0 py-3' : 'gap-3 px-3.5 py-2.5'"
+        >
+          <span class="shrink-0">
+            <app-nav-icon [icon]="item.icon" />
+          </span>
+
+          @if (!collapsed()) {
+            <span class="flex-1 text-left whitespace-nowrap">{{ item.label }}</span>
+            <svg
+              class="h-4 w-4 shrink-0 transition-transform duration-200"
+              [class.rotate-180]="isExpanded(item.label)"
+              fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+            >
+              <polyline points="6 9 12 15 18 9"/>
+            </svg>
+          }
+
+          @if (collapsed()) {
+            <span class="pointer-events-none absolute left-full top-1/2 z-20 ml-3 -translate-y-1/2 whitespace-nowrap rounded-md bg-gr-primary-dark px-2.5 py-1.5 text-[13px] font-medium text-gr-primary-lite opacity-0 shadow-lg ring-1 ring-gr-primary-lite/10 transition-opacity group-hover:opacity-100">
+              {{ item.label }}
+            </span>
+          }
+        </button>
+
+        @if (!collapsed() && isExpanded(item.label)) {
+          <div class="flex flex-col gap-1 py-1">
+            @for (child of item.children; track child.route) {
+              <a
+                [routerLink]="child.route"
+                routerLinkActive="bg-gr-primary-lite/10 text-gr-primary-lite"
+                class="rounded-lg py-2 pr-3.5 pl-11 text-[14px] font-medium text-gr-primary-lite/65 transition-all hover:bg-gr-primary-lite/6 hover:text-gr-primary-lite"
+              >
+                {{ child.label }}
+              </a>
+            }
+          </div>
+        }
+      } @else {
+        <a
+          [routerLink]="item.route"
+          routerLinkActive="border-gr-gold bg-gr-primary-lite/10 text-gr-primary-lite"
+          class="group relative flex items-center rounded-xl border-l-2 border-transparent text-[15px] font-medium text-gr-primary-lite/75 transition-all hover:bg-gr-primary-lite/6 hover:text-gr-primary-lite"
+          [class]="collapsed() ? 'justify-center px-0 py-3' : 'gap-3 px-3.5 py-2.5'"
+          #rla="routerLinkActive"
+        >
+          <span class="shrink-0" [class.text-gr-gold]="rla.isActive">
+            <app-nav-icon [icon]="item.icon" />
+          </span>
+
+          @if (!collapsed()) {
+            <span class="flex-1 whitespace-nowrap">{{ item.label }}</span>
+          }
+
+          @if (collapsed()) {
+            <span class="pointer-events-none absolute left-full top-1/2 z-20 ml-3 -translate-y-1/2 whitespace-nowrap rounded-md bg-gr-primary-dark px-2.5 py-1.5 text-[13px] font-medium text-gr-primary-lite opacity-0 shadow-lg ring-1 ring-gr-primary-lite/10 transition-opacity group-hover:opacity-100">
+              {{ item.label }}
+            </span>
+          }
+        </a>
+      }
+    }
+  </nav>
+
+  <!-- Cerrar sesión -->
+  <div class="mt-auto">
+    <div class="-mx-4 border-t border-gr-primary-lite/10"></div>
+    <button
+      (click)="logout()"
+      class="group relative -mx-4 flex w-[calc(100%+2rem)] cursor-pointer items-center text-[15px] font-medium text-gr-danger transition-all hover:bg-gr-primary-lite/10"
+      [class]="collapsed() ? 'justify-center px-0 py-5' : 'gap-3 px-7 py-5'"
+    >
+      <svg class="h-5 w-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+        <polyline points="16 17 21 12 16 7"/>
+        <line x1="21" y1="12" x2="9" y2="12"/>
+      </svg>
+
+      @if (!collapsed()) {
+        <span class="whitespace-nowrap">Cerrar sesión</span>
+      }
+
+      @if (collapsed()) {
+        <span class="pointer-events-none absolute left-full top-1/2 z-20 ml-3 -translate-y-1/2 whitespace-nowrap rounded-md bg-gr-primary-dark px-2.5 py-1.5 text-[13px] font-medium text-gr-danger opacity-0 shadow-lg ring-1 ring-gr-primary-lite/10 transition-opacity group-hover:opacity-100">
+          Cerrar sesión
+        </span>
+      }
+    </button>
+  </div>
+</aside>
