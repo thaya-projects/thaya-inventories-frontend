@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, Component, EventEmitter, Output, computed, inj
 import { toSignal } from '@angular/core/rxjs-interop';
 import { NavigationEnd, Router } from '@angular/router';
 import { filter, map, startWith } from 'rxjs';
+import { AuthService } from '../../core/services/auth';
 
 // TODO: solo cubre el menú de super_admin por ahora; sumar admin/warehouse/assistant
 // cuando se implementen esos roles.
@@ -30,9 +31,9 @@ export class Header {
   @Output() openSidebar = new EventEmitter<void>();
 
   private router = inject(Router);
+  private auth = inject(AuthService);
 
-  // TODO: reemplazar por AuthService real
-  userName = 'Admin';
+  userName = computed(() => this.auth.currentUser()?.fullName ?? 'Usuario');
 
   private pathname = toSignal(
     this.router.events.pipe(
@@ -47,6 +48,6 @@ export class Header {
   today = formatDateEs(new Date());
 
   getInitial(): string {
-    return this.userName.charAt(0).toUpperCase();
+    return this.userName().charAt(0).toUpperCase();
   }
 }

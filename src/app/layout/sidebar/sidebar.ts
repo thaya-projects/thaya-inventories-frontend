@@ -1,7 +1,8 @@
-import { ChangeDetectionStrategy, Component, EventEmitter, Input, Output, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, EventEmitter, Input, Output, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterModule } from '@angular/router';
+import { Router, RouterModule } from '@angular/router';
 import { NavIcon } from './nav-icon';
+import { AuthService } from '../../core/services/auth';
 
 interface NavChild {
   label: string;
@@ -52,6 +53,9 @@ export class Sidebar {
   @Input() showClose = false;
   @Output() closeSidebar = new EventEmitter<void>();
 
+  private auth = inject(AuthService);
+  private router = inject(Router);
+
   // Modo icon-only en desktop; no aplica a la instancia del drawer móvil.
   collapsed = signal(false);
 
@@ -63,29 +67,22 @@ export class Sidebar {
   // los roles admin/warehouse/assistant, este pasa a ser un mapa por rol.
   navItems: NavItem[] = SUPER_ADMIN_NAV;
 
-  private expandedGroups = signal<Set<string>>(new Set());
+  // Acordeón: un solo grupo abierto a la vez, para que la lista no ocupe todo el sidebar.
+  private expandedGroup = signal<string | null>(null);
 
   isExpanded(label: string) {
-    return this.expandedGroups().has(label);
+    return this.expandedGroup() === label;
   }
 
   toggleGroup(item: NavItem) {
     if (this.collapsed()) {
       this.collapsed.set(false);
     }
-    this.expandedGroups.update(current => {
-      const next = new Set(current);
-      if (next.has(item.label)) {
-        next.delete(item.label);
-      } else {
-        next.add(item.label);
-      }
-      return next;
-    });
+    this.expandedGroup.update(current => (current === item.label ? null : item.label));
   }
 
   logout() {
-    // Aquí tu lógica de cerrar sesión
-    console.log('Cerrar sesión');
+    this.auth.logout();
+    this.router.navigate(['/login']);
   }
 }
