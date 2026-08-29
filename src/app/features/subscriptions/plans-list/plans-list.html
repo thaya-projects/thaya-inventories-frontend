@@ -1,0 +1,80 @@
+<div class="mb-8 flex flex-wrap items-center justify-between gap-4">
+  <div>
+    <h1 class="text-2xl font-bold text-gr-text">Planes</h1>
+    <p class="mt-1 text-gr-sub">Planes de suscripción disponibles en la plataforma.</p>
+  </div>
+  <a
+    routerLink="/subscriptions/plans/new"
+    class="rounded-sm bg-gr-primary-dark px-4 py-2.5 font-semibold text-gr-primary-lite transition hover:brightness-95"
+  >
+    + Nuevo plan
+  </a>
+</div>
+
+<div class="mb-6 flex gap-2">
+  <button
+    type="button"
+    (click)="setFilter('all')"
+    class="cursor-pointer rounded-sm px-3.5 py-2 text-sm font-medium transition-colors"
+    [class]="statusFilter() === 'all' ? 'bg-gr-primary-dark text-gr-primary-lite' : 'text-gr-sub hover:bg-gr-bg'"
+  >
+    Todos
+  </button>
+  <button
+    type="button"
+    (click)="setFilter('active')"
+    class="cursor-pointer rounded-sm px-3.5 py-2 text-sm font-medium transition-colors"
+    [class]="statusFilter() === 'active' ? 'bg-gr-primary-dark text-gr-primary-lite' : 'text-gr-sub hover:bg-gr-bg'"
+  >
+    Activos
+  </button>
+  <button
+    type="button"
+    (click)="setFilter('inactive')"
+    class="cursor-pointer rounded-sm px-3.5 py-2 text-sm font-medium transition-colors"
+    [class]="statusFilter() === 'inactive' ? 'bg-gr-primary-dark text-gr-primary-lite' : 'text-gr-sub hover:bg-gr-bg'"
+  >
+    Inactivos
+  </button>
+</div>
+
+@if (errorMessage()) {
+  <div class="mb-6 rounded-sm border border-gr-danger/20 bg-gr-danger-bg px-4 py-3 text-sm text-gr-danger">
+    {{ errorMessage() }}
+  </div>
+}
+
+@if (loading()) {
+  <p class="text-gr-sub">Cargando planes...</p>
+} @else {
+  <app-data-table [columns]="columns()" [rows]="plans()" emptyMessage="No hay planes registrados todavía." />
+}
+
+<ng-template #priceTpl let-plan>
+  {{ plan.priceMonthly != null ? 'Bs ' + plan.priceMonthly.toFixed(2) : '—' }}
+</ng-template>
+
+<ng-template #statusTpl let-plan>
+  @if (plan.isActive) {
+    <span class="rounded-full bg-gr-success-bg px-3 py-1 text-xs font-medium text-gr-success">Activo</span>
+  } @else {
+    <span class="rounded-full bg-gr-danger-bg px-3 py-1 text-xs font-medium text-gr-danger">Inactivo</span>
+  }
+</ng-template>
+
+<ng-template #actionsTpl let-plan>
+  <div class="flex items-center justify-end gap-3">
+    <a [routerLink]="['/subscriptions/plans', plan.id, 'edit']" class="text-sm font-medium text-gr-primary transition hover:text-gr-gold">
+      Editar
+    </a>
+    <button
+      type="button"
+      (click)="toggleActive(plan)"
+      [disabled]="updatingId() === plan.id"
+      class="cursor-pointer text-sm font-medium transition disabled:cursor-not-allowed disabled:opacity-50"
+      [class]="plan.isActive ? 'text-gr-danger hover:brightness-90' : 'text-gr-success hover:brightness-90'"
+    >
+      {{ plan.isActive ? 'Desactivar' : 'Activar' }}
+    </button>
+  </div>
+</ng-template>

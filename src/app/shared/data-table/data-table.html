@@ -1,0 +1,57 @@
+<div class="overflow-hidden rounded-lg border border-gr-border bg-gr-surface shadow-sm">
+  <div class="overflow-x-auto">
+    <table class="w-full border-collapse text-left text-sm">
+      <thead>
+        <tr class="bg-gr-primary-dark text-gr-primary-lite">
+          @for (col of columns(); track col.key) {
+            <th
+              class="px-6 py-4 text-xs font-semibold tracking-wide uppercase whitespace-nowrap"
+              [class.text-center]="col.align === 'center'"
+              [class.text-right]="col.align === 'right'"
+            >
+              {{ col.label }}
+            </th>
+          }
+        </tr>
+      </thead>
+      <tbody>
+        @for (row of pagedRows(); track $index) {
+          <tr class="border-b border-gr-border-lite last:border-0 hover:bg-gr-bg">
+            @for (col of columns(); track col.key) {
+              <td
+                class="px-6 py-4 align-middle text-gr-text"
+                [class.text-center]="col.align === 'center'"
+                [class.text-right]="col.align === 'right'"
+              >
+                @if (col.cellTemplate) {
+                  <ng-container [ngTemplateOutlet]="col.cellTemplate" [ngTemplateOutletContext]="{ $implicit: row }" />
+                } @else {
+                  {{ cellValue(row, col) }}
+                }
+              </td>
+            }
+          </tr>
+        } @empty {
+          <tr>
+            <td [attr.colspan]="columns().length" class="px-6 py-10 text-center text-gr-muted">
+              {{ emptyMessage() }}
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+
+  @if (totalItems() > 0) {
+    <app-pagination
+      class="block border-t border-gr-border-lite"
+      [currentPage]="currentPage()"
+      [totalPages]="totalPages()"
+      [pageSize]="effectivePageSize()"
+      [totalItems]="totalItems()"
+      [pageSizeOptions]="pageSizeOptions()"
+      (pageChange)="goToPage($event)"
+      (pageSizeChange)="onPageSizeChange($event)"
+    />
+  }
+</div>

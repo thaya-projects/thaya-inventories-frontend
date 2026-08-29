@@ -7,14 +7,15 @@ import { AuthService } from '../../core/services/auth';
 // TODO: solo cubre el menú de super_admin por ahora; sumar admin/warehouse/assistant
 // cuando se implementen esos roles.
 const PAGE_NAMES: Record<string, string> = {
-  '/dashboard':             'Dashboard',
-  '/empresas':              'Empresas',
-  '/empresas/nueva':        'Nueva empresa',
-  '/suscripciones/planes':  'Planes',
-  '/suscripciones/activas': 'Suscripciones activas',
-  '/suscripciones/pagos':   'Pagos de suscripciones',
-  '/reportes':              'Reportes',
-  '/configuracion':         'Configuración',
+  '/dashboard':              'Dashboard',
+  '/companies':              'Empresas',
+  '/companies/new':          'Nueva empresa',
+  '/subscriptions/plans':    'Planes',
+  '/subscriptions/plans/new':'Nuevo plan',
+  '/subscriptions/active':   'Suscripciones activas',
+  '/subscriptions/payments': 'Pagos de suscripciones',
+  '/reportes':               'Reportes',
+  '/configuracion':          'Configuración',
 };
 
 function formatDateEs(date: Date): string {
@@ -44,7 +45,13 @@ export class Header {
     { initialValue: this.router.url },
   );
 
-  pageName = computed(() => PAGE_NAMES[this.pathname()] ?? 'THAYA');
+  pageName = computed(() => {
+    const path = this.pathname();
+    if (PAGE_NAMES[path]) return PAGE_NAMES[path];
+    if (path.startsWith('/companies/')) return 'Detalle de empresa';
+    if (path.endsWith('/edit')) return 'Editar plan';
+    return 'THAYA';
+  });
   today = formatDateEs(new Date());
 
   getInitial(): string {

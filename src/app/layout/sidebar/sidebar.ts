@@ -26,17 +26,17 @@ const SUPER_ADMIN_NAV: NavItem[] = [
     label: 'Empresas',
     icon: 'building',
     children: [
-      { label: 'Todas las empresas', route: '/empresas' },
-      { label: 'Nueva empresa', route: '/empresas/nueva' },
+      { label: 'Todas las empresas', route: '/companies' },
+      { label: 'Nueva empresa', route: '/companies/new' },
     ],
   },
   {
     label: 'Suscripciones',
     icon: 'card',
     children: [
-      { label: 'Planes', route: '/suscripciones/planes' },
-      { label: 'Suscripciones activas', route: '/suscripciones/activas' },
-      { label: 'Pagos de suscripciones', route: '/suscripciones/pagos' },
+      { label: 'Planes', route: '/subscriptions/plans' },
+      { label: 'Suscripciones activas', route: '/subscriptions/active' },
+      { label: 'Pagos de suscripciones', route: '/subscriptions/payments' },
     ],
   },
   { label: 'Reportes', route: '/reportes', icon: 'chart' },
