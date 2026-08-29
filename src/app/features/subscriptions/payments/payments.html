@@ -1,0 +1,80 @@
+<div class="mb-8">
+  <h1 class="text-2xl font-bold text-gr-text">Pagos de suscripciones</h1>
+  <p class="mt-1 text-gr-sub">Pagos registrados en la plataforma.</p>
+</div>
+
+<div class="mb-6 flex flex-wrap gap-2">
+  <button
+    type="button"
+    (click)="setStatusFilter('')"
+    class="cursor-pointer rounded-sm px-3.5 py-2 text-sm font-medium transition-colors"
+    [class]="statusFilter() === '' ? 'bg-gr-primary-dark text-gr-primary-lite' : 'text-gr-sub hover:bg-gr-bg'"
+  >
+    Todos
+  </button>
+  @for (status of statusOptions; track status) {
+    <button
+      type="button"
+      (click)="setStatusFilter(status)"
+      class="cursor-pointer rounded-sm px-3.5 py-2 text-sm font-medium transition-colors"
+      [class]="statusFilter() === status ? 'bg-gr-primary-dark text-gr-primary-lite' : 'text-gr-sub hover:bg-gr-bg'"
+    >
+      {{ status }}
+    </button>
+  }
+</div>
+
+@if (errorMessage()) {
+  <div class="mb-6 rounded-sm border border-gr-danger/20 bg-gr-danger-bg px-4 py-3 text-sm text-gr-danger">
+    {{ errorMessage() }}
+  </div>
+}
+
+@if (loading()) {
+  <p class="text-gr-sub">Cargando pagos...</p>
+} @else {
+  <app-data-table
+    [columns]="columns()"
+    [rows]="payments()"
+    [serverSide]="true"
+    [currentPage]="page()"
+    [totalItems]="totalCount()"
+    [pageSize]="pageSize()"
+    (pageChange)="onPageChange($event)"
+    (pageSizeChange)="onPageSizeChange($event)"
+    emptyMessage="No hay pagos registrados todavía."
+  />
+}
+
+<ng-template #companyTpl let-payment>
+  {{ companyNameFor(payment) }}
+</ng-template>
+
+<ng-template #amountTpl let-payment>
+  {{ payment.currency }} {{ payment.amount.toFixed(2) }}
+</ng-template>
+
+<ng-template #statusTpl let-payment>
+  <span class="w-fit rounded-full px-3 py-1 text-xs font-medium" [class]="statusBadgeClass(payment.status)">
+    {{ payment.status }}
+  </span>
+</ng-template>
+
+<ng-template #dateTpl let-payment>
+  {{ payment.createdAt | date: 'dd/MM/yyyy' }}
+</ng-template>
+
+<ng-template #actionsTpl let-payment>
+  @if (payment.status === 'Pending') {
+    <div class="flex justify-end">
+      <button
+        type="button"
+        (click)="markPaid(payment)"
+        [disabled]="markingId() === payment.id"
+        class="cursor-pointer text-sm font-medium text-gr-primary transition hover:text-gr-gold disabled:cursor-not-allowed disabled:opacity-50"
+      >
+        Marcar pagado
+      </button>
+    </div>
+  }
+</ng-template>

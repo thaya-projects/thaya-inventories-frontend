@@ -21,6 +21,49 @@ export const routes: Routes = [
         path: 'dashboard',
         loadComponent: () => import('./features/dashboard/dashboard').then(m => m.Dashboard),
       },
+      {
+        path: 'companies',
+        loadComponent: () =>
+          import('./features/companies/companies-list/companies-list').then(m => m.CompaniesList),
+      },
+      // 'companies/new' antes que 'companies/:id' — si no, ':id' la matchea primero.
+      {
+        path: 'companies/new',
+        loadComponent: () =>
+          import('./features/companies/company-form/company-form').then(m => m.CompanyForm),
+      },
+      {
+        path: 'companies/:id',
+        loadComponent: () =>
+          import('./features/companies/company-detail/company-detail').then(m => m.CompanyDetail),
+      },
+      {
+        path: 'subscriptions/plans',
+        loadComponent: () =>
+          import('./features/subscriptions/plans-list/plans-list').then(m => m.PlansList),
+      },
+      {
+        path: 'subscriptions/plans/new',
+        loadComponent: () =>
+          import('./features/subscriptions/plan-form/plan-form').then(m => m.PlanForm),
+      },
+      {
+        path: 'subscriptions/plans/:id/edit',
+        loadComponent: () =>
+          import('./features/subscriptions/plan-form/plan-form').then(m => m.PlanForm),
+      },
+      {
+        path: 'subscriptions/active',
+        loadComponent: () =>
+          import('./features/subscriptions/active-subscriptions/active-subscriptions').then(
+            m => m.ActiveSubscriptions,
+          ),
+      },
+      {
+        path: 'subscriptions/payments',
+        loadComponent: () =>
+          import('./features/subscriptions/payments/payments').then(m => m.Payments),
+      },
     ],
   },
 ];

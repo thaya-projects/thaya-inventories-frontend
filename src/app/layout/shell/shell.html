@@ -1,4 +1,6 @@
 <div class="flex h-screen w-full overflow-hidden bg-gr-bg">
+  <app-toast-container />
+
   <!-- Fixed sidebar — tablet y desktop (colapsable) -->
   <app-sidebar class="hidden shrink-0 md:block" />
 
@@ -17,7 +19,7 @@
   <div class="flex min-w-0 flex-1 flex-col overflow-hidden">
     <app-header (openSidebar)="openSidebar()" />
     <main class="flex-1 overflow-y-auto">
-      <div class="p-6">
+      <div class="mx-auto max-w-7xl p-6 lg:p-8">
         <router-outlet />
       </div>
     </main>

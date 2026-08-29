@@ -2,10 +2,11 @@ import { ChangeDetectionStrategy, Component, HostListener, signal } from '@angul
 import { RouterOutlet } from '@angular/router';
 import { Sidebar } from '../sidebar/sidebar';
 import { Header } from '../header/header';
+import { ToastContainer } from '../../shared/toast/toast-container';
 
 @Component({
   selector: 'app-shell',
-  imports: [RouterOutlet, Sidebar, Header],
+  imports: [RouterOutlet, Sidebar, Header, ToastContainer],
   templateUrl: './shell.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
