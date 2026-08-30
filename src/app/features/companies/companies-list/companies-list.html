@@ -3,13 +3,18 @@
     <h1 class="text-2xl font-bold text-gr-text">Empresas</h1>
     <p class="mt-1 text-gr-sub">Listado de empresas registradas en la plataforma.</p>
   </div>
-  <a
-    routerLink="/companies/new"
-    class="rounded-sm bg-gr-primary-dark px-4 py-2.5 font-semibold text-gr-primary-lite transition hover:brightness-95"
+  <button
+    type="button"
+    (click)="openCreateModal()"
+    class="cursor-pointer rounded-sm bg-gr-primary-dark px-4 py-2.5 font-semibold text-gr-primary-lite transition hover:brightness-95"
   >
     + Nueva empresa
-  </a>
+  </button>
 </div>
+
+@if (showCreateModal()) {
+  <app-company-create-modal (close)="closeCreateModal()" (created)="onCompanyCreated($event)" />
+}
 
 <div class="mb-6">
   <app-search-input
@@ -66,7 +71,11 @@
 </ng-template>
 
 <ng-template #actionsTpl let-company>
-  <a [routerLink]="['/companies', company.id]" class="text-sm font-medium text-gr-primary transition hover:text-gr-gold">
+  <button type="button" (click)="openDetail(company)" class="cursor-pointer text-sm font-medium text-gr-primary transition hover:text-gr-gold">
     Ver
-  </a>
+  </button>
 </ng-template>
+
+@if (selectedCompany(); as company) {
+  <app-company-detail-modal [company]="company" (close)="closeDetail()" (updated)="onCompanyUpdated($event)" />
+}

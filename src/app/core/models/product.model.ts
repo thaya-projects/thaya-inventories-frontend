@@ -1,0 +1,101 @@
+// Confirmado con /api/products. Roles: List/Get → Admin, Warehouse, Assistant.
+// Create/Update/Activate/Deactivate/Kardex → Admin, Warehouse (Assistant es solo lectura).
+export type ProductType = 'RawMaterial' | 'Finished' | 'Service' | 'Kit' | 'Consumable';
+
+export interface Product {
+  id: string;
+  code: string;
+  name: string;
+  description: string | null;
+  productType: ProductType;
+  categoryId: string | null;
+  categoryName: string | null;
+  unitOfMeasureId: string | null;
+  unitOfMeasureName: string | null;
+  tracksStock: boolean;
+  hasVariants: boolean;
+  currentStock: number;
+  minimumStock: number;
+  averageCost: number;
+  salePrice: number | null;
+  shelfLifeMonths: number | null;
+  attributes: Record<string, unknown>;
+  isActive: boolean;
+  // Resuelto por el backend desde la imagen con isPrimary:true — null si no tiene ninguna.
+  primaryImageUrl: string | null;
+  createdAt: string;
+  updatedAt: string | null;
+}
+
+export interface ProductListFilters {
+  search?: string;
+  categoryId?: string;
+  productType?: ProductType;
+  isActive?: boolean;
+  tracksStock?: boolean;
+  hasVariants?: boolean;
+}
+
+// currentStock y averageCost no se mandan nunca — arrancan en 0 y solo se
+// mueven vía /api/inventory-movements (Fase 3).
+export interface CreateProductRequest {
+  code: string;
+  name: string;
+  description?: string | null;
+  productType: ProductType;
+  categoryId?: string | null;
+  unitOfMeasureId?: string | null;
+  tracksStock: boolean;
+  hasVariants: boolean;
+  minimumStock: number;
+  salePrice?: number | null;
+  shelfLifeMonths?: number | null;
+  attributes?: Record<string, unknown>;
+}
+
+// Mismo body que crear, menos hasVariants — no se puede cambiar después de creado.
+export interface UpdateProductRequest {
+  code: string;
+  name: string;
+  description?: string | null;
+  productType: ProductType;
+  categoryId?: string | null;
+  unitOfMeasureId?: string | null;
+  tracksStock: boolean;
+  minimumStock: number;
+  salePrice?: number | null;
+  shelfLifeMonths?: number | null;
+  attributes?: Record<string, unknown>;
+}
+
+export type MovementType =
+  | 'In'
+  | 'Out'
+  | 'Adjustment'
+  | 'Transfer'
+  | 'Production'
+  | 'Waste'
+  | 'Return'
+  | 'Scrap';
+
+export interface KardexMovement {
+  date: string;
+  movementType: MovementType;
+  quantity: number;
+  // Saldo acumulado DESPUÉS de este movimiento — no confundir con `quantity`.
+  balance: number;
+  unitCost: number;
+  notes: string | null;
+}
+
+export interface ProductKardex {
+  productId: string;
+  productName: string;
+  currentStock: number;
+  movements: KardexMovement[];
+}
+
+export interface KardexFilters {
+  dateFrom?: string;
+  dateTo?: string;
+}

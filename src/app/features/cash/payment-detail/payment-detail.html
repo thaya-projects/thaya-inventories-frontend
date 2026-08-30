@@ -1,0 +1,111 @@
+<div class="mx-auto max-w-2xl">
+  <a routerLink="/cash/payments" class="mb-6 inline-flex items-center gap-1.5 text-sm font-medium text-gr-sub transition hover:text-gr-text">
+    <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <polyline points="15 18 9 12 15 6"/>
+    </svg>
+    Volver a pagos
+  </a>
+
+  @if (errorMessage()) {
+    <div class="mb-6 rounded-sm border border-gr-danger/20 bg-gr-danger-bg px-4 py-3 text-sm text-gr-danger">
+      {{ errorMessage() }}
+    </div>
+  }
+
+  @if (loading()) {
+    <p class="text-gr-sub">Cargando...</p>
+  } @else if (payment(); as p) {
+    <div class="mb-6 flex flex-wrap items-start justify-between gap-4">
+      <div>
+        <h1 class="text-2xl font-bold text-gr-text">{{ p.sourceLabel }}</h1>
+        <p class="mt-1 text-gr-sub">{{ sourceLabel(p.sourceType) }} — {{ p.createdAt | date: 'dd/MM/yyyy' }}</p>
+      </div>
+      <span class="rounded-full px-3 py-1 text-xs font-medium" [class]="statusBadgeClass(p.status)">
+        {{ statusLabel(p.status) }}
+      </span>
+    </div>
+
+    <div class="mb-6 rounded-lg border border-gr-border bg-gr-surface p-6">
+      <dl class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <div>
+          <dt class="text-xs font-medium tracking-wide text-gr-muted uppercase">Monto</dt>
+          <dd class="mt-1 text-lg font-semibold text-gr-text">{{ p.currency }} {{ p.amount.toFixed(2) }}</dd>
+        </div>
+        <div>
+          <dt class="text-xs font-medium tracking-wide text-gr-muted uppercase">Método</dt>
+          <dd class="mt-1 text-gr-text">{{ p.paymentMethodName ?? '—' }}</dd>
+        </div>
+        @if (p.paidAt) {
+          <div>
+            <dt class="text-xs font-medium tracking-wide text-gr-muted uppercase">Pagado el</dt>
+            <dd class="mt-1 text-gr-text">{{ p.paidAt | date: 'dd/MM/yyyy HH:mm' }}</dd>
+          </div>
+        }
+        @if (p.notes) {
+          <div class="sm:col-span-2">
+            <dt class="text-xs font-medium tracking-wide text-gr-muted uppercase">Notas</dt>
+            <dd class="mt-1 text-gr-text">{{ p.notes }}</dd>
+          </div>
+        }
+      </dl>
+
+      <div class="mt-6 border-t border-gr-border-lite pt-5">
+        <p class="mb-2 text-xs font-medium tracking-wide text-gr-muted uppercase">Comprobante</p>
+
+        @if (uploadError()) {
+          <div class="mb-3 rounded-sm border border-gr-danger/20 bg-gr-danger-bg px-4 py-3 text-sm text-gr-danger">
+            {{ uploadError() }}
+          </div>
+        }
+
+        @if (p.proofImageUrl) {
+          <a [href]="p.proofImageUrl" target="_blank" rel="noopener" class="mb-3 block">
+            <img [src]="p.proofImageUrl" alt="Comprobante de pago" class="max-h-64 rounded-sm border border-gr-border-lite">
+          </a>
+        } @else {
+          <p class="mb-3 text-sm text-gr-sub">Todavía no se subió comprobante.</p>
+        }
+
+        @if (p.status === 'Pending') {
+          <input
+            type="file" accept="image/jpeg,image/png,image/webp"
+            (change)="onFileSelected($event)"
+            [disabled]="uploadingProof()"
+            class="text-sm text-gr-sub file:mr-3 file:cursor-pointer file:rounded-sm file:border-0 file:bg-gr-bg file:px-3 file:py-2 file:text-sm file:font-medium file:text-gr-sub hover:file:bg-gr-border-lite disabled:cursor-not-allowed disabled:opacity-60"
+          >
+        }
+      </div>
+    </div>
+
+    @if (p.status === 'Pending') {
+      <div class="flex flex-wrap items-center gap-3">
+        <button
+          type="button" (click)="markPaid()"
+          [disabled]="working()"
+          class="rounded-sm bg-gr-success-bg px-5 py-2.5 font-semibold text-gr-success transition hover:brightness-95 disabled:cursor-not-allowed disabled:opacity-60"
+        >
+          Marcar pagado
+        </button>
+        <button
+          type="button" (click)="askCancel()"
+          [disabled]="working()"
+          class="rounded-sm bg-gr-danger-bg px-5 py-2.5 font-semibold text-gr-danger transition hover:brightness-95 disabled:cursor-not-allowed disabled:opacity-60"
+        >
+          Cancelar pago
+        </button>
+      </div>
+    }
+
+    @if (confirmCancelOpen()) {
+      <app-confirm-dialog
+        title="Cancelar pago"
+        message="¿Cancelar este pago?"
+        confirmLabel="Cancelar pago"
+        cancelLabel="Volver"
+        [working]="working()"
+        (close)="closeCancelConfirm()"
+        (confirmed)="confirmCancel()"
+      />
+    }
+  }
+</div>

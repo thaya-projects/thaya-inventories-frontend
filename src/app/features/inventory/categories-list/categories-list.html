@@ -1,0 +1,72 @@
+<div class="mb-8 flex flex-wrap items-center justify-between gap-4">
+  <div>
+    <h1 class="text-2xl font-bold text-gr-text">Categorías</h1>
+    <p class="mt-1 text-gr-sub">Categorías y subcategorías de tus productos.</p>
+  </div>
+  <button
+    type="button"
+    (click)="openCreateModal()"
+    class="cursor-pointer rounded-sm bg-gr-primary-dark px-4 py-2.5 font-semibold text-gr-primary-lite transition hover:brightness-95"
+  >
+    + Nueva categoría
+  </button>
+</div>
+
+@if (showFormModal()) {
+  <app-category-form-modal [categoryId]="editingCategoryId()" (close)="closeFormModal()" (saved)="onCategorySaved()" />
+}
+
+<div class="mb-6 flex gap-2">
+  <button
+    type="button" (click)="setFilter('all')"
+    class="cursor-pointer rounded-sm px-3.5 py-2 text-sm font-medium transition-colors"
+    [class]="statusFilter() === 'all' ? 'bg-gr-primary-dark text-gr-primary-lite' : 'text-gr-sub hover:bg-gr-bg'"
+  >
+    Todas
+  </button>
+  <button
+    type="button" (click)="setFilter('active')"
+    class="cursor-pointer rounded-sm px-3.5 py-2 text-sm font-medium transition-colors"
+    [class]="statusFilter() === 'active' ? 'bg-gr-primary-dark text-gr-primary-lite' : 'text-gr-sub hover:bg-gr-bg'"
+  >
+    Activas
+  </button>
+  <button
+    type="button" (click)="setFilter('inactive')"
+    class="cursor-pointer rounded-sm px-3.5 py-2 text-sm font-medium transition-colors"
+    [class]="statusFilter() === 'inactive' ? 'bg-gr-primary-dark text-gr-primary-lite' : 'text-gr-sub hover:bg-gr-bg'"
+  >
+    Inactivas
+  </button>
+</div>
+
+@if (errorMessage()) {
+  <div class="mb-6 rounded-sm border border-gr-danger/20 bg-gr-danger-bg px-4 py-3 text-sm text-gr-danger">
+    {{ errorMessage() }}
+  </div>
+}
+
+@if (loading()) {
+  <p class="text-gr-sub">Cargando categorías...</p>
+} @else if (roots().length === 0) {
+  <p class="text-gr-sub">No hay categorías registradas todavía.</p>
+} @else {
+  <div class="rounded-lg border border-gr-border bg-gr-surface px-6">
+    @for (root of roots(); track root.id) {
+      <app-category-tree-node [category]="root" [updatingId]="updatingId()" (edit)="openEditModal($event)" (toggleActive)="askToggleActive($event)" />
+    }
+  </div>
+}
+
+@if (toggleTarget(); as category) {
+  <app-confirm-dialog
+    [title]="category.isActive ? 'Desactivar categoría' : 'Activar categoría'"
+    [message]="(category.isActive ? '¿Desactivar la categoría \'' : '¿Activar la categoría \'') + category.name + '\'?'"
+    [confirmLabel]="category.isActive ? 'Desactivar' : 'Activar'"
+    cancelLabel="Volver"
+    [danger]="category.isActive"
+    [working]="updatingId() === category.id"
+    (close)="closeToggleConfirm()"
+    (confirmed)="confirmToggleActive()"
+  />
+}

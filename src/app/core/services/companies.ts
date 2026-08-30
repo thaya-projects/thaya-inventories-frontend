@@ -2,7 +2,14 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
-import { Company, CompanyListFilters, CreateCompanyRequest, CreateCompanyResponse } from '../models/company.model';
+import {
+  Company,
+  CompanyListFilters,
+  CreateCompanyRequest,
+  CreateCompanyResponse,
+  ResetAdminPasswordRequest,
+  ResetAdminPasswordResponse,
+} from '../models/company.model';
 import { PagedResult } from '../models/paged-result.model';
 
 const BASE_URL = `${environment.apiUrl}/platform/companies`;
@@ -35,5 +42,14 @@ export class CompaniesService {
 
   setActive(id: string, isActive: boolean): Observable<Company> {
     return this.http.put<Company>(`${BASE_URL}/${id}`, { isActive });
+  }
+
+  resetAdminPassword(
+    companyId: string,
+    adminEmail: string,
+    newPassword: string,
+  ): Observable<ResetAdminPasswordResponse> {
+    const body: ResetAdminPasswordRequest = { adminEmail, newPassword, confirmPassword: newPassword };
+    return this.http.post<ResetAdminPasswordResponse>(`${BASE_URL}/${companyId}/reset-admin-password`, body);
   }
 }

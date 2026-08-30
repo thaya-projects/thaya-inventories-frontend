@@ -1,0 +1,31 @@
+<div class="mx-auto max-w-lg">
+  <div class="mb-8">
+    <h1 class="text-2xl font-bold text-gr-text">Mi perfil</h1>
+    <p class="mt-1 text-gr-sub">Datos de tu cuenta.</p>
+  </div>
+
+  @if (user(); as u) {
+    <div class="rounded-lg border border-gr-border bg-gr-surface p-6">
+      <div class="mb-6 flex items-center gap-4">
+        <div class="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-gr-primary-dark text-xl font-bold text-gr-primary-lite">
+          {{ getInitial() }}
+        </div>
+        <div class="min-w-0">
+          <p class="truncate text-lg font-semibold text-gr-text">{{ u.fullName }}</p>
+          <p class="truncate text-sm text-gr-sub">{{ u.email }}</p>
+        </div>
+      </div>
+
+      <dl class="grid grid-cols-1 gap-4 border-t border-gr-border-lite pt-5 sm:grid-cols-2">
+        <div>
+          <dt class="text-xs font-medium tracking-wide text-gr-muted uppercase">Rol</dt>
+          <dd class="mt-1 text-gr-text">{{ roleLabel() }}</dd>
+        </div>
+        <div>
+          <dt class="text-xs font-medium tracking-wide text-gr-muted uppercase">Correo</dt>
+          <dd class="mt-1 text-gr-text">{{ u.email }}</dd>
+        </div>
+      </dl>
+    </div>
+  }
+</div>

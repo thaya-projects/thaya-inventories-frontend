@@ -1,23 +1,29 @@
 import { ChangeDetectionStrategy, Component, TemplateRef, computed, inject, signal, viewChild } from '@angular/core';
-import { RouterLink } from '@angular/router';
 import { DatePipe } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import { DataTable, DataTableColumn } from '../../../shared/data-table/data-table';
 import { SearchInput } from '../../../shared/search-input/search-input';
 import { CompaniesService } from '../../../core/services/companies';
-import { Company } from '../../../core/models/company.model';
+import { Company, CreateCompanyResponse } from '../../../core/models/company.model';
 import { subscriptionStatusBadgeClass } from '../../../shared/subscription-status';
+import { CompanyCreateModal } from '../company-create-modal/company-create-modal';
+import { CompanyDetailModal } from '../company-detail-modal/company-detail-modal';
+import { ToastService } from '../../../shared/toast/toast.service';
 
 const SEARCH_DEBOUNCE_MS = 400;
 
 @Component({
   selector: 'app-companies-list',
-  imports: [DataTable, RouterLink, DatePipe, SearchInput],
+  imports: [DataTable, DatePipe, SearchInput, CompanyCreateModal, CompanyDetailModal],
   templateUrl: './companies-list.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class CompaniesList {
   private companiesService = inject(CompaniesService);
+  private toast = inject(ToastService);
+
+  showCreateModal = signal(false);
+  selectedCompany = signal<Company | null>(null);
 
   companies = signal<Company[]>([]);
   totalCount = signal(0);
@@ -91,5 +97,31 @@ export class CompaniesList {
     this.pageSize.set(size);
     this.page.set(1);
     this.load();
+  }
+
+  openCreateModal() {
+    this.showCreateModal.set(true);
+  }
+
+  closeCreateModal() {
+    this.showCreateModal.set(false);
+  }
+
+  onCompanyCreated(res: CreateCompanyResponse) {
+    this.showCreateModal.set(false);
+    this.toast.success(`Empresa "${res.companyName}" creada.`);
+    this.load();
+  }
+
+  openDetail(company: Company) {
+    this.selectedCompany.set(company);
+  }
+
+  closeDetail() {
+    this.selectedCompany.set(null);
+  }
+
+  onCompanyUpdated(updated: Company) {
+    this.companies.update(list => list.map(c => (c.id === updated.id ? updated : c)));
   }
 }

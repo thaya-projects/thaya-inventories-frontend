@@ -3,19 +3,36 @@ import { toSignal } from '@angular/core/rxjs-interop';
 import { NavigationEnd, Router } from '@angular/router';
 import { filter, map, startWith } from 'rxjs';
 import { AuthService } from '../../core/services/auth';
+import { NotificationBell } from '../notification-bell/notification-bell';
+import { UserMenu } from '../user-menu/user-menu';
 
-// TODO: solo cubre el menú de super_admin por ahora; sumar admin/warehouse/assistant
-// cuando se implementen esos roles.
+// TODO: warehouse/assistant ven menos ítems que admin — falta esa variante.
 const PAGE_NAMES: Record<string, string> = {
-  '/dashboard':              'Dashboard',
-  '/companies':              'Empresas',
-  '/companies/new':          'Nueva empresa',
-  '/subscriptions/plans':    'Planes',
-  '/subscriptions/plans/new':'Nuevo plan',
-  '/subscriptions/active':   'Suscripciones activas',
-  '/subscriptions/payments': 'Pagos de suscripciones',
-  '/reportes':               'Reportes',
-  '/configuracion':          'Configuración',
+  '/dashboard':                'Dashboard',
+  '/companies':                'Empresas',
+  '/subscriptions/plans':      'Planes',
+  '/subscriptions/active':     'Suscripciones activas',
+  '/subscriptions/payments':   'Pagos de suscripciones',
+  '/reportes':                 'Reportes',
+  '/configuracion':            'Configuración',
+  '/company':                  'Mi empresa',
+  '/team':                     'Equipo',
+  '/team/new':                 'Nuevo usuario',
+  '/inventory/products':       'Productos',
+  '/inventory/categories':     'Categorías',
+  '/inventory/units':          'Unidades',
+  '/inventory/warehouses':     'Almacenes',
+  '/inventory/warehouses/new': 'Nuevo almacén',
+  '/inventory/movements':          'Movimientos',
+  '/purchases':                'Compras',
+  '/purchases/suppliers':      'Proveedores',
+  '/sales':                    'Ventas',
+  '/sales/customers':          'Clientes',
+  '/cash/payments':            'Pagos',
+  '/cash/methods':             'Métodos de pago',
+  '/expenses':                 'Gastos',
+  '/notifications':            'Notificaciones',
+  '/profile':                  'Mi perfil',
 };
 
 function formatDateEs(date: Date): string {
@@ -24,7 +41,7 @@ function formatDateEs(date: Date): string {
 
 @Component({
   selector: 'app-header',
-  imports: [],
+  imports: [NotificationBell, UserMenu],
   templateUrl: './header.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
@@ -34,7 +51,8 @@ export class Header {
   private router = inject(Router);
   private auth = inject(AuthService);
 
-  userName = computed(() => this.auth.currentUser()?.fullName ?? 'Usuario');
+  // Campana: solo roles de empresa, no SuperAdmin (mismo shell para ambos).
+  showNotificationBell = computed(() => this.auth.currentUser()?.role !== 'SuperAdmin');
 
   private pathname = toSignal(
     this.router.events.pipe(
@@ -48,13 +66,14 @@ export class Header {
   pageName = computed(() => {
     const path = this.pathname();
     if (PAGE_NAMES[path]) return PAGE_NAMES[path];
-    if (path.startsWith('/companies/')) return 'Detalle de empresa';
-    if (path.endsWith('/edit')) return 'Editar plan';
+    if (path.startsWith('/team/')) return 'Editar usuario';
+    if (path.startsWith('/inventory/warehouses/')) return 'Editar almacén';
+    if (path.endsWith('/kardex')) return 'Kardex';
+    if (path.startsWith('/purchases/')) return 'Detalle de compra';
+    if (path.startsWith('/sales/')) return 'Detalle de venta';
+    if (path.startsWith('/cash/payments/')) return 'Detalle de pago';
+    if (path.startsWith('/expenses/')) return 'Detalle de gasto';
     return 'THAYA';
   });
   today = formatDateEs(new Date());
-
-  getInitial(): string {
-    return this.userName().charAt(0).toUpperCase();
-  }
 }

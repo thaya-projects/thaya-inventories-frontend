@@ -1,5 +1,5 @@
 <div class="fixed inset-0 z-50 flex items-center justify-center bg-gr-text/50 p-4" (click)="close.emit()">
-  <div class="w-full max-w-md rounded-lg bg-gr-surface p-6 shadow-lg" (click)="$event.stopPropagation()">
+  <div [class]="panelClass()" (click)="$event.stopPropagation()">
     <div class="mb-4 flex items-center justify-between">
       <h2 class="text-lg font-semibold text-gr-text">{{ title() }}</h2>
       <button

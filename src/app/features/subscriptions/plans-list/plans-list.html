@@ -3,13 +3,18 @@
     <h1 class="text-2xl font-bold text-gr-text">Planes</h1>
     <p class="mt-1 text-gr-sub">Planes de suscripción disponibles en la plataforma.</p>
   </div>
-  <a
-    routerLink="/subscriptions/plans/new"
-    class="rounded-sm bg-gr-primary-dark px-4 py-2.5 font-semibold text-gr-primary-lite transition hover:brightness-95"
+  <button
+    type="button"
+    (click)="openCreateModal()"
+    class="cursor-pointer rounded-sm bg-gr-primary-dark px-4 py-2.5 font-semibold text-gr-primary-lite transition hover:brightness-95"
   >
     + Nuevo plan
-  </a>
+  </button>
 </div>
+
+@if (showFormModal()) {
+  <app-plan-form-modal [planId]="editingPlanId()" (close)="closeFormModal()" (saved)="onPlanSaved()" />
+}
 
 <div class="mb-6 flex gap-2">
   <button
@@ -64,12 +69,12 @@
 
 <ng-template #actionsTpl let-plan>
   <div class="flex items-center justify-end gap-3">
-    <a [routerLink]="['/subscriptions/plans', plan.id, 'edit']" class="text-sm font-medium text-gr-primary transition hover:text-gr-gold">
+    <button type="button" (click)="openEditModal(plan)" class="cursor-pointer text-sm font-medium text-gr-primary transition hover:text-gr-gold">
       Editar
-    </a>
+    </button>
     <button
       type="button"
-      (click)="toggleActive(plan)"
+      (click)="askToggleActive(plan)"
       [disabled]="updatingId() === plan.id"
       class="cursor-pointer text-sm font-medium transition disabled:cursor-not-allowed disabled:opacity-50"
       [class]="plan.isActive ? 'text-gr-danger hover:brightness-90' : 'text-gr-success hover:brightness-90'"
@@ -78,3 +83,16 @@
     </button>
   </div>
 </ng-template>
+
+@if (toggleTarget(); as plan) {
+  <app-confirm-dialog
+    [title]="plan.isActive ? 'Desactivar plan' : 'Activar plan'"
+    [message]="(plan.isActive ? '¿Desactivar el plan \'' : '¿Activar el plan \'') + plan.name + '\'?'"
+    [confirmLabel]="plan.isActive ? 'Desactivar' : 'Activar'"
+    cancelLabel="Volver"
+    [danger]="plan.isActive"
+    [working]="updatingId() === plan.id"
+    (close)="closeToggleConfirm()"
+    (confirmed)="confirmToggleActive()"
+  />
+}

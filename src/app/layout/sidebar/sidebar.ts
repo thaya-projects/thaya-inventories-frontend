@@ -1,8 +1,9 @@
-import { ChangeDetectionStrategy, Component, EventEmitter, Input, Output, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, EventEmitter, Input, Output, computed, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterModule } from '@angular/router';
 import { NavIcon } from './nav-icon';
 import { AuthService } from '../../core/services/auth';
+import { CompanyContextService } from '../../core/services/company-context';
 
 interface NavChild {
   label: string;
@@ -17,19 +18,10 @@ interface NavItem {
 }
 
 // Menú del super_admin (plataforma). No depende de plan/suscripción de ninguna
-// empresa, por eso va fijo aquí. Los menús de admin/warehouse/assistant se
-// agregarán después y vendrán filtrados por un endpoint según lo habilitado
-// en el plan de cada empresa.
+// empresa, por eso va fijo acá.
 const SUPER_ADMIN_NAV: NavItem[] = [
   { label: 'Dashboard', route: '/dashboard', icon: 'grid' },
-  {
-    label: 'Empresas',
-    icon: 'building',
-    children: [
-      { label: 'Todas las empresas', route: '/companies' },
-      { label: 'Nueva empresa', route: '/companies/new' },
-    ],
-  },
+  { label: 'Empresas', route: '/companies', icon: 'building' },
   {
     label: 'Suscripciones',
     icon: 'card',
@@ -43,6 +35,11 @@ const SUPER_ADMIN_NAV: NavItem[] = [
   { label: 'Configuración', route: '/configuracion', icon: 'settings' },
 ];
 
+// Menú del admin de empresa (Fase 2), filtrado por settings de la empresa y
+// features del plan contratado (ver buildAdminNav). Claves faltantes = false.
+// TODO: warehouse/assistant ven menos ítems que admin — falta confirmar qué
+// catálogos exactos pierden (por ahora solo se gatea Equipo/Mi empresa por rol).
+
 @Component({
   selector: 'app-sidebar',
   imports: [CommonModule, RouterModule, NavIcon],
@@ -55,6 +52,7 @@ export class Sidebar {
 
   private auth = inject(AuthService);
   private router = inject(Router);
+  private companyContext = inject(CompanyContextService);
 
   // Modo icon-only en desktop; no aplica a la instancia del drawer móvil.
   collapsed = signal(false);
@@ -63,9 +61,60 @@ export class Sidebar {
     this.collapsed.update(v => !v);
   }
 
-  // TODO: por ahora solo existe el menú de super_admin. Cuando se agreguen
-  // los roles admin/warehouse/assistant, este pasa a ser un mapa por rol.
-  navItems: NavItem[] = SUPER_ADMIN_NAV;
+  navItems = computed<NavItem[]>(() => {
+    const role = this.auth.currentUser()?.role;
+    return role === 'SuperAdmin' ? SUPER_ADMIN_NAV : this.buildAdminNav(role);
+  });
+
+  // features/settings son objetos libres del backend (sin schema fijo): toda
+  // clave ausente se trata como false, nunca como error.
+  private buildAdminNav(role: string | undefined): NavItem[] {
+    const settings = this.companyContext.company()?.settings ?? {};
+    const features = this.companyContext.subscription()?.features ?? {};
+    const on = (v: unknown) => v === true;
+
+    const showInventory = features.inventory !== false;
+    const showPurchases = features.purchases !== false;
+    const showSales = features.sales !== false;
+    const showWarehouses = on(features.multiWarehouse) && on(settings.usesMultiWarehouse);
+    const isAdmin = role === 'Admin';
+
+    const inventoryChildren: NavChild[] = [
+      { label: 'Productos', route: '/inventory/products' },
+      { label: 'Movimientos', route: '/inventory/movements' },
+      { label: 'Categorías', route: '/inventory/categories' },
+      { label: 'Unidades', route: '/inventory/units' },
+    ];
+    if (showWarehouses) {
+      inventoryChildren.push({ label: 'Almacenes', route: '/inventory/warehouses' });
+    }
+
+    const purchasesChildren: NavChild[] = [
+      { label: 'Órdenes', route: '/purchases' },
+      { label: 'Proveedores', route: '/purchases/suppliers' },
+    ];
+
+    const salesChildren: NavChild[] = [
+      { label: 'Órdenes', route: '/sales' },
+      { label: 'Clientes', route: '/sales/customers' },
+    ];
+
+    const cashChildren: NavChild[] = [{ label: 'Pagos', route: '/cash/payments' }];
+    if (isAdmin) {
+      cashChildren.push({ label: 'Métodos de pago', route: '/cash/methods' });
+    }
+
+    const items: NavItem[] = [{ label: 'Dashboard', route: '/dashboard', icon: 'grid' }];
+    if (showInventory) items.push({ label: 'Inventario', icon: 'box', children: inventoryChildren });
+    if (showPurchases) items.push({ label: 'Compras', icon: 'inbox', children: purchasesChildren });
+    if (showSales) items.push({ label: 'Ventas', icon: 'cart', children: salesChildren });
+    items.push({ label: 'Caja', icon: 'wallet', children: cashChildren });
+    if (isAdmin) items.push({ label: 'Gastos', route: '/expenses', icon: 'card' });
+    if (isAdmin) items.push({ label: 'Equipo', route: '/team', icon: 'users' });
+    if (isAdmin) items.push({ label: 'Mi empresa', route: '/company', icon: 'building' });
+    items.push({ label: 'Notificaciones', route: '/notifications', icon: 'bell' });
+    return items;
+  }
 
   // Acordeón: un solo grupo abierto a la vez, para que la lista no ocupe todo el sidebar.
   private expandedGroup = signal<string | null>(null);

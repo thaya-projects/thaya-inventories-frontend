@@ -3,6 +3,7 @@ import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { HttpErrorResponse } from '@angular/common/http';
 import { DataTable, DataTableColumn } from '../../../shared/data-table/data-table';
 import { Modal } from '../../../shared/modal/modal';
+import { ConfirmDialog } from '../../../shared/confirm-dialog/confirm-dialog';
 import { ToastService } from '../../../shared/toast/toast.service';
 import { subscriptionStatusBadgeClass } from '../../../shared/subscription-status';
 import { CompanySubscriptionsService } from '../../../core/services/company-subscriptions';
@@ -15,7 +16,7 @@ const PAYMENT_METHODS = ['qr', 'transfer', 'card', 'paypal'] as const;
 
 @Component({
   selector: 'app-active-subscriptions',
-  imports: [DataTable, ReactiveFormsModule, Modal],
+  imports: [DataTable, ReactiveFormsModule, Modal, ConfirmDialog],
   templateUrl: './active-subscriptions.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
@@ -133,19 +134,36 @@ export class ActiveSubscriptions {
     });
   }
 
-  cancelSubscription(sub: CompanySubscription) {
-    if (!confirm(`¿Cancelar la suscripción de ${sub.companyName}? Esta acción no se puede deshacer.`)) {
-      return;
-    }
+  // --- Cancelar suscripción ---
+  cancelTarget = signal<CompanySubscription | null>(null);
+  cancelling = signal(false);
 
+  openCancelDialog(sub: CompanySubscription) {
+    this.cancelTarget.set(sub);
+  }
+
+  closeCancelDialog() {
+    if (this.cancelling()) return;
+    this.cancelTarget.set(null);
+  }
+
+  confirmCancel() {
+    const sub = this.cancelTarget();
+    if (!sub) return;
+
+    this.cancelling.set(true);
     this.updatingId.set(sub.id);
+
     this.subscriptionsService.cancel(sub.id).subscribe({
       next: () => {
+        this.cancelling.set(false);
         this.updatingId.set(null);
+        this.cancelTarget.set(null);
         this.toast.success('Suscripción cancelada.');
         this.load();
       },
       error: (err: HttpErrorResponse) => {
+        this.cancelling.set(false);
         this.updatingId.set(null);
         this.toast.error(this.mapError(err));
       },

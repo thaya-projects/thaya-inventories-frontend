@@ -1,0 +1,89 @@
+<div class="mb-8 flex flex-wrap items-center justify-between gap-4">
+  <div>
+    <h1 class="text-2xl font-bold text-gr-text">Métodos de pago</h1>
+    <p class="mt-1 text-gr-sub">Métodos disponibles para cobrar en tu empresa.</p>
+  </div>
+  <button
+    type="button"
+    (click)="openCreateModal()"
+    class="cursor-pointer rounded-sm bg-gr-primary-dark px-4 py-2.5 font-semibold text-gr-primary-lite transition hover:brightness-95"
+  >
+    + Nuevo método
+  </button>
+</div>
+
+@if (showFormModal()) {
+  <app-payment-method-form-modal [methodId]="editingMethodId()" (close)="closeFormModal()" (saved)="onMethodSaved()" />
+}
+
+@if (errorMessage()) {
+  <div class="mb-6 rounded-sm border border-gr-danger/20 bg-gr-danger-bg px-4 py-3 text-sm text-gr-danger">
+    {{ errorMessage() }}
+  </div>
+}
+
+@if (loading()) {
+  <p class="text-gr-sub">Cargando métodos de pago...</p>
+} @else {
+  <app-data-table [columns]="columns()" [rows]="methods()" emptyMessage="No hay métodos de pago registrados todavía." />
+}
+
+<ng-template #typeTpl let-method>
+  {{ typeLabel(method.type) }}
+</ng-template>
+
+<ng-template #defaultTpl let-method>
+  @if (method.isDefault) {
+    <span class="rounded-full bg-gr-info-bg px-3 py-1 text-xs font-medium text-gr-info">Predeterminado</span>
+  } @else {
+    <span class="text-gr-muted">—</span>
+  }
+</ng-template>
+
+<ng-template #activeTpl let-method>
+  @if (method.isActive) {
+    <span class="rounded-full bg-gr-success-bg px-3 py-1 text-xs font-medium text-gr-success">Activo</span>
+  } @else {
+    <span class="rounded-full bg-gr-danger-bg px-3 py-1 text-xs font-medium text-gr-danger">Inactivo</span>
+  }
+</ng-template>
+
+<ng-template #actionsTpl let-method>
+  <div class="flex items-center justify-end gap-3">
+    @if (!method.isDefault) {
+      <button
+        type="button"
+        (click)="setDefault(method)"
+        [disabled]="updatingId() === method.id"
+        class="cursor-pointer text-sm font-medium text-gr-info transition hover:brightness-90 disabled:cursor-not-allowed disabled:opacity-50"
+      >
+        Predeterminar
+      </button>
+    }
+    <button type="button" (click)="openEditModal(method)" class="cursor-pointer text-sm font-medium text-gr-primary transition hover:text-gr-gold">
+      Editar
+    </button>
+    <button
+      type="button"
+      (click)="askToggleActive(method)"
+      [disabled]="updatingId() === method.id"
+      class="cursor-pointer text-sm font-medium transition disabled:cursor-not-allowed disabled:opacity-50"
+      [class]="method.isActive ? 'text-gr-danger hover:brightness-90' : 'text-gr-success hover:brightness-90'"
+    >
+      {{ method.isActive ? 'Desactivar' : 'Activar' }}
+    </button>
+  </div>
+</ng-template>
+
+@if (toggleTarget(); as method) {
+  <app-confirm-dialog
+    [title]="method.isActive ? 'Desactivar método de pago' : 'Activar método de pago'"
+    [message]="(method.isActive ? '¿Desactivar el método \'' : '¿Activar el método \'') + method.name + '\'?'"
+    [confirmLabel]="method.isActive ? 'Desactivar' : 'Activar'"
+    cancelLabel="Volver"
+    [danger]="method.isActive"
+    [working]="updatingId() === method.id"
+    (close)="closeToggleConfirm()"
+    (confirmed)="confirmToggleActive()"
+  />
+}

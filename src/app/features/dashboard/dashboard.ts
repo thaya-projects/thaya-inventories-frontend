@@ -1,23 +1,43 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
-import { RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { StatCard } from '../../shared/stat-card/stat-card';
 import { CompaniesService } from '../../core/services/companies';
-import { Company } from '../../core/models/company.model';
+import { DashboardService } from '../../core/services/dashboard';
+import { AuthService } from '../../core/services/auth';
+import { Company, CreateCompanyResponse } from '../../core/models/company.model';
+import { DashboardResponse } from '../../core/models/dashboard.model';
+import { CompanyCreateModal } from '../companies/company-create-modal/company-create-modal';
+import { ToastService } from '../../shared/toast/toast.service';
 
 const TRIAL_WARNING_DAYS = 7;
 
 @Component({
   selector: 'app-dashboard',
-  imports: [RouterLink, StatCard],
+  imports: [RouterLink, StatCard, CompanyCreateModal],
   templateUrl: './dashboard.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class Dashboard {
   private companiesService = inject(CompaniesService);
+  private dashboardService = inject(DashboardService);
+  private auth = inject(AuthService);
+  private router = inject(Router);
+  private toast = inject(ToastService);
 
-  private companies = signal<Company[]>([]);
+  showCreateModal = signal(false);
+
+  role = computed(() => this.auth.currentUser()?.role);
+  isSuperAdmin = computed(() => this.role() === 'SuperAdmin');
+  // "Admin" acá es el admin de una empresa — distinto de SuperAdmin.
+  isCompanyAdmin = computed(() => this.role() === 'Admin');
+  isWarehouse = computed(() => this.role() === 'Warehouse');
+  isAssistant = computed(() => this.role() === 'Assistant');
+
   loading = signal(true);
   errorMessage = signal<string | null>(null);
+
+  // --- SuperAdmin ---
+  private companies = signal<Company[]>([]);
 
   activeCount = computed(() => this.companies().filter(c => c.isActive).length);
 
@@ -39,11 +59,55 @@ export class Dashboard {
     }).length,
   );
 
+  // --- Empresa (Admin / Warehouse / Assistant) ---
+  dashboard = signal<DashboardResponse | null>(null);
+
+  // Por rol: qué tarjetas y listas mostrar, y a dónde va cada una.
+  showSalesAmountCards = computed(() => this.isCompanyAdmin() || this.isAssistant());
+  showPayablesCard = computed(() => this.isCompanyAdmin());
+  showLowStockCard = computed(() => this.isCompanyAdmin() || this.isWarehouse());
+  showReceiveCard = computed(() => this.isWarehouse());
+  showMovementsLink = computed(() => this.isWarehouse());
+
+  showLowStockList = computed(() => this.isCompanyAdmin() || this.isWarehouse());
+  showReceiveList = computed(() => this.isCompanyAdmin() || this.isWarehouse());
+  showDispatchList = computed(() => true);
+  showPaymentsList = computed(() => this.isCompanyAdmin() || this.isAssistant());
+
+  primaryAction = computed<{ label: string; route: string; queryParams?: Record<string, string> }>(() => {
+    // Warehouse: "Nueva entrada" queda bloqueada si la empresa usa
+    // multi-almacén (ver movement-form-modal) — Compras siempre funciona, así
+    // que es el CTA seguro para ese rol. "Nueva compra"/"Nueva venta" ya no
+    // son páginas — se abren por modal desde sus listados (ver ?new=true).
+    if (this.isWarehouse()) return { label: 'Nueva compra', route: '/purchases', queryParams: { new: 'true' } };
+    return { label: 'Nueva venta', route: '/sales', queryParams: { new: 'true' } };
+  });
+
   constructor() {
-    this.load();
+    if (this.isSuperAdmin()) {
+      this.loadSuperAdmin();
+    } else if (this.role()) {
+      this.loadCompany();
+    } else {
+      this.loading.set(false);
+    }
   }
 
-  private load() {
+  openCreateModal() {
+    this.showCreateModal.set(true);
+  }
+
+  closeCreateModal() {
+    this.showCreateModal.set(false);
+  }
+
+  onCompanyCreated(res: CreateCompanyResponse) {
+    this.showCreateModal.set(false);
+    this.toast.success(`Empresa "${res.companyName}" creada.`);
+    this.router.navigate(['/companies', res.companyId]);
+  }
+
+  private loadSuperAdmin() {
     this.loading.set(true);
 
     // TODO: no hay un endpoint de estadísticas de plataforma todavía — traemos
@@ -56,6 +120,22 @@ export class Dashboard {
       },
       error: () => {
         this.errorMessage.set('No se pudieron cargar los datos del dashboard.');
+        this.loading.set(false);
+      },
+    });
+  }
+
+  private loadCompany() {
+    this.loading.set(true);
+    this.errorMessage.set(null);
+
+    this.dashboardService.get().subscribe({
+      next: dashboard => {
+        this.dashboard.set(dashboard);
+        this.loading.set(false);
+      },
+      error: () => {
+        this.errorMessage.set('No se pudo cargar el dashboard.');
         this.loading.set(false);
       },
     });

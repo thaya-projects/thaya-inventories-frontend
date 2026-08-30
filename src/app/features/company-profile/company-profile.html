@@ -1,0 +1,140 @@
+<div class="mb-8">
+  <h1 class="text-2xl font-bold text-gr-text">Mi empresa</h1>
+  <p class="mt-1 text-gr-sub">Datos, configuración de módulos y tu plan actual.</p>
+</div>
+
+@if (loading()) {
+  <p class="text-gr-sub">Cargando...</p>
+}
+
+@if (!loading()) {
+  <div class="grid grid-cols-1 gap-6 lg:grid-cols-3">
+    <!-- Datos de la empresa -->
+    <form [formGroup]="form" (ngSubmit)="saveProfile()" class="rounded-lg border border-gr-border bg-gr-surface p-6 lg:col-span-2">
+      <h2 class="mb-5 text-lg font-semibold text-gr-text">Datos de la empresa</h2>
+
+      <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <div class="sm:col-span-2">
+          <label class="mb-1.5 block text-sm font-medium text-gr-sub">Nombre</label>
+          <input
+            type="text" formControlName="name"
+            class="w-full rounded-sm border border-gr-border bg-gr-bg px-3.5 py-2.5 text-gr-text outline-none focus:border-gr-primary-mid"
+          />
+          @if (form.controls.name.invalid && form.controls.name.touched) {
+            <p class="mt-1 text-xs text-gr-danger">El nombre es obligatorio.</p>
+          }
+        </div>
+
+        <div>
+          <label class="mb-1.5 block text-sm font-medium text-gr-sub">Industria</label>
+          <input type="text" formControlName="industry" class="w-full rounded-sm border border-gr-border bg-gr-bg px-3.5 py-2.5 text-gr-text outline-none focus:border-gr-primary-mid" />
+        </div>
+        <div>
+          <label class="mb-1.5 block text-sm font-medium text-gr-sub">NIT</label>
+          <input type="text" formControlName="taxId" class="w-full rounded-sm border border-gr-border bg-gr-bg px-3.5 py-2.5 text-gr-text outline-none focus:border-gr-primary-mid" />
+        </div>
+        <div>
+          <label class="mb-1.5 block text-sm font-medium text-gr-sub">Teléfono</label>
+          <input type="text" formControlName="phone" class="w-full rounded-sm border border-gr-border bg-gr-bg px-3.5 py-2.5 text-gr-text outline-none focus:border-gr-primary-mid" />
+        </div>
+        <div>
+          <label class="mb-1.5 block text-sm font-medium text-gr-sub">Correo</label>
+          <input type="email" formControlName="email" class="w-full rounded-sm border border-gr-border bg-gr-bg px-3.5 py-2.5 text-gr-text outline-none focus:border-gr-primary-mid" />
+        </div>
+        <div>
+          <label class="mb-1.5 block text-sm font-medium text-gr-sub">Ciudad</label>
+          <input type="text" formControlName="city" class="w-full rounded-sm border border-gr-border bg-gr-bg px-3.5 py-2.5 text-gr-text outline-none focus:border-gr-primary-mid" />
+        </div>
+        <div>
+          <label class="mb-1.5 block text-sm font-medium text-gr-sub">Dirección</label>
+          <input type="text" formControlName="address" class="w-full rounded-sm border border-gr-border bg-gr-bg px-3.5 py-2.5 text-gr-text outline-none focus:border-gr-primary-mid" />
+        </div>
+        <div class="sm:col-span-2">
+          <label class="mb-1.5 block text-sm font-medium text-gr-sub">URL del logo</label>
+          <input type="text" formControlName="logoUrl" class="w-full rounded-sm border border-gr-border bg-gr-bg px-3.5 py-2.5 text-gr-text outline-none focus:border-gr-primary-mid" />
+        </div>
+      </div>
+
+      <div class="mt-6 border-t border-gr-border-lite pt-5">
+        <button
+          type="submit"
+          [disabled]="savingProfile()"
+          class="rounded-sm bg-gr-primary-dark px-5 py-2.5 font-semibold text-gr-primary-lite transition hover:brightness-95 disabled:cursor-not-allowed disabled:opacity-60"
+        >
+          {{ savingProfile() ? 'Guardando...' : 'Guardar cambios' }}
+        </button>
+      </div>
+    </form>
+
+    <!-- Plan y suscripción (solo lectura) -->
+    @if (subscription(); as sub) {
+      <div class="rounded-lg border border-gr-border bg-gr-surface p-6">
+        <h2 class="mb-4 text-lg font-semibold text-gr-text">Plan y suscripción</h2>
+
+        <div class="mb-4 flex items-center justify-between">
+          <span class="font-medium text-gr-text">{{ sub.planName }}</span>
+          <span class="rounded-full px-2.5 py-0.5 text-xs font-medium" [class]="statusBadgeClass(sub.status)">
+            {{ sub.status }}
+          </span>
+        </div>
+
+        <dl class="space-y-2.5 text-sm">
+          <div class="flex justify-between">
+            <dt class="text-gr-muted">Ciclo</dt>
+            <dd class="text-gr-text">{{ sub.billingCycle }}</dd>
+          </div>
+          @if (sub.trialEndsAt) {
+            <div class="flex justify-between">
+              <dt class="text-gr-muted">Fin del trial</dt>
+              <dd class="text-gr-text">{{ sub.trialEndsAt | date: 'dd/MM/yyyy' }}</dd>
+            </div>
+          }
+          @if (sub.currentPeriodEnd) {
+            <div class="flex justify-between">
+              <dt class="text-gr-muted">Fin del período actual</dt>
+              <dd class="text-gr-text">{{ sub.currentPeriodEnd | date: 'dd/MM/yyyy' }}</dd>
+            </div>
+          }
+        </dl>
+
+        @if (activeModules().length) {
+          <div class="mt-5 border-t border-gr-border-lite pt-4">
+            <p class="mb-2 text-xs font-medium tracking-wide text-gr-muted uppercase">Módulos activos</p>
+            <div class="flex flex-wrap gap-1.5">
+              @for (mod of activeModules(); track mod) {
+                <span class="rounded-full bg-gr-primary-lite/60 px-2.5 py-0.5 text-xs font-medium text-gr-primary-dark">
+                  {{ mod }}
+                </span>
+              }
+            </div>
+          </div>
+        }
+      </div>
+    }
+  </div>
+
+  <!-- Configuración / módulos -->
+  <div class="mt-6 rounded-lg border border-gr-border bg-gr-surface p-6">
+    <h2 class="mb-1 text-lg font-semibold text-gr-text">Configuración</h2>
+    <p class="mb-5 text-sm text-gr-sub">Se guarda al cambiar cada opción.</p>
+
+    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+      @for (toggle of toggles; track toggle.key) {
+        <label class="flex cursor-pointer items-start justify-between gap-4 rounded-sm border border-gr-border-lite px-4 py-3.5">
+          <span>
+            <span class="block text-sm font-medium text-gr-text">{{ toggle.label }}</span>
+            <span class="block text-xs text-gr-muted">{{ toggle.hint }}</span>
+          </span>
+
+          <input
+            type="checkbox"
+            class="mt-0.5 h-4 w-4 shrink-0 cursor-pointer accent-gr-primary-dark disabled:cursor-not-allowed"
+            [checked]="isChecked(toggle.key)"
+            [disabled]="savingSetting() === toggle.key"
+            (change)="toggleSetting(toggle.key)"
+          />
+        </label>
+      }
+    </div>
+  </div>
+}
