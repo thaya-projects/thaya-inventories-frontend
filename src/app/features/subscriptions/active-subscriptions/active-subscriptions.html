@@ -84,7 +84,7 @@
     @if (sub.status !== 'Cancelled') {
       <button
         type="button"
-        (click)="cancelSubscription(sub)"
+        (click)="openCancelDialog(sub)"
         [disabled]="updatingId() === sub.id"
         class="cursor-pointer text-sm font-medium text-gr-danger transition hover:brightness-90 disabled:cursor-not-allowed disabled:opacity-50"
       >
@@ -172,4 +172,16 @@
       </div>
     </form>
   </app-modal>
+}
+
+@if (cancelTarget(); as sub) {
+  <app-confirm-dialog
+    title="Cancelar suscripción"
+    [message]="'¿Cancelar la suscripción de ' + sub.companyName + '? Esta acción no se puede deshacer.'"
+    confirmLabel="Cancelar suscripción"
+    cancelLabel="Volver"
+    [working]="cancelling()"
+    (close)="closeCancelDialog()"
+    (confirmed)="confirmCancel()"
+  />
 }

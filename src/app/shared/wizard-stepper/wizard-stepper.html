@@ -1,0 +1,24 @@
+<div class="mb-6 flex items-center gap-2">
+  @for (label of steps(); track label; let i = $index) {
+    <div class="flex flex-1 items-center gap-2">
+      <div
+        class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-semibold transition-colors"
+        [class]="i + 1 <= currentStep() ? 'bg-gr-primary-dark text-gr-primary-lite' : 'bg-gr-bg text-gr-muted'"
+      >
+        @if (i + 1 < currentStep()) {
+          <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="20 6 9 17 4 12"/>
+          </svg>
+        } @else {
+          {{ i + 1 }}
+        }
+      </div>
+      <span class="hidden text-xs font-medium sm:block" [class]="i + 1 <= currentStep() ? 'text-gr-text' : 'text-gr-muted'">
+        {{ label }}
+      </span>
+      @if (i < steps().length - 1) {
+        <div class="h-px flex-1" [class]="i + 1 < currentStep() ? 'bg-gr-primary-dark' : 'bg-gr-border'"></div>
+      }
+    </div>
+  }
+</div>

@@ -40,3 +40,19 @@ export interface CreateCompanyResponse {
   subscriptionId: string;
   trialEndsAt: string;
 }
+
+// Confirmado: POST /api/platform/companies/{companyId}/reset-admin-password.
+// adminEmail debe ser el correo de un usuario con rol Admin de esa empresa
+// (no hay un campo "adminEmail" separado en Company, por eso el modal lo deja
+// editable en vez de asumir que company.email es ese correo).
+export interface ResetAdminPasswordRequest {
+  adminEmail: string;
+  newPassword: string;
+  confirmPassword: string;
+}
+
+export interface ResetAdminPasswordResponse {
+  companyId: string;
+  adminUserId: string;
+  adminEmail: string;
+}

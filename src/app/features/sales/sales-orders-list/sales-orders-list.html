@@ -1,0 +1,99 @@
+<div class="mb-8 flex flex-wrap items-center justify-between gap-4">
+  <div>
+    <h1 class="text-2xl font-bold text-gr-text">Ventas</h1>
+    <p class="mt-1 text-gr-sub">Órdenes de venta a clientes.</p>
+  </div>
+  <button
+    type="button"
+    (click)="openCreateModal()"
+    class="cursor-pointer rounded-sm bg-gr-primary-dark px-4 py-2.5 font-semibold text-gr-primary-lite transition hover:brightness-95"
+  >
+    + Nueva venta
+  </button>
+</div>
+
+@if (showCreateModal()) {
+  <app-sales-order-form-modal (close)="closeCreateModal()" (saved)="onOrderCreated()" />
+}
+
+<div class="mb-6 flex flex-wrap gap-2">
+  <button
+    type="button" (click)="setFilter('all')"
+    class="cursor-pointer rounded-sm px-3.5 py-2 text-sm font-medium transition-colors"
+    [class]="statusFilter() === 'all' ? 'bg-gr-primary-dark text-gr-primary-lite' : 'text-gr-sub hover:bg-gr-bg'"
+  >
+    Todas
+  </button>
+  <button
+    type="button" (click)="setFilter('Pending')"
+    class="cursor-pointer rounded-sm px-3.5 py-2 text-sm font-medium transition-colors"
+    [class]="statusFilter() === 'Pending' ? 'bg-gr-primary-dark text-gr-primary-lite' : 'text-gr-sub hover:bg-gr-bg'"
+  >
+    Pendientes
+  </button>
+  <button
+    type="button" (click)="setFilter('Dispatched')"
+    class="cursor-pointer rounded-sm px-3.5 py-2 text-sm font-medium transition-colors"
+    [class]="statusFilter() === 'Dispatched' ? 'bg-gr-primary-dark text-gr-primary-lite' : 'text-gr-sub hover:bg-gr-bg'"
+  >
+    Despachadas
+  </button>
+  <button
+    type="button" (click)="setFilter('Delivered')"
+    class="cursor-pointer rounded-sm px-3.5 py-2 text-sm font-medium transition-colors"
+    [class]="statusFilter() === 'Delivered' ? 'bg-gr-primary-dark text-gr-primary-lite' : 'text-gr-sub hover:bg-gr-bg'"
+  >
+    Entregadas
+  </button>
+  <button
+    type="button" (click)="setFilter('Cancelled')"
+    class="cursor-pointer rounded-sm px-3.5 py-2 text-sm font-medium transition-colors"
+    [class]="statusFilter() === 'Cancelled' ? 'bg-gr-primary-dark text-gr-primary-lite' : 'text-gr-sub hover:bg-gr-bg'"
+  >
+    Canceladas
+  </button>
+</div>
+
+@if (errorMessage()) {
+  <div class="mb-6 rounded-sm border border-gr-danger/20 bg-gr-danger-bg px-4 py-3 text-sm text-gr-danger">
+    {{ errorMessage() }}
+  </div>
+}
+
+@if (loading()) {
+  <p class="text-gr-sub">Cargando ventas...</p>
+} @else {
+  <app-data-table
+    [columns]="columns()"
+    [rows]="orders()"
+    [serverSide]="true"
+    [currentPage]="page()"
+    [totalItems]="totalCount()"
+    [pageSize]="pageSize()"
+    (pageChange)="onPageChange($event)"
+    (pageSizeChange)="onPageSizeChange($event)"
+    emptyMessage="No hay ventas registradas todavía."
+  />
+}
+
+<ng-template #dateTpl let-o>
+  {{ o.date | date: 'dd/MM/yyyy' }}
+</ng-template>
+
+<ng-template #totalTpl let-o>
+  {{ o.total != null ? ('Bs ' + o.total.toFixed(2)) : '—' }}
+</ng-template>
+
+<ng-template #statusTpl let-o>
+  <span class="rounded-full px-2.5 py-0.5 text-xs font-medium" [class]="statusBadgeClass(o.status)">
+    {{ statusLabel(o.status) }}
+  </span>
+</ng-template>
+
+<ng-template #actionsTpl let-o>
+  <div class="flex items-center justify-end gap-3">
+    <a [routerLink]="['/sales', o.id]" class="text-sm font-medium text-gr-primary transition hover:text-gr-gold">
+      Ver
+    </a>
+  </div>
+</ng-template>

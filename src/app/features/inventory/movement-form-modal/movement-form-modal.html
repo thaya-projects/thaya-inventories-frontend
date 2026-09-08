@@ -1,0 +1,127 @@
+<app-modal title="Entrada / Salida de inventario" size="md" (close)="close.emit()">
+  @if (errorMessage()) {
+    <div class="mb-6 rounded-sm border border-gr-danger/20 bg-gr-danger-bg px-4 py-3 text-sm text-gr-danger">
+      {{ errorMessage() }}
+    </div>
+  }
+
+  @if (blockedByMultiWarehouse()) {
+    <p class="text-gr-sub">El registro manual de entradas/salidas todavía no está disponible para empresas con multi-almacén activado.</p>
+  } @else if (loading()) {
+    <p class="text-gr-sub">Cargando...</p>
+  } @else {
+    <form [formGroup]="form" (ngSubmit)="submit()">
+      <div class="space-y-4">
+        <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <div>
+            <label for="date" class="mb-1.5 block text-sm font-medium text-gr-sub">Fecha</label>
+            <input
+              id="date" type="date" formControlName="date"
+              class="w-full rounded-sm border border-gr-border bg-gr-surface px-4 py-2.5 text-gr-text transition focus:border-gr-primary focus:outline-none focus:ring-2 focus:ring-gr-primary/30"
+            >
+          </div>
+          <div>
+            <label for="movementType" class="mb-1.5 block text-sm font-medium text-gr-sub">Tipo</label>
+            <select
+              id="movementType" formControlName="movementType"
+              class="w-full rounded-sm border border-gr-border bg-gr-surface px-4 py-2.5 text-gr-text transition focus:border-gr-primary focus:outline-none focus:ring-2 focus:ring-gr-primary/30"
+            >
+              <option value="In">Entrada</option>
+              <option value="Out">Salida</option>
+            </select>
+          </div>
+        </div>
+
+        <div>
+          <label for="productId" class="mb-1.5 block text-sm font-medium text-gr-sub">Producto</label>
+          <select
+            id="productId" formControlName="productId"
+            class="w-full rounded-sm border border-gr-border bg-gr-surface px-4 py-2.5 text-gr-text transition focus:border-gr-primary focus:outline-none focus:ring-2 focus:ring-gr-primary/30"
+          >
+            <option value="" disabled>— Selecciona un producto —</option>
+            @for (p of products(); track p.id) {
+              <option [value]="p.id">{{ p.code }} — {{ p.name }}</option>
+            }
+          </select>
+          @if (form.controls.productId.invalid && form.controls.productId.touched) {
+            <p class="mt-1.5 text-xs text-gr-danger">Selecciona un producto.</p>
+          }
+        </div>
+
+        <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <div>
+            <label for="quantity" class="mb-1.5 block text-sm font-medium text-gr-sub">Cantidad</label>
+            <input
+              id="quantity" type="number" step="any" formControlName="quantity"
+              class="w-full rounded-sm border border-gr-border bg-gr-surface px-4 py-2.5 text-gr-text transition focus:border-gr-primary focus:outline-none focus:ring-2 focus:ring-gr-primary/30"
+            >
+            @if (form.controls.quantity.invalid && form.controls.quantity.touched) {
+              <p class="mt-1.5 text-xs text-gr-danger">La cantidad debe ser mayor a 0.</p>
+            }
+          </div>
+          <div>
+            <label for="unitCost" class="mb-1.5 block text-sm font-medium text-gr-sub">Costo unitario (opcional)</label>
+            <input
+              id="unitCost" type="number" step="any" formControlName="unitCost"
+              class="w-full rounded-sm border border-gr-border bg-gr-surface px-4 py-2.5 text-gr-text transition focus:border-gr-primary focus:outline-none focus:ring-2 focus:ring-gr-primary/30"
+            >
+          </div>
+        </div>
+
+        @if (usesLots()) {
+          <div>
+            <label for="lotOrSerial" class="mb-1.5 block text-sm font-medium text-gr-sub">Lote / serie (opcional)</label>
+            <input
+              id="lotOrSerial" type="text" formControlName="lotOrSerial"
+              class="w-full rounded-sm border border-gr-border bg-gr-surface px-4 py-2.5 text-gr-text transition focus:border-gr-primary focus:outline-none focus:ring-2 focus:ring-gr-primary/30"
+            >
+          </div>
+        }
+
+        @if (form.controls.movementType.value === 'In') {
+          <div>
+            <label for="supplierId" class="mb-1.5 block text-sm font-medium text-gr-sub">Proveedor (opcional)</label>
+            <select
+              id="supplierId" formControlName="supplierId"
+              class="w-full rounded-sm border border-gr-border bg-gr-surface px-4 py-2.5 text-gr-text transition focus:border-gr-primary focus:outline-none focus:ring-2 focus:ring-gr-primary/30"
+            >
+              <option value="">— Sin proveedor —</option>
+              @for (s of suppliers(); track s.id) {
+                <option [value]="s.id">{{ s.name }}</option>
+              }
+            </select>
+          </div>
+        }
+
+        <div>
+          <label for="notes" class="mb-1.5 block text-sm font-medium text-gr-sub">Notas (opcional)</label>
+          <textarea
+            id="notes" rows="2" formControlName="notes"
+            class="w-full rounded-sm border border-gr-border bg-gr-surface px-4 py-2.5 text-gr-text transition focus:border-gr-primary focus:outline-none focus:ring-2 focus:ring-gr-primary/30"
+          ></textarea>
+        </div>
+      </div>
+
+      <div class="mt-8 flex items-center justify-end gap-3 border-t border-gr-border-lite pt-5">
+        <button type="button" (click)="close.emit()" class="rounded-sm px-4 py-2.5 font-medium text-gr-sub transition hover:text-gr-text">
+          Cancelar
+        </button>
+        <button
+          type="submit"
+          [disabled]="submitting()"
+          class="flex items-center gap-2 rounded-sm bg-gr-primary-dark px-5 py-2.5 font-semibold text-gr-primary-lite transition hover:brightness-95 disabled:cursor-not-allowed disabled:opacity-60"
+        >
+          @if (submitting()) {
+            <svg class="h-4 w-4 animate-spin" fill="none" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+            </svg>
+            Guardando…
+          } @else {
+            Registrar movimiento
+          }
+        </button>
+      </div>
+    </form>
+  }
+</app-modal>

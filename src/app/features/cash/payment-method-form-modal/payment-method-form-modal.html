@@ -1,0 +1,98 @@
+<app-modal [title]="methodId() ? 'Editar método de pago' : 'Nuevo método de pago'" size="md" (close)="close.emit()">
+  @if (errorMessage()) {
+    <div class="mb-6 rounded-sm border border-gr-danger/20 bg-gr-danger-bg px-4 py-3 text-sm text-gr-danger">
+      {{ errorMessage() }}
+    </div>
+  }
+
+  @if (loading()) {
+    <p class="text-gr-sub">Cargando...</p>
+  } @else {
+    <form [formGroup]="form" (ngSubmit)="submit()">
+      <div class="space-y-4">
+        <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <div>
+            <label for="name" class="mb-1.5 block text-sm font-medium text-gr-sub">Nombre</label>
+            <input
+              id="name" type="text" formControlName="name" placeholder="Ej. QR Banco Unión"
+              class="w-full rounded-sm border border-gr-border bg-gr-surface px-4 py-2.5 text-gr-text placeholder-gr-muted transition focus:border-gr-primary focus:outline-none focus:ring-2 focus:ring-gr-primary/30"
+            >
+            @if (form.controls.name.invalid && form.controls.name.touched) {
+              <p class="mt-1.5 text-xs text-gr-danger">El nombre es obligatorio.</p>
+            }
+          </div>
+          <div>
+            <label for="type" class="mb-1.5 block text-sm font-medium text-gr-sub">Tipo</label>
+            <select
+              id="type" formControlName="type"
+              class="w-full rounded-sm border border-gr-border bg-gr-surface px-4 py-2.5 text-gr-text transition focus:border-gr-primary focus:outline-none focus:ring-2 focus:ring-gr-primary/30"
+            >
+              @for (t of types; track t.value) {
+                <option [value]="t.value">{{ t.label }}</option>
+              }
+            </select>
+          </div>
+        </div>
+
+        @if (form.controls.type.value === 'Transfer') {
+          <div>
+            <label for="bank" class="mb-1.5 block text-sm font-medium text-gr-sub">Banco</label>
+            <input
+              id="bank" type="text" formControlName="bank"
+              class="w-full rounded-sm border border-gr-border bg-gr-surface px-4 py-2.5 text-gr-text transition focus:border-gr-primary focus:outline-none focus:ring-2 focus:ring-gr-primary/30"
+            >
+          </div>
+        }
+
+        @if (form.controls.type.value === 'Qr' || form.controls.type.value === 'Transfer') {
+          <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <div>
+              <label for="accountName" class="mb-1.5 block text-sm font-medium text-gr-sub">Nombre de cuenta</label>
+              <input
+                id="accountName" type="text" formControlName="accountName"
+                class="w-full rounded-sm border border-gr-border bg-gr-surface px-4 py-2.5 text-gr-text transition focus:border-gr-primary focus:outline-none focus:ring-2 focus:ring-gr-primary/30"
+              >
+            </div>
+            <div>
+              <label for="accountNumber" class="mb-1.5 block text-sm font-medium text-gr-sub">Número de cuenta</label>
+              <input
+                id="accountNumber" type="text" formControlName="accountNumber"
+                class="w-full rounded-sm border border-gr-border bg-gr-surface px-4 py-2.5 text-gr-text transition focus:border-gr-primary focus:outline-none focus:ring-2 focus:ring-gr-primary/30"
+              >
+            </div>
+          </div>
+        }
+
+        @if (!methodId()) {
+          <label class="flex cursor-pointer items-center gap-2.5">
+            <input type="checkbox" formControlName="isDefault" class="h-4 w-4 cursor-pointer accent-gr-primary-dark">
+            <span class="text-sm text-gr-sub">Usar como método predeterminado</span>
+          </label>
+        } @else {
+          <p class="text-xs text-gr-muted">Para cambiar el método predeterminado, usa "Predeterminar" en el listado.</p>
+        }
+      </div>
+
+      <div class="mt-8 flex items-center justify-end gap-3 border-t border-gr-border-lite pt-5">
+        <button type="button" (click)="close.emit()" class="rounded-sm px-4 py-2.5 font-medium text-gr-sub transition hover:text-gr-text">
+          Cancelar
+        </button>
+        <button
+          type="submit"
+          [disabled]="submitting()"
+          class="flex items-center gap-2 rounded-sm bg-gr-primary-dark px-5 py-2.5 font-semibold text-gr-primary-lite transition hover:brightness-95 disabled:cursor-not-allowed disabled:opacity-60"
+        >
+          @if (submitting()) {
+            <svg class="h-4 w-4 animate-spin" fill="none" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+            </svg>
+            Guardando…
+          } @else {
+            {{ methodId() ? 'Guardar cambios' : 'Crear método' }}
+          }
+        </button>
+      </div>
+    </form>
+  }
+</app-modal>

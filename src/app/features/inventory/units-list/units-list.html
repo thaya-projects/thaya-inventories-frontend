@@ -1,0 +1,113 @@
+<div class="mb-8 flex flex-wrap items-center justify-between gap-4">
+  <div>
+    <h1 class="text-2xl font-bold text-gr-text">Unidades de medida</h1>
+    <p class="mt-1 text-gr-sub">Unidades usadas por tus productos.</p>
+  </div>
+  <button
+    type="button"
+    (click)="openCreateModal()"
+    class="cursor-pointer rounded-sm bg-gr-primary-dark px-4 py-2.5 font-semibold text-gr-primary-lite transition hover:brightness-95"
+  >
+    + Nueva unidad
+  </button>
+</div>
+
+@if (showFormModal()) {
+  <app-unit-form-modal [unitId]="editingUnitId()" (close)="closeFormModal()" (saved)="onUnitSaved()" />
+}
+
+<div class="mb-6 flex flex-wrap items-center gap-4">
+  <app-search-input
+    placeholder="Buscar por código o nombre..."
+    [value]="search()"
+    (valueChange)="onSearch($event)"
+  />
+
+  <div class="flex gap-2">
+    <button
+      type="button" (click)="setFilter('all')"
+      class="cursor-pointer rounded-sm px-3.5 py-2 text-sm font-medium transition-colors"
+      [class]="statusFilter() === 'all' ? 'bg-gr-primary-dark text-gr-primary-lite' : 'text-gr-sub hover:bg-gr-bg'"
+    >
+      Todas
+    </button>
+    <button
+      type="button" (click)="setFilter('active')"
+      class="cursor-pointer rounded-sm px-3.5 py-2 text-sm font-medium transition-colors"
+      [class]="statusFilter() === 'active' ? 'bg-gr-primary-dark text-gr-primary-lite' : 'text-gr-sub hover:bg-gr-bg'"
+    >
+      Activas
+    </button>
+    <button
+      type="button" (click)="setFilter('inactive')"
+      class="cursor-pointer rounded-sm px-3.5 py-2 text-sm font-medium transition-colors"
+      [class]="statusFilter() === 'inactive' ? 'bg-gr-primary-dark text-gr-primary-lite' : 'text-gr-sub hover:bg-gr-bg'"
+    >
+      Inactivas
+    </button>
+  </div>
+</div>
+
+@if (errorMessage()) {
+  <div class="mb-6 rounded-sm border border-gr-danger/20 bg-gr-danger-bg px-4 py-3 text-sm text-gr-danger">
+    {{ errorMessage() }}
+  </div>
+}
+
+@if (loading()) {
+  <p class="text-gr-sub">Cargando unidades...</p>
+} @else {
+  <app-data-table
+    [columns]="columns()"
+    [rows]="units()"
+    [serverSide]="true"
+    [currentPage]="page()"
+    [totalItems]="totalCount()"
+    [pageSize]="pageSize()"
+    (pageChange)="onPageChange($event)"
+    (pageSizeChange)="onPageSizeChange($event)"
+    emptyMessage="No hay unidades de medida registradas todavía."
+  />
+}
+
+<ng-template #typeTpl let-unit>
+  {{ typeLabel(unit.type) }}
+</ng-template>
+
+<ng-template #activeTpl let-unit>
+  @if (unit.isActive) {
+    <span class="rounded-full bg-gr-success-bg px-3 py-1 text-xs font-medium text-gr-success">Activa</span>
+  } @else {
+    <span class="rounded-full bg-gr-danger-bg px-3 py-1 text-xs font-medium text-gr-danger">Inactiva</span>
+  }
+</ng-template>
+
+<ng-template #actionsTpl let-unit>
+  <div class="flex items-center justify-end gap-3">
+    <button type="button" (click)="openEditModal(unit)" class="cursor-pointer text-sm font-medium text-gr-primary transition hover:text-gr-gold">
+      Editar
+    </button>
+    <button
+      type="button"
+      (click)="askToggleActive(unit)"
+      [disabled]="updatingId() === unit.id"
+      class="cursor-pointer text-sm font-medium transition disabled:cursor-not-allowed disabled:opacity-50"
+      [class]="unit.isActive ? 'text-gr-danger hover:brightness-90' : 'text-gr-success hover:brightness-90'"
+    >
+      {{ unit.isActive ? 'Desactivar' : 'Activar' }}
+    </button>
+  </div>
+</ng-template>
+
+@if (toggleTarget(); as unit) {
+  <app-confirm-dialog
+    [title]="unit.isActive ? 'Desactivar unidad' : 'Activar unidad'"
+    [message]="(unit.isActive ? '¿Desactivar la unidad \'' : '¿Activar la unidad \'') + unit.name + '\'?'"
+    [confirmLabel]="unit.isActive ? 'Desactivar' : 'Activar'"
+    cancelLabel="Volver"
+    [danger]="unit.isActive"
+    [working]="updatingId() === unit.id"
+    (close)="closeToggleConfirm()"
+    (confirmed)="confirmToggleActive()"
+  />
+}

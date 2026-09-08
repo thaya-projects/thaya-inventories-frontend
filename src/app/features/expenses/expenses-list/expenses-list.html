@@ -1,0 +1,116 @@
+<div class="mb-8 flex flex-wrap items-center justify-between gap-4">
+  <div>
+    <h1 class="text-2xl font-bold text-gr-text">Gastos</h1>
+    <p class="mt-1 text-gr-sub">Gastos generales de tu empresa.</p>
+  </div>
+  <button
+    type="button"
+    (click)="openCreateModal()"
+    class="cursor-pointer rounded-sm bg-gr-primary-dark px-4 py-2.5 font-semibold text-gr-primary-lite transition hover:brightness-95"
+  >
+    + Nuevo gasto
+  </button>
+</div>
+
+@if (showFormModal()) {
+  <app-expense-form-modal [expenseId]="editingExpenseId()" (close)="closeFormModal()" (saved)="onExpenseSaved()" />
+}
+
+<div class="mb-6 flex flex-wrap gap-2">
+  <button
+    type="button" (click)="setPaidFilter('all')"
+    class="cursor-pointer rounded-sm px-3.5 py-2 text-sm font-medium transition-colors"
+    [class]="paidFilter() === 'all' ? 'bg-gr-primary-dark text-gr-primary-lite' : 'text-gr-sub hover:bg-gr-bg'"
+  >
+    Todos
+  </button>
+  <button
+    type="button" (click)="setPaidFilter('paid')"
+    class="cursor-pointer rounded-sm px-3.5 py-2 text-sm font-medium transition-colors"
+    [class]="paidFilter() === 'paid' ? 'bg-gr-primary-dark text-gr-primary-lite' : 'text-gr-sub hover:bg-gr-bg'"
+  >
+    Pagados
+  </button>
+  <button
+    type="button" (click)="setPaidFilter('unpaid')"
+    class="cursor-pointer rounded-sm px-3.5 py-2 text-sm font-medium transition-colors"
+    [class]="paidFilter() === 'unpaid' ? 'bg-gr-primary-dark text-gr-primary-lite' : 'text-gr-sub hover:bg-gr-bg'"
+  >
+    Por pagar
+  </button>
+</div>
+
+@if (errorMessage()) {
+  <div class="mb-6 rounded-sm border border-gr-danger/20 bg-gr-danger-bg px-4 py-3 text-sm text-gr-danger">
+    {{ errorMessage() }}
+  </div>
+}
+
+@if (loading()) {
+  <p class="text-gr-sub">Cargando gastos...</p>
+} @else {
+  <app-data-table
+    [columns]="columns()"
+    [rows]="expenses()"
+    [serverSide]="true"
+    [currentPage]="page()"
+    [totalItems]="totalCount()"
+    [pageSize]="pageSize()"
+    (pageChange)="onPageChange($event)"
+    (pageSizeChange)="onPageSizeChange($event)"
+    emptyMessage="No hay gastos registrados todavía."
+  />
+}
+
+<ng-template #dateTpl let-e>
+  {{ e.date | date: 'dd/MM/yyyy' }}
+</ng-template>
+
+<ng-template #categoryTpl let-e>
+  {{ categoryLabel(e.category) }}
+</ng-template>
+
+<ng-template #amountTpl let-e>
+  Bs {{ e.amount.toFixed(2) }}
+</ng-template>
+
+<ng-template #statusTpl let-e>
+  <span class="rounded-full px-2.5 py-0.5 text-xs font-medium" [class]="statusBadgeClass(e.paymentStatus)">
+    {{ statusLabel(e.paymentStatus) }}
+  </span>
+</ng-template>
+
+<ng-template #pendingTpl let-e>
+  {{ e.pendingAmount > 0 ? ('Bs ' + e.pendingAmount.toFixed(2)) : '—' }}
+</ng-template>
+
+<ng-template #actionsTpl let-e>
+  <div class="flex items-center justify-end gap-3">
+    <a [routerLink]="['/expenses', e.id]" class="text-sm font-medium text-gr-sub transition hover:text-gr-text">
+      Ver
+    </a>
+    <button type="button" (click)="openEditModal(e)" class="cursor-pointer text-sm font-medium text-gr-primary transition hover:text-gr-gold">
+      Editar
+    </button>
+    <button
+      type="button"
+      (click)="askDelete(e)"
+      [disabled]="deletingId() === e.id"
+      class="cursor-pointer text-sm font-medium text-gr-danger transition hover:brightness-90 disabled:cursor-not-allowed disabled:opacity-50"
+    >
+      Eliminar
+    </button>
+  </div>
+</ng-template>
+
+@if (deleteTarget(); as expense) {
+  <app-confirm-dialog
+    title="Eliminar gasto"
+    [message]="'¿Eliminar el gasto \'' + expense.description + '\'? Esta acción no se puede deshacer.'"
+    confirmLabel="Eliminar"
+    cancelLabel="Volver"
+    [working]="deletingId() === expense.id"
+    (close)="closeDeleteConfirm()"
+    (confirmed)="confirmDelete()"
+  />
+}

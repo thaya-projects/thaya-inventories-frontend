@@ -1,0 +1,182 @@
+<app-modal [title]="purchaseId() ? 'Editar compra' : 'Nueva compra'" size="xl" (close)="close.emit()">
+  @if (errorMessage()) {
+    <div class="mb-6 rounded-sm border border-gr-danger/20 bg-gr-danger-bg px-4 py-3 text-sm text-gr-danger">
+      {{ errorMessage() }}
+    </div>
+  }
+
+  @if (loading()) {
+    <p class="text-gr-sub">Cargando...</p>
+  } @else {
+    <form [formGroup]="form" (ngSubmit)="submit()">
+      <div class="mb-6">
+        <h2 class="mb-4 text-lg font-semibold text-gr-text">Cabecera</h2>
+
+        <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <div>
+            <label for="date" class="mb-1.5 block text-sm font-medium text-gr-sub">Fecha</label>
+            <input
+              id="date" type="date" formControlName="date"
+              class="w-full rounded-sm border border-gr-border bg-gr-surface px-4 py-2.5 text-gr-text transition focus:border-gr-primary focus:outline-none focus:ring-2 focus:ring-gr-primary/30"
+            >
+          </div>
+          <div>
+            <label for="supplierId" class="mb-1.5 block text-sm font-medium text-gr-sub">Proveedor</label>
+            <select
+              id="supplierId" formControlName="supplierId"
+              class="w-full rounded-sm border border-gr-border bg-gr-surface px-4 py-2.5 text-gr-text transition focus:border-gr-primary focus:outline-none focus:ring-2 focus:ring-gr-primary/30"
+            >
+              <option value="" disabled>— Selecciona un proveedor —</option>
+              @for (s of suppliers(); track s.id) {
+                <option [value]="s.id">{{ s.name }}</option>
+              }
+            </select>
+            @if (form.controls.supplierId.invalid && form.controls.supplierId.touched) {
+              <p class="mt-1.5 text-xs text-gr-danger">Selecciona un proveedor.</p>
+            }
+          </div>
+
+          @if (usesMultiWarehouse()) {
+            <div>
+              <label for="warehouseId" class="mb-1.5 block text-sm font-medium text-gr-sub">Almacén</label>
+              <select
+                id="warehouseId" formControlName="warehouseId"
+                class="w-full rounded-sm border border-gr-border bg-gr-surface px-4 py-2.5 text-gr-text transition focus:border-gr-primary focus:outline-none focus:ring-2 focus:ring-gr-primary/30"
+              >
+                <option value="" disabled>— Selecciona un almacén —</option>
+                @for (w of warehouses(); track w.id) {
+                  <option [value]="w.id">{{ w.name }}</option>
+                }
+              </select>
+            </div>
+          }
+
+          <div>
+            <label for="discount" class="mb-1.5 block text-sm font-medium text-gr-sub">Descuento</label>
+            <input
+              id="discount" type="number" step="any" formControlName="discount"
+              class="w-full rounded-sm border border-gr-border bg-gr-surface px-4 py-2.5 text-gr-text transition focus:border-gr-primary focus:outline-none focus:ring-2 focus:ring-gr-primary/30"
+            >
+          </div>
+
+          <div class="sm:col-span-2">
+            <label for="notes" class="mb-1.5 block text-sm font-medium text-gr-sub">Notas (opcional)</label>
+            <textarea
+              id="notes" rows="2" formControlName="notes"
+              class="w-full rounded-sm border border-gr-border bg-gr-surface px-4 py-2.5 text-gr-text transition focus:border-gr-primary focus:outline-none focus:ring-2 focus:ring-gr-primary/30"
+            ></textarea>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <div class="mb-4 flex items-center justify-between">
+          <h2 class="text-lg font-semibold text-gr-text">Ítems</h2>
+          <button
+            type="button" (click)="addItem()"
+            class="cursor-pointer rounded-sm bg-gr-bg px-3.5 py-2 text-sm font-medium text-gr-sub transition hover:bg-gr-border-lite hover:text-gr-text"
+          >
+            + Agregar ítem
+          </button>
+        </div>
+
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-sm">
+            <thead>
+              <tr class="border-b border-gr-border-lite text-xs font-medium tracking-wide text-gr-muted uppercase">
+                <th class="py-2 pr-3">Producto</th>
+                <th class="w-28 py-2 pr-3">Cantidad</th>
+                <th class="w-32 py-2 pr-3">Costo unit.</th>
+                <th class="w-32 py-2 pr-3 text-right">Total</th>
+                <th class="w-10 py-2"></th>
+              </tr>
+            </thead>
+            <tbody [formArrayName]="'items'">
+              @for (item of itemsArray.controls; track $index) {
+                <tr [formGroupName]="$index" class="border-b border-gr-border-lite last:border-b-0">
+                  <td class="py-2 pr-3">
+                    <select
+                      formControlName="productId" (change)="onProductChange($index)"
+                      class="w-full rounded-sm border border-gr-border bg-gr-surface px-2.5 py-2 text-gr-text transition focus:border-gr-primary focus:outline-none focus:ring-2 focus:ring-gr-primary/30"
+                    >
+                      <option value="" disabled>— Producto —</option>
+                      @for (p of products(); track p.id) {
+                        <option [value]="p.id">{{ p.code }} — {{ p.name }}</option>
+                      }
+                    </select>
+                  </td>
+                  <td class="py-2 pr-3">
+                    <input
+                      type="number" step="any" formControlName="quantity"
+                      class="w-full rounded-sm border border-gr-border bg-gr-surface px-2.5 py-2 text-gr-text transition focus:border-gr-primary focus:outline-none focus:ring-2 focus:ring-gr-primary/30"
+                    >
+                  </td>
+                  <td class="py-2 pr-3">
+                    <input
+                      type="number" step="any" formControlName="unitCost"
+                      class="w-full rounded-sm border border-gr-border bg-gr-surface px-2.5 py-2 text-gr-text transition focus:border-gr-primary focus:outline-none focus:ring-2 focus:ring-gr-primary/30"
+                    >
+                  </td>
+                  <td class="py-2 pr-3 text-right text-gr-text">
+                    Bs {{ lineTotal($index).toFixed(2) }}
+                  </td>
+                  <td class="py-2 text-right">
+                    <button
+                      type="button" (click)="removeItem($index)"
+                      [disabled]="itemsArray.length === 1"
+                      class="cursor-pointer text-gr-danger transition hover:brightness-90 disabled:cursor-not-allowed disabled:opacity-40"
+                      aria-label="Quitar ítem"
+                    >
+                      <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="18" y1="6" x2="6" y2="18"/>
+                        <line x1="6" y1="6" x2="18" y2="18"/>
+                      </svg>
+                    </button>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+
+        <div class="mt-4 flex justify-end">
+          <dl class="w-56 space-y-1.5 text-sm">
+            <div class="flex justify-between">
+              <dt class="text-gr-sub">Subtotal</dt>
+              <dd class="text-gr-text">Bs {{ subtotal().toFixed(2) }}</dd>
+            </div>
+            <div class="flex justify-between">
+              <dt class="text-gr-sub">Descuento</dt>
+              <dd class="text-gr-text">Bs {{ (form.controls.discount.value || 0).toFixed(2) }}</dd>
+            </div>
+            <div class="flex justify-between border-t border-gr-border-lite pt-1.5 font-semibold">
+              <dt class="text-gr-text">Total</dt>
+              <dd class="text-gr-text">Bs {{ total().toFixed(2) }}</dd>
+            </div>
+          </dl>
+        </div>
+      </div>
+
+      <div class="mt-8 flex items-center justify-end gap-3 border-t border-gr-border-lite pt-5">
+        <button type="button" (click)="close.emit()" class="rounded-sm px-4 py-2.5 font-medium text-gr-sub transition hover:text-gr-text">
+          Cancelar
+        </button>
+        <button
+          type="submit"
+          [disabled]="submitting()"
+          class="flex items-center gap-2 rounded-sm bg-gr-primary-dark px-5 py-2.5 font-semibold text-gr-primary-lite transition hover:brightness-95 disabled:cursor-not-allowed disabled:opacity-60"
+        >
+          @if (submitting()) {
+            <svg class="h-4 w-4 animate-spin" fill="none" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+            </svg>
+            Guardando…
+          } @else {
+            {{ purchaseId() ? 'Guardar cambios' : 'Crear compra' }}
+          }
+        </button>
+      </div>
+    </form>
+  }
+</app-modal>
