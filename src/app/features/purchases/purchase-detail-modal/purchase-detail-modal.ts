@@ -1,5 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
-import { ActivatedRoute, RouterLink } from '@angular/router';
+import { ChangeDetectionStrategy, Component, OnInit, computed, inject, input, output, signal } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { HttpErrorResponse } from '@angular/common/http';
@@ -29,18 +28,21 @@ const STATUS_BADGE_CLASS: Record<PurchaseStatus, string> = {
 };
 
 @Component({
-  selector: 'app-purchase-detail',
-  imports: [RouterLink, DatePipe, ReactiveFormsModule, Modal, ConfirmDialog, PurchaseFormModal],
-  templateUrl: './purchase-detail.html',
+  selector: 'app-purchase-detail-modal',
+  imports: [ReactiveFormsModule, DatePipe, Modal, ConfirmDialog, PurchaseFormModal],
+  templateUrl: './purchase-detail-modal.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class PurchaseDetail {
-  private route = inject(ActivatedRoute);
+export class PurchaseDetailModal implements OnInit {
   private purchasesService = inject(PurchasesService);
   private purchasePaymentsService = inject(PurchasePaymentsService);
   private paymentMethodsService = inject(PaymentMethodsService);
   private toast = inject(ToastService);
   private fb = inject(FormBuilder);
+
+  purchaseId = input.required<string>();
+  close = output<void>();
+  updated = output<Purchase>();
 
   purchase = signal<Purchase | null>(null);
   loading = signal(true);
@@ -68,13 +70,12 @@ export class PurchaseDetail {
     paymentMethodId: ['', Validators.required],
     amount: [0, [Validators.required, Validators.min(0.01)]],
     notes: [''],
+    markAsPaid: [true],
   });
 
-  purchaseId = this.route.snapshot.paramMap.get('id')!;
-
-  constructor() {
-    this.load(this.purchaseId);
-    this.loadPayments(this.purchaseId);
+  ngOnInit(): void {
+    this.load();
+    this.loadPayments();
 
     this.paymentMethodsService.list({ isActive: true }).subscribe({
       next: methods => this.paymentMethods.set(methods),
@@ -82,9 +83,9 @@ export class PurchaseDetail {
     });
   }
 
-  private load(id: string) {
+  private load() {
     this.loading.set(true);
-    this.purchasesService.get(id).subscribe({
+    this.purchasesService.get(this.purchaseId()).subscribe({
       next: purchase => {
         this.purchase.set(purchase);
         this.loading.set(false);
@@ -96,9 +97,9 @@ export class PurchaseDetail {
     });
   }
 
-  private loadPayments(id: string) {
+  private loadPayments() {
     this.paymentsLoading.set(true);
-    this.purchasePaymentsService.list(id).subscribe({
+    this.purchasePaymentsService.list(this.purchaseId()).subscribe({
       next: payments => {
         this.payments.set(payments);
         this.paymentsLoading.set(false);
@@ -115,6 +116,7 @@ export class PurchaseDetail {
       paymentMethodId: '',
       amount: this.balanceDue() ?? 0,
       notes: '',
+      markAsPaid: true,
     });
     this.paymentModalOpen.set(true);
   }
@@ -137,6 +139,8 @@ export class PurchaseDetail {
     this.paymentErrorMessage.set(null);
     this.submittingPayment.set(true);
 
+    const markAsPaid = value.markAsPaid !== false;
+
     this.purchasePaymentsService
       .create(purchase.id, {
         paymentMethodId: value.paymentMethodId!,
@@ -145,13 +149,14 @@ export class PurchaseDetail {
         notes: value.notes || null,
         qrImageUrl: null,
         proofImageUrl: null,
+        markAsPaid,
       })
       .subscribe({
         next: () => {
           this.submittingPayment.set(false);
           this.paymentModalOpen.set(false);
-          this.toast.success('Pago registrado.');
-          this.loadPayments(purchase.id);
+          this.toast.success(markAsPaid ? 'Pago registrado como pagado.' : 'Pago registrado. Queda pendiente en Caja.');
+          this.loadPayments();
         },
         error: (err: HttpErrorResponse) => {
           this.submittingPayment.set(false);
@@ -172,6 +177,7 @@ export class PurchaseDetail {
     this.purchase.set(purchase);
     this.editModalOpen.set(false);
     this.toast.success('Compra actualizada.');
+    this.updated.emit(purchase);
   }
 
   confirmAction = signal<PurchaseConfirmAction | null>(null);
@@ -206,6 +212,7 @@ export class PurchaseDetail {
         this.working.set(false);
         this.confirmAction.set(null);
         this.toast.success('Compra recibida — el stock ya se actualizó.');
+        this.updated.emit(purchase);
       },
       error: (err: HttpErrorResponse) => {
         this.working.set(false);
@@ -225,6 +232,7 @@ export class PurchaseDetail {
         this.working.set(false);
         this.confirmAction.set(null);
         this.toast.success('Compra cancelada.');
+        this.updated.emit(purchase);
       },
       error: (err: HttpErrorResponse) => {
         this.working.set(false);

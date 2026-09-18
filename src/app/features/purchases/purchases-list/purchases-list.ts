@@ -1,10 +1,11 @@
 import { ChangeDetectionStrategy, Component, TemplateRef, computed, inject, signal, viewChild } from '@angular/core';
-import { ActivatedRoute, RouterLink } from '@angular/router';
+import { ActivatedRoute } from '@angular/router';
 import { DatePipe } from '@angular/common';
 import { DataTable, DataTableColumn } from '../../../shared/data-table/data-table';
 import { PurchasesService } from '../../../core/services/purchases';
 import { Purchase, PurchaseStatus } from '../../../core/models/purchase.model';
 import { PurchaseFormModal } from '../purchase-form-modal/purchase-form-modal';
+import { PurchaseDetailModal } from '../purchase-detail-modal/purchase-detail-modal';
 import { ToastService } from '../../../shared/toast/toast.service';
 
 type StatusFilter = 'all' | PurchaseStatus;
@@ -24,7 +25,7 @@ const STATUS_BADGE_CLASS: Record<PurchaseStatus, string> = {
 
 @Component({
   selector: 'app-purchases-list',
-  imports: [DataTable, RouterLink, DatePipe, PurchaseFormModal],
+  imports: [DataTable, DatePipe, PurchaseFormModal, PurchaseDetailModal],
   templateUrl: './purchases-list.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
@@ -42,6 +43,7 @@ export class PurchasesList {
   statusFilter = signal<StatusFilter>('all');
 
   showCreateModal = signal(false);
+  selectedPurchaseId = signal<string | null>(null);
 
   statusLabel = (status: string) => STATUS_LABELS[status as PurchaseStatus] ?? status;
   statusBadgeClass = (status: string) => STATUS_BADGE_CLASS[status as PurchaseStatus] ?? 'bg-gr-border-lite text-gr-sub';
@@ -61,8 +63,9 @@ export class PurchasesList {
   ]);
 
   constructor() {
-    // Permite llegar con un filtro precargado (ej. desde el Dashboard: ?status=Pending)
-    // o con el modal de alta ya abierto (ej. desde el Dashboard: ?new=true).
+    // Permite llegar con un filtro precargado (ej. desde el Dashboard: ?status=Pending),
+    // con el modal de alta ya abierto (?new=true) o con el detalle de una compra
+    // puntual ya abierto (ej. desde el Dashboard "Por recibir": ?view=<id>).
     const statusParam = this.route.snapshot.queryParamMap.get('status') as PurchaseStatus | null;
     if (statusParam && STATUS_VALUES.includes(statusParam)) {
       this.statusFilter.set(statusParam);
@@ -70,6 +73,11 @@ export class PurchasesList {
 
     if (this.route.snapshot.queryParamMap.get('new') === 'true') {
       this.showCreateModal.set(true);
+    }
+
+    const viewId = this.route.snapshot.queryParamMap.get('view');
+    if (viewId) {
+      this.selectedPurchaseId.set(viewId);
     }
 
     this.load();
@@ -125,5 +133,17 @@ export class PurchasesList {
     this.toast.success('Compra creada.');
     this.page.set(1);
     this.load();
+  }
+
+  openDetail(purchase: Purchase) {
+    this.selectedPurchaseId.set(purchase.id);
+  }
+
+  closeDetail() {
+    this.selectedPurchaseId.set(null);
+  }
+
+  onPurchaseUpdated(updated: Purchase) {
+    this.purchases.update(list => list.map(p => (p.id === updated.id ? updated : p)));
   }
 }

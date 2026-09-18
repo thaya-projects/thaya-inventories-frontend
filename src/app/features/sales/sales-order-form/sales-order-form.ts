@@ -1,9 +1,10 @@
-import { ChangeDetectionStrategy, Component, OnInit, computed, inject, input, output, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { FormArray, FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { HttpErrorResponse } from '@angular/common/http';
 import { forkJoin } from 'rxjs';
-import { Modal } from '../../../shared/modal/modal';
 import { WizardStepper } from '../../../shared/wizard-stepper/wizard-stepper';
+import { CustomerFormModal } from '../customer-form-modal/customer-form-modal';
 import { SalesOrdersService } from '../../../core/services/sales-orders';
 import { ProductsService } from '../../../core/services/products';
 import { CustomersService } from '../../../core/services/customers';
@@ -11,7 +12,8 @@ import { TransportersService } from '../../../core/services/transporters';
 import { Product } from '../../../core/models/product.model';
 import { Customer } from '../../../core/models/customer.model';
 import { Transporter } from '../../../core/models/transporter.model';
-import { FreightType, SalesOrder, SaveSalesOrderRequest } from '../../../core/models/sales-order.model';
+import { FreightType, SaveSalesOrderRequest } from '../../../core/models/sales-order.model';
+import { ToastService } from '../../../shared/toast/toast.service';
 
 const PRODUCTS_PAGE_SIZE = 200;
 const PRODUCT_RESULTS_LIMIT = 20;
@@ -34,22 +36,23 @@ interface ItemSeed {
 type WizardStep = 1 | 2 | 3;
 
 @Component({
-  selector: 'app-sales-order-form-modal',
-  imports: [ReactiveFormsModule, Modal, WizardStepper],
-  templateUrl: './sales-order-form-modal.html',
+  selector: 'app-sales-order-form',
+  imports: [ReactiveFormsModule, RouterLink, WizardStepper, CustomerFormModal],
+  templateUrl: './sales-order-form.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class SalesOrderFormModal implements OnInit {
+export class SalesOrderForm {
   private fb = inject(FormBuilder);
   private salesOrdersService = inject(SalesOrdersService);
   private productsService = inject(ProductsService);
   private customersService = inject(CustomersService);
   private transportersService = inject(TransportersService);
+  private route = inject(ActivatedRoute);
+  private router = inject(Router);
+  private toast = inject(ToastService);
 
-  // null/omitido = alta. Con id = edición de esa venta (solo si está Pending).
-  orderId = input<string | null>(null);
-  close = output<void>();
-  saved = output<SalesOrder>();
+  orderId = this.route.snapshot.paramMap.get('id');
+  isEditMode = !!this.orderId;
 
   stepLabels = ['Cliente', 'Productos', 'Confirmar'];
   freightTypes = FREIGHT_TYPES;
@@ -65,6 +68,7 @@ export class SalesOrderFormModal implements OnInit {
 
   customerSearch = signal('');
   productSearch = signal('');
+  showCustomerModal = signal(false);
 
   today = new Date().toISOString().slice(0, 10);
 
@@ -102,9 +106,10 @@ export class SalesOrderFormModal implements OnInit {
     return matches.slice(0, PRODUCT_RESULTS_LIMIT);
   });
 
-  ngOnInit(): void {
+  constructor() {
     forkJoin({
-      products: this.productsService.list(1, PRODUCTS_PAGE_SIZE, { isActive: true }),
+      // Solo Finished — lo que se compra (RawMaterial) no se vende directo, se consume en producción.
+      products: this.productsService.list(1, PRODUCTS_PAGE_SIZE, { isActive: true, productType: 'Finished' }),
       customers: this.customersService.list({ isActive: true }),
       transporters: this.transportersService.list(true),
     }).subscribe({
@@ -113,9 +118,8 @@ export class SalesOrderFormModal implements OnInit {
         this.customers.set(customers);
         this.transporters.set(transporters);
 
-        const id = this.orderId();
-        if (id) {
-          this.loadOrder(id);
+        if (this.orderId) {
+          this.loadOrder(this.orderId);
         } else {
           this.loading.set(false);
         }
@@ -130,6 +134,13 @@ export class SalesOrderFormModal implements OnInit {
   private loadOrder(id: string) {
     this.salesOrdersService.get(id).subscribe({
       next: order => {
+        if (order.status !== 'Pending') {
+          // Solo se edita una venta Pending — cualquier otro estado va al
+          // detalle, que ahora es un modal desde el listado (?view=<id>).
+          this.router.navigate(['/sales'], { queryParams: { view: id } });
+          return;
+        }
+
         this.form.patchValue({
           date: order.date?.slice(0, 10) ?? this.today,
           customerId: order.customerId,
@@ -163,6 +174,21 @@ export class SalesOrderFormModal implements OnInit {
     this.form.controls.customerId.setValue(customer.id);
   }
 
+  openCustomerModal() {
+    this.showCustomerModal.set(true);
+  }
+
+  closeCustomerModal() {
+    this.showCustomerModal.set(false);
+  }
+
+  onCustomerCreated(customer: Customer) {
+    this.customers.update(list => [customer, ...list]);
+    this.selectCustomer(customer);
+    this.showCustomerModal.set(false);
+    this.toast.success(`Cliente "${customer.name}" creado.`);
+  }
+
   // Paso 1 -> 2.
   next() {
     if (this.form.controls.customerId.invalid || this.form.controls.date.invalid) {
@@ -177,7 +203,9 @@ export class SalesOrderFormModal implements OnInit {
     this.step.update(s => (s > 1 ? ((s - 1) as WizardStep) : s));
   }
 
-  // Paso 2 -> 3.
+  // Paso 2 -> 3. La cantidad puede superar el stock actual — la venta se
+  // guarda igual como pedido, solo no se podrá despachar hasta que haya
+  // stock (el back valida eso al despachar, no acá).
   review() {
     if (this.itemsArray.length === 0) {
       this.errorMessage.set('Agrega al menos un producto a la venta.');
@@ -212,6 +240,25 @@ export class SalesOrderFormModal implements OnInit {
   cartQuantity(productId: string): number {
     const index = this.itemIndexFor(productId);
     return index === -1 ? 0 : Number(this.itemsArray.at(index).get('quantity')!.value) || 0;
+  }
+
+  // Stock restante del producto de esa línea después de esta venta — negativo
+  // si la cantidad pedida supera lo disponible.
+  stockRemaining(index: number): number | null {
+    const group = this.itemsArray.at(index);
+    const product = this.productFor(group.get('productId')!.value);
+    if (!product) return null;
+    const quantity = Number(group.get('quantity')!.value) || 0;
+    return product.currentStock - quantity;
+  }
+
+  exceedsStock(index: number): boolean {
+    const remaining = this.stockRemaining(index);
+    return remaining != null && remaining < 0;
+  }
+
+  hasStockIssue(): boolean {
+    return this.itemsArray.controls.some((_, i) => this.exceedsStock(i));
   }
 
   incrementProduct(product: Product) {
@@ -290,8 +337,6 @@ export class SalesOrderFormModal implements OnInit {
     this.errorMessage.set(null);
     this.submitting.set(true);
 
-    const id = this.orderId();
-
     const payload: SaveSalesOrderRequest = {
       date: value.date!,
       warehouseId: null,
@@ -303,7 +348,7 @@ export class SalesOrderFormModal implements OnInit {
       notes: value.notes || null,
       items: value.items!.map((item: any) => ({
         // En alta no se manda id — solo en edición (id presente = actualiza, null = línea nueva).
-        ...(id ? { id: item.id ?? null } : {}),
+        ...(this.isEditMode ? { id: item.id ?? null } : {}),
         productId: item.productId,
         variantId: null,
         unitOfMeasureId: item.unitOfMeasureId || null,
@@ -312,10 +357,15 @@ export class SalesOrderFormModal implements OnInit {
       })),
     };
 
-    const request = id ? this.salesOrdersService.update(id, payload) : this.salesOrdersService.create(payload);
+    const request = this.isEditMode
+      ? this.salesOrdersService.update(this.orderId!, payload)
+      : this.salesOrdersService.create(payload);
 
     request.subscribe({
-      next: order => this.saved.emit(order),
+      next: order => {
+        this.toast.success(this.isEditMode ? 'Venta actualizada.' : 'Venta creada.');
+        this.router.navigate(['/sales'], { queryParams: { view: order.id } });
+      },
       error: (err: HttpErrorResponse) => {
         this.submitting.set(false);
         this.errorMessage.set(this.mapError(err));

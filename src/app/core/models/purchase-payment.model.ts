@@ -26,4 +26,6 @@ export interface CreatePurchasePaymentRequest {
   notes: string | null;
   qrImageUrl: string | null;
   proofImageUrl: string | null;
+  // Default true. Si es false, el pago queda Pending en Caja en vez de Paid.
+  markAsPaid: boolean;
 }

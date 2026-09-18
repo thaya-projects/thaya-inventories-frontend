@@ -3,17 +3,16 @@
     <h1 class="text-2xl font-bold text-gr-text">Ventas</h1>
     <p class="mt-1 text-gr-sub">Órdenes de venta a clientes.</p>
   </div>
-  <button
-    type="button"
-    (click)="openCreateModal()"
-    class="cursor-pointer rounded-sm bg-gr-primary-dark px-4 py-2.5 font-semibold text-gr-primary-lite transition hover:brightness-95"
+  <a
+    routerLink="/sales/new"
+    class="rounded-sm bg-gr-primary-dark px-4 py-2.5 font-semibold text-gr-primary-lite transition hover:brightness-95"
   >
     + Nueva venta
-  </button>
+  </a>
 </div>
 
-@if (showCreateModal()) {
-  <app-sales-order-form-modal (close)="closeCreateModal()" (saved)="onOrderCreated()" />
+@if (selectedOrderId(); as orderId) {
+  <app-sales-order-detail-modal [orderId]="orderId" (close)="closeDetail()" (updated)="onOrderUpdated($event)" />
 }
 
 <div class="mb-6 flex flex-wrap gap-2">
@@ -85,15 +84,22 @@
 </ng-template>
 
 <ng-template #statusTpl let-o>
-  <span class="rounded-full px-2.5 py-0.5 text-xs font-medium" [class]="statusBadgeClass(o.status)">
-    {{ statusLabel(o.status) }}
-  </span>
+  <div class="flex flex-wrap items-center gap-1.5">
+    <span class="rounded-full px-2.5 py-0.5 text-xs font-medium" [class]="statusBadgeClass(o.status)">
+      {{ statusLabel(o.status) }}
+    </span>
+    @if (hasInsufficientStock(o)) {
+      <span class="rounded-full bg-gr-danger-bg px-2.5 py-0.5 text-xs font-medium text-gr-danger">
+        Stock insuficiente
+      </span>
+    }
+  </div>
 </ng-template>
 
 <ng-template #actionsTpl let-o>
   <div class="flex items-center justify-end gap-3">
-    <a [routerLink]="['/sales', o.id]" class="text-sm font-medium text-gr-primary transition hover:text-gr-gold">
+    <button type="button" (click)="openDetail(o)" class="cursor-pointer text-sm font-medium text-gr-primary transition hover:text-gr-gold">
       Ver
-    </a>
+    </button>
   </div>
 </ng-template>

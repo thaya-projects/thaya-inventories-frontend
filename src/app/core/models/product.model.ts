@@ -53,7 +53,8 @@ export interface CreateProductRequest {
   attributes?: Record<string, unknown>;
 }
 
-// Mismo body que crear, menos hasVariants — no se puede cambiar después de creado.
+// Mismo body que crear, hasVariants incluido — confirmado que el backend ya
+// lo acepta en el PUT (antes no se podía cambiar después de creado).
 export interface UpdateProductRequest {
   code: string;
   name: string;
@@ -62,6 +63,7 @@ export interface UpdateProductRequest {
   categoryId?: string | null;
   unitOfMeasureId?: string | null;
   tracksStock: boolean;
+  hasVariants: boolean;
   minimumStock: number;
   salePrice?: number | null;
   shelfLifeMonths?: number | null;

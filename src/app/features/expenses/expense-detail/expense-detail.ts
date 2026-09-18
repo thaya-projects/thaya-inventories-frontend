@@ -77,6 +77,7 @@ export class ExpenseDetail {
     paymentMethodId: ['', Validators.required],
     amount: [0, [Validators.required, Validators.min(0.01)]],
     notes: [''],
+    markAsPaid: [true],
   });
 
   expenseId = this.route.snapshot.paramMap.get('id')!;
@@ -140,6 +141,7 @@ export class ExpenseDetail {
       paymentMethodId: '',
       amount: this.balanceDue(),
       notes: '',
+      markAsPaid: true,
     });
     this.paymentModalOpen.set(true);
   }
@@ -162,6 +164,8 @@ export class ExpenseDetail {
     this.paymentErrorMessage.set(null);
     this.submittingPayment.set(true);
 
+    const markAsPaid = value.markAsPaid !== false;
+
     this.expensePaymentsService
       .create(expense.id, {
         paymentMethodId: value.paymentMethodId!,
@@ -170,12 +174,13 @@ export class ExpenseDetail {
         notes: value.notes || null,
         qrImageUrl: null,
         proofImageUrl: null,
+        markAsPaid,
       })
       .subscribe({
         next: () => {
           this.submittingPayment.set(false);
           this.paymentModalOpen.set(false);
-          this.toast.success('Pago registrado.');
+          this.toast.success(markAsPaid ? 'Pago registrado como pagado.' : 'Pago registrado. Queda pendiente en Caja.');
           // El gasto ya trae paymentStatus/paidAmount/pendingAmount
           // actualizados al releerlo — no hace falta un segundo endpoint.
           this.load(expense.id);

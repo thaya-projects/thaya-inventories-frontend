@@ -134,6 +134,20 @@
                     </button>
                   </td>
                 </tr>
+                @if (usesLots()) {
+                  <tr class="border-b border-gr-border-lite last:border-b-0">
+                    <td colspan="5" class="pb-3">
+                      <label class="mb-1 block text-xs font-medium text-gr-sub">Lote / serie (opcional)</label>
+                      <div class="max-w-xs">
+                        <app-lot-code-field
+                          [value]="item.get('lotOrSerial')!.value ?? ''"
+                          [loading]="generatingLotIndex() === $index"
+                          (valueChange)="item.get('lotOrSerial')!.setValue($event)"
+                        />
+                      </div>
+                    </td>
+                  </tr>
+                }
               }
             </tbody>
           </table>

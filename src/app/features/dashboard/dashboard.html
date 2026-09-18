@@ -132,7 +132,8 @@
             <div class="space-y-2">
               @for (item of d.pendingDispatch; track item.id) {
                 <a
-                  [routerLink]="['/sales', item.id]"
+                  routerLink="/sales"
+                  [queryParams]="{ view: item.id }"
                   class="flex items-center justify-between border-b border-gr-border-lite py-2 text-sm last:border-b-0 hover:text-gr-primary"
                 >
                   <span class="text-gr-text">#{{ item.number }} — {{ item.customerName }}</span>
@@ -153,7 +154,8 @@
             <div class="space-y-2">
               @for (item of d.pendingReceive; track item.id) {
                 <a
-                  [routerLink]="['/purchases', item.id]"
+                  routerLink="/purchases"
+                  [queryParams]="{ view: item.id }"
                   class="flex items-center justify-between border-b border-gr-border-lite py-2 text-sm last:border-b-0 hover:text-gr-primary"
                 >
                   <span class="text-gr-text">#{{ item.number }} — {{ item.supplierName }}</span>

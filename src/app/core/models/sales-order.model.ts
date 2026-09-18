@@ -16,6 +16,13 @@ export interface SaleItemResponse {
   quantity: number;
   unitPrice: number | null;
   total: number | null; // quantity × unitPrice.
+  // Solo relevante mientras la venta está Pending — el back marca la línea si
+  // la cantidad pedida supera el stock actual. No bloquea guardar ni despachar
+  // por sí solo (el back rechaza el despacho con 400 si de verdad no alcanza).
+  insufficientStock?: boolean;
+  // null/ausente antes de despachar (FIFO todavía no asignó lote). Se llena al
+  // despachar y queda de solo lectura — nunca se manda de vuelta en el PUT.
+  lotOrSerial?: string | null;
 }
 
 export interface SalesOrder {

@@ -107,7 +107,7 @@ export class ProductFormModal implements OnInit {
     hasVariants: [false],
     minimumStock: [0, [Validators.required, Validators.min(0)]],
     salePrice: [null as number | null],
-    shelfLifeMonths: [null as number | null],
+    shelfLifeMonths: [12 as number | null],
     attributesJson: ['{}'],
   });
 
@@ -158,8 +158,6 @@ export class ProductFormModal implements OnInit {
           shelfLifeMonths: product.shelfLifeMonths,
           attributesJson: JSON.stringify(product.attributes ?? {}, null, 2),
         });
-        // hasVariants no se puede cambiar después de creado (no va en el PUT).
-        this.form.controls.hasVariants.disable();
         this.loading.set(false);
         this.loadImages(id);
       },
@@ -332,6 +330,7 @@ export class ProductFormModal implements OnInit {
       categoryId: value.categoryId || null,
       unitOfMeasureId: value.unitOfMeasureId || null,
       tracksStock: value.tracksStock!,
+      hasVariants: value.hasVariants!,
       minimumStock: value.minimumStock!,
       salePrice: value.salePrice,
       shelfLifeMonths: value.shelfLifeMonths,
@@ -339,15 +338,12 @@ export class ProductFormModal implements OnInit {
     };
 
     const id = this.currentProductId();
-    const request = id
-      ? this.productsService.update(id, basePayload)
-      : this.productsService.create({ ...basePayload, hasVariants: value.hasVariants! });
+    const request = id ? this.productsService.update(id, basePayload) : this.productsService.create(basePayload);
 
     request.subscribe({
       next: product => {
         this.submitting.set(false);
         this.currentProductId.set(product.id);
-        this.form.controls.hasVariants.disable();
         this.saved.emit(product);
         this.step.set(4);
       },

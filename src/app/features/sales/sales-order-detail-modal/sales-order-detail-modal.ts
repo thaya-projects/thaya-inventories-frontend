@@ -1,5 +1,5 @@
-import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
-import { ActivatedRoute, RouterLink } from '@angular/router';
+import { ChangeDetectionStrategy, Component, OnInit, computed, inject, input, output, signal } from '@angular/core';
+import { RouterLink } from '@angular/router';
 import { DatePipe } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { HttpErrorResponse } from '@angular/common/http';
@@ -10,10 +10,10 @@ import { SalesOrderPayment } from '../../../core/models/sales-order-payment.mode
 import { PaymentMethodsService } from '../../../core/services/payment-methods';
 import { PaymentMethod } from '../../../core/models/payment-method.model';
 import { AuthService } from '../../../core/services/auth';
+import { CompanyContextService } from '../../../core/services/company-context';
 import { ToastService } from '../../../shared/toast/toast.service';
 import { Modal } from '../../../shared/modal/modal';
 import { ConfirmDialog } from '../../../shared/confirm-dialog/confirm-dialog';
-import { SalesOrderFormModal } from '../sales-order-form-modal/sales-order-form-modal';
 
 type SalesOrderConfirmAction = 'dispatch' | 'cancel';
 
@@ -39,25 +39,28 @@ const FREIGHT_LABELS: Record<string, string> = {
 };
 
 @Component({
-  selector: 'app-sales-order-detail',
-  imports: [RouterLink, DatePipe, ReactiveFormsModule, Modal, ConfirmDialog, SalesOrderFormModal],
-  templateUrl: './sales-order-detail.html',
+  selector: 'app-sales-order-detail-modal',
+  imports: [RouterLink, DatePipe, ReactiveFormsModule, Modal, ConfirmDialog],
+  templateUrl: './sales-order-detail-modal.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class SalesOrderDetail {
-  private route = inject(ActivatedRoute);
+export class SalesOrderDetailModal implements OnInit {
   private salesOrdersService = inject(SalesOrdersService);
   private salesOrderPaymentsService = inject(SalesOrderPaymentsService);
   private paymentMethodsService = inject(PaymentMethodsService);
   private auth = inject(AuthService);
+  private companyContext = inject(CompanyContextService);
   private toast = inject(ToastService);
   private fb = inject(FormBuilder);
+
+  orderId = input.required<string>();
+  close = output<void>();
+  updated = output<SalesOrder>();
 
   order = signal<SalesOrder | null>(null);
   loading = signal(true);
   errorMessage = signal<string | null>(null);
   working = signal(false);
-  editModalOpen = signal(false);
 
   payments = signal<SalesOrderPayment[]>([]);
   paymentsLoading = signal(true);
@@ -68,6 +71,17 @@ export class SalesOrderDetail {
 
   // Despachar/cancelar: Admin, Warehouse — Assistant puede crear/editar Pending pero no esto.
   canDispatchOrCancel = computed(() => this.auth.currentUser()?.role !== 'Assistant');
+
+  // Estricto === true (a diferencia de LotCodeField, que es visible-por-defecto)
+  // — acá se trata de mostrar una columna de solo lectura con el lote asignado
+  // por FIFO al despachar, no de pedir uno.
+  usesLots = computed(() => this.companyContext.company()?.settings.usesLots === true);
+
+  // Solo relevante mientras la venta está Pending.
+  hasInsufficientStock = computed(() => {
+    const order = this.order();
+    return !!order && order.status === 'Pending' && order.items.some(i => i.insufficientStock);
+  });
 
   totalPaid = computed(() => this.payments().reduce((sum, p) => sum + p.amount, 0));
   balanceDue = computed(() => {
@@ -84,13 +98,12 @@ export class SalesOrderDetail {
     paymentMethodId: ['', Validators.required],
     amount: [0, [Validators.required, Validators.min(0.01)]],
     notes: [''],
+    markAsPaid: [true],
   });
 
-  orderId = this.route.snapshot.paramMap.get('id')!;
-
-  constructor() {
-    this.load(this.orderId);
-    this.loadPayments(this.orderId);
+  ngOnInit(): void {
+    this.load();
+    this.loadPayments();
 
     this.paymentMethodsService.list({ isActive: true }).subscribe({
       next: methods => this.paymentMethods.set(methods),
@@ -98,9 +111,9 @@ export class SalesOrderDetail {
     });
   }
 
-  private load(id: string) {
+  private load() {
     this.loading.set(true);
-    this.salesOrdersService.get(id).subscribe({
+    this.salesOrdersService.get(this.orderId()).subscribe({
       next: order => {
         this.order.set(order);
         this.loading.set(false);
@@ -112,9 +125,9 @@ export class SalesOrderDetail {
     });
   }
 
-  private loadPayments(id: string) {
+  private loadPayments() {
     this.paymentsLoading.set(true);
-    this.salesOrderPaymentsService.list(id).subscribe({
+    this.salesOrderPaymentsService.list(this.orderId()).subscribe({
       next: payments => {
         this.payments.set(payments);
         this.paymentsLoading.set(false);
@@ -125,26 +138,13 @@ export class SalesOrderDetail {
     });
   }
 
-  openEditModal() {
-    this.editModalOpen.set(true);
-  }
-
-  closeEditModal() {
-    this.editModalOpen.set(false);
-  }
-
-  onOrderUpdated(order: SalesOrder) {
-    this.order.set(order);
-    this.editModalOpen.set(false);
-    this.toast.success('Venta actualizada.');
-  }
-
   openPaymentModal() {
     this.paymentErrorMessage.set(null);
     this.paymentForm.reset({
       paymentMethodId: '',
       amount: this.balanceDue() ?? 0,
       notes: '',
+      markAsPaid: true,
     });
     this.paymentModalOpen.set(true);
   }
@@ -167,6 +167,8 @@ export class SalesOrderDetail {
     this.paymentErrorMessage.set(null);
     this.submittingPayment.set(true);
 
+    const markAsPaid = value.markAsPaid !== false;
+
     this.salesOrderPaymentsService
       .create(order.id, {
         paymentMethodId: value.paymentMethodId!,
@@ -175,13 +177,14 @@ export class SalesOrderDetail {
         notes: value.notes || null,
         qrImageUrl: null,
         proofImageUrl: null,
+        markAsPaid,
       })
       .subscribe({
         next: () => {
           this.submittingPayment.set(false);
           this.paymentModalOpen.set(false);
-          this.toast.success('Cobro registrado.');
-          this.loadPayments(order.id);
+          this.toast.success(markAsPaid ? 'Cobro registrado como pagado.' : 'Cobro registrado. Queda pendiente en Caja.');
+          this.loadPayments();
         },
         error: (err: HttpErrorResponse) => {
           this.submittingPayment.set(false);
@@ -191,6 +194,13 @@ export class SalesOrderDetail {
   }
 
   confirmAction = signal<SalesOrderConfirmAction | null>(null);
+
+  dispatchConfirmMessage = computed(() => {
+    const base = 'Esto saca stock y no se puede deshacer. ¿Confirmas despachar esta venta?';
+    return this.hasInsufficientStock()
+      ? `Hay líneas sin stock suficiente. Si al confirmar no alcanza, el sistema rechazará el despacho. ${base}`
+      : base;
+  });
 
   askDispatch() {
     this.confirmAction.set('dispatch');
@@ -222,6 +232,7 @@ export class SalesOrderDetail {
         this.working.set(false);
         this.confirmAction.set(null);
         this.toast.success('Venta despachada — el stock ya se actualizó.');
+        this.updated.emit(order);
       },
       error: (err: HttpErrorResponse) => {
         this.working.set(false);
@@ -241,6 +252,7 @@ export class SalesOrderDetail {
         this.working.set(false);
         this.confirmAction.set(null);
         this.toast.success('Venta cancelada.');
+        this.updated.emit(order);
       },
       error: (err: HttpErrorResponse) => {
         this.working.set(false);

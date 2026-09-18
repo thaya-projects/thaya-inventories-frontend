@@ -29,4 +29,6 @@ export interface CreateSalesOrderPaymentRequest {
   notes: string | null;
   qrImageUrl: string | null;
   proofImageUrl: string | null;
+  // Default true. Si es false, el cobro queda Pending en Caja en vez de Paid.
+  markAsPaid: boolean;
 }

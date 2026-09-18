@@ -139,6 +139,7 @@ export const routes: Routes = [
       // --- Fase 3: Compras ---
       // 'purchases/new', 'purchases/suppliers/new', 'purchases/suppliers/:id' y
       // 'purchases/:id/edit' ya no son páginas — alta y edición por modal.
+      // 'purchases/:id' (detalle) tampoco — "Ver" ahora abre un modal desde purchases-list.
       {
         path: 'purchases',
         canActivate: [roleGuard('Admin', 'Warehouse')],
@@ -151,21 +152,35 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./features/purchases/suppliers-list/suppliers-list').then(m => m.SuppliersList),
       },
+      // --- Producción ---
+      // Solo Admin/Warehouse. Requiere settings.usesProduction=true en la
+      // empresa — si no, el backend responde 400 en cualquier request (ver
+      // production-orders-list, que lo muestra como error, no como crash).
+      // 'production/new', 'production/:id/edit' y 'production/:id' (detalle) ya
+      // no son páginas — alta, edición y "Ver" son todos modales desde production-orders-list.
       {
-        path: 'purchases/:id',
+        path: 'production',
         canActivate: [roleGuard('Admin', 'Warehouse')],
         loadComponent: () =>
-          import('./features/purchases/purchase-detail/purchase-detail').then(m => m.PurchaseDetail),
+          import('./features/production/production-orders-list/production-orders-list').then(
+            m => m.ProductionOrdersList,
+          ),
       },
       // --- Fase 4: Ventas ---
       // Ver/crear/editar Pending: Admin, Warehouse, Assistant. Despachar/cancelar
       // se gatea aparte dentro del detalle (Assistant no las ve).
-      // 'sales/new' y 'sales/:id/edit' ya no son páginas — alta y edición por modal.
       {
         path: 'sales',
         canActivate: [roleGuard('Admin', 'Warehouse', 'Assistant')],
         loadComponent: () =>
           import('./features/sales/sales-orders-list/sales-orders-list').then(m => m.SalesOrdersList),
+      },
+      // 'sales/new' y 'sales/customers*' antes que 'sales/:id'.
+      {
+        path: 'sales/new',
+        canActivate: [roleGuard('Admin', 'Warehouse', 'Assistant')],
+        loadComponent: () =>
+          import('./features/sales/sales-order-form/sales-order-form').then(m => m.SalesOrderForm),
       },
       // 'sales/customers/new' e 'sales/customers/:id' ya no son páginas — alta y edición por modal desde customers-list.
       {
@@ -175,11 +190,12 @@ export const routes: Routes = [
           import('./features/sales/customers-list/customers-list').then(m => m.CustomersList),
       },
       {
-        path: 'sales/:id',
+        path: 'sales/:id/edit',
         canActivate: [roleGuard('Admin', 'Warehouse', 'Assistant')],
         loadComponent: () =>
-          import('./features/sales/sales-order-detail/sales-order-detail').then(m => m.SalesOrderDetail),
+          import('./features/sales/sales-order-form/sales-order-form').then(m => m.SalesOrderForm),
       },
+      // 'sales/:id' (detalle) ya no es página — "Ver" abre un modal desde sales-orders-list.
       // --- Fase 4b: Caja ---
       // Ver pagos: Admin, Warehouse, Assistant. CRUD de métodos: solo Admin.
       {
