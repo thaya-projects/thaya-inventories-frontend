@@ -16,6 +16,10 @@
   <app-purchase-form-modal (close)="closeCreateModal()" (saved)="onPurchaseCreated()" />
 }
 
+@if (selectedPurchaseId(); as purchaseId) {
+  <app-purchase-detail-modal [purchaseId]="purchaseId" (close)="closeDetail()" (updated)="onPurchaseUpdated($event)" />
+}
+
 <div class="mb-6 flex gap-2">
   <button
     type="button" (click)="setFilter('all')"
@@ -85,8 +89,8 @@
 
 <ng-template #actionsTpl let-p>
   <div class="flex items-center justify-end gap-3">
-    <a [routerLink]="['/purchases', p.id]" class="text-sm font-medium text-gr-primary transition hover:text-gr-gold">
+    <button type="button" (click)="openDetail(p)" class="cursor-pointer text-sm font-medium text-gr-primary transition hover:text-gr-gold">
       Ver
-    </a>
+    </button>
   </div>
 </ng-template>

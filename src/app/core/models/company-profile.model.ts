@@ -8,6 +8,12 @@ export interface CompanySettings {
   usesLoaders: boolean;
   usesMultiWarehouse: boolean;
   activeModules: string[];
+  // Códigos de lote: "auto" autoasigna el siguiente código si se omite lotCode
+  // al crear una orden de producción; cualquier otro valor se trata como manual.
+  lotCodeMode: 'auto' | string;
+  lotCodePrefixMp: string; // default "MP" si no se configura.
+  lotCodePrefixPt: string; // default "PT" si no se configura.
+  includeProductCode: boolean; // default false.
 }
 
 export interface CompanyProfile {
@@ -41,6 +47,8 @@ export interface UpdateCompanyRequest {
 }
 
 // PUT /api/company/settings — el body va envuelto en { settings: {...} }, no plano.
+// Confirmado: hace MERGE server-side (solo pisa las keys que mandás, el resto
+// se conserva) — no hace falta mandar el objeto completo para no perder datos.
 export interface UpdateCompanySettingsRequest {
   settings: Partial<CompanySettings>;
 }

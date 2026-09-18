@@ -3,8 +3,10 @@ import { FormArray, FormBuilder, FormGroup, ReactiveFormsModule, Validators } fr
 import { HttpErrorResponse } from '@angular/common/http';
 import { forkJoin } from 'rxjs';
 import { Modal } from '../../../shared/modal/modal';
+import { LotCodeField } from '../../../shared/lot-code-field/lot-code-field';
 import { PurchasesService } from '../../../core/services/purchases';
 import { ProductsService } from '../../../core/services/products';
+import { LotsService } from '../../../core/services/lots';
 import { SuppliersService } from '../../../core/services/suppliers';
 import { WarehousesService } from '../../../core/services/warehouses';
 import { CompanyContextService } from '../../../core/services/company-context';
@@ -21,11 +23,12 @@ interface ItemSeed {
   unitOfMeasureId: string;
   quantity: number;
   unitCost: number;
+  lotOrSerial?: string | null;
 }
 
 @Component({
   selector: 'app-purchase-form-modal',
-  imports: [ReactiveFormsModule, Modal],
+  imports: [ReactiveFormsModule, Modal, LotCodeField],
   templateUrl: './purchase-form-modal.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
@@ -33,6 +36,7 @@ export class PurchaseFormModal implements OnInit {
   private fb = inject(FormBuilder);
   private purchasesService = inject(PurchasesService);
   private productsService = inject(ProductsService);
+  private lotsService = inject(LotsService);
   private suppliersService = inject(SuppliersService);
   private warehousesService = inject(WarehousesService);
   private companyContext = inject(CompanyContextService);
@@ -51,6 +55,7 @@ export class PurchaseFormModal implements OnInit {
   warehouses = signal<Warehouse[]>([]);
 
   usesMultiWarehouse = computed(() => this.companyContext.company()?.settings.usesMultiWarehouse === true);
+  usesLots = computed(() => this.companyContext.company()?.settings.usesLots !== false);
 
   today = new Date().toISOString().slice(0, 10);
 
@@ -69,7 +74,8 @@ export class PurchaseFormModal implements OnInit {
 
   ngOnInit(): void {
     forkJoin({
-      products: this.productsService.list(1, PRODUCTS_PAGE_SIZE, { isActive: true }),
+      // Solo RawMaterial — se compra materia prima/insumos, no producto terminado.
+      products: this.productsService.list(1, PRODUCTS_PAGE_SIZE, { isActive: true, productType: 'RawMaterial' }),
       suppliers: this.suppliersService.list({ isActive: true }),
       warehouses: this.warehousesService.list({ isActive: true }),
     }).subscribe({
@@ -111,6 +117,7 @@ export class PurchaseFormModal implements OnInit {
             unitOfMeasureId: item.unitOfMeasureId ?? '',
             quantity: item.quantity,
             unitCost: item.unitCost,
+            lotOrSerial: item.lotOrSerial,
           });
         }
 
@@ -130,6 +137,7 @@ export class PurchaseFormModal implements OnInit {
       unitOfMeasureId: [seed?.unitOfMeasureId ?? ''],
       quantity: [seed?.quantity ?? 1, [Validators.required, Validators.min(0.0001)]],
       unitCost: [seed?.unitCost ?? 0, [Validators.required, Validators.min(0)]],
+      lotOrSerial: [seed?.lotOrSerial ?? '', Validators.maxLength(40)],
     });
   }
 
@@ -141,10 +149,29 @@ export class PurchaseFormModal implements OnInit {
     this.itemsArray.removeAt(index);
   }
 
+  generatingLotIndex = signal<number | null>(null);
+
+  // (change) del <select> — solo dispara con interacción real del usuario,
+  // nunca con el patchValue de loadPurchase(), así que no pisa el lote ya
+  // cargado al editar una compra existente.
   onProductChange(index: number) {
     const group = this.itemsArray.at(index);
     const product = this.products().find(p => p.id === group.get('productId')!.value);
     group.get('unitOfMeasureId')!.setValue(product?.unitOfMeasureId ?? '');
+
+    if (this.usesLots() && product) {
+      this.generatingLotIndex.set(index);
+      this.lotsService.next('Mp', product.id).subscribe({
+        next: res => {
+          this.generatingLotIndex.set(null);
+          group.get('lotOrSerial')!.setValue(res.lotCode);
+        },
+        error: () => {
+          this.generatingLotIndex.set(null);
+          // no bloquea el form — el usuario puede escribir el lote a mano
+        },
+      });
+    }
   }
 
   lineTotal(index: number): number {
@@ -198,6 +225,7 @@ export class PurchaseFormModal implements OnInit {
         unitOfMeasureId: item.unitOfMeasureId || null,
         quantity: item.quantity,
         unitCost: item.unitCost,
+        lotOrSerial: item.lotOrSerial || null,
       })),
     };
 

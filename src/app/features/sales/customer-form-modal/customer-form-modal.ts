@@ -3,6 +3,7 @@ import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Modal } from '../../../shared/modal/modal';
 import { CustomersService } from '../../../core/services/customers';
+import { Customer } from '../../../core/models/customer.model';
 
 @Component({
   selector: 'app-customer-form-modal',
@@ -17,7 +18,7 @@ export class CustomerFormModal implements OnInit {
   // null/omitido = alta. Con id = edición de ese cliente.
   customerId = input<string | null>(null);
   close = output<void>();
-  saved = output<void>();
+  saved = output<Customer>();
 
   loading = signal(true);
   submitting = signal(false);
@@ -81,7 +82,7 @@ export class CustomerFormModal implements OnInit {
     const request = id ? this.customersService.update(id, payload) : this.customersService.create(payload);
 
     request.subscribe({
-      next: () => this.saved.emit(),
+      next: customer => this.saved.emit(customer),
       error: (err: HttpErrorResponse) => {
         this.submitting.set(false);
         this.errorMessage.set(this.mapError(err));

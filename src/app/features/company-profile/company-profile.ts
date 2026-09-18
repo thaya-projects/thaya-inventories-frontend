@@ -43,6 +43,7 @@ export class CompanyProfilePage {
 
   savingProfile = signal(false);
   savingSetting = signal<string | null>(null);
+  savingLotSettings = signal(false);
 
   form = this.fb.nonNullable.group({
     name: ['', Validators.required],
@@ -53,6 +54,13 @@ export class CompanyProfilePage {
     city: [''],
     address: [''],
     logoUrl: [''],
+  });
+
+  lotSettingsForm = this.fb.nonNullable.group({
+    lotCodeMode: ['auto' as 'auto' | 'manual'],
+    lotCodePrefixMp: ['MP', Validators.maxLength(10)],
+    lotCodePrefixPt: ['PT', Validators.maxLength(10)],
+    includeProductCode: [false],
   });
 
   activeModules = computed(() => this.company()?.settings.activeModules ?? []);
@@ -79,6 +87,13 @@ export class CompanyProfilePage {
         address: c.address ?? '',
         logoUrl: c.logoUrl ?? '',
       });
+
+      this.lotSettingsForm.reset({
+        lotCodeMode: c.settings.lotCodeMode === 'auto' ? 'auto' : 'manual',
+        lotCodePrefixMp: c.settings.lotCodePrefixMp || 'MP',
+        lotCodePrefixPt: c.settings.lotCodePrefixPt || 'PT',
+        includeProductCode: c.settings.includeProductCode === true,
+      });
     });
   }
 
@@ -104,6 +119,38 @@ export class CompanyProfilePage {
         this.toast.error('No se pudo actualizar la configuración.');
       },
     });
+  }
+
+  saveLotSettings() {
+    if (this.lotSettingsForm.invalid) {
+      this.lotSettingsForm.markAllAsTouched();
+      return;
+    }
+
+    const raw = this.lotSettingsForm.getRawValue();
+    this.savingLotSettings.set(true);
+
+    // El PUT hace merge server-side — mandar solo estas 4 keys no pisa el resto de settings.
+    this.companyService
+      .updateSettings({
+        settings: {
+          lotCodeMode: raw.lotCodeMode,
+          lotCodePrefixMp: raw.lotCodePrefixMp || 'MP',
+          lotCodePrefixPt: raw.lotCodePrefixPt || 'PT',
+          includeProductCode: raw.includeProductCode,
+        },
+      })
+      .subscribe({
+        next: updated => {
+          this.companyContext.setCompany(updated);
+          this.savingLotSettings.set(false);
+          this.toast.success('Configuración de lotes actualizada.');
+        },
+        error: () => {
+          this.savingLotSettings.set(false);
+          this.toast.error('No se pudo guardar la configuración de lotes.');
+        },
+      });
   }
 
   saveProfile() {

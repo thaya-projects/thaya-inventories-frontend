@@ -137,4 +137,53 @@
       }
     </div>
   </div>
+
+  <!-- Códigos de lote -->
+  <form [formGroup]="lotSettingsForm" (ngSubmit)="saveLotSettings()" class="mt-6 rounded-lg border border-gr-border bg-gr-surface p-6">
+    <h2 class="mb-1 text-lg font-semibold text-gr-text">Códigos de lote</h2>
+    <p class="mb-5 text-sm text-gr-sub">Cómo se arman los códigos sugeridos para producción y compras.</p>
+
+    <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
+      <div>
+        <label class="mb-1.5 block text-sm font-medium text-gr-sub">Modo de lote</label>
+        <select
+          formControlName="lotCodeMode"
+          class="w-full rounded-sm border border-gr-border bg-gr-surface px-3.5 py-2.5 text-gr-text transition focus:border-gr-primary focus:outline-none focus:ring-2 focus:ring-gr-primary/30"
+        >
+          <option value="auto">Automático</option>
+          <option value="manual">Manual</option>
+        </select>
+        <p class="mt-1.5 text-xs text-gr-muted">Automático autoasigna el lote si se deja vacío.</p>
+      </div>
+      <div>
+        <label class="mb-1.5 block text-sm font-medium text-gr-sub">Prefijo MP</label>
+        <input
+          type="text" formControlName="lotCodePrefixMp" placeholder="MP"
+          class="w-full rounded-sm border border-gr-border bg-gr-surface px-3.5 py-2.5 text-gr-text placeholder-gr-muted transition focus:border-gr-primary focus:outline-none focus:ring-2 focus:ring-gr-primary/30"
+        >
+      </div>
+      <div>
+        <label class="mb-1.5 block text-sm font-medium text-gr-sub">Prefijo PT</label>
+        <input
+          type="text" formControlName="lotCodePrefixPt" placeholder="PT"
+          class="w-full rounded-sm border border-gr-border bg-gr-surface px-3.5 py-2.5 text-gr-text placeholder-gr-muted transition focus:border-gr-primary focus:outline-none focus:ring-2 focus:ring-gr-primary/30"
+        >
+      </div>
+    </div>
+
+    <label class="mt-4 flex w-fit cursor-pointer items-center gap-2.5">
+      <input type="checkbox" formControlName="includeProductCode" class="h-4 w-4 cursor-pointer accent-gr-primary-dark">
+      <span class="text-sm text-gr-sub">Incluir el código del producto en el lote</span>
+    </label>
+
+    <div class="mt-5 border-t border-gr-border-lite pt-5">
+      <button
+        type="submit"
+        [disabled]="savingLotSettings()"
+        class="rounded-sm bg-gr-primary-dark px-5 py-2.5 font-semibold text-gr-primary-lite transition hover:brightness-95 disabled:cursor-not-allowed disabled:opacity-60"
+      >
+        {{ savingLotSettings() ? 'Guardando...' : 'Guardar' }}
+      </button>
+    </div>
+  </form>
 }

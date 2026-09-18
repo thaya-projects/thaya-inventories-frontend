@@ -14,6 +14,9 @@ export interface PurchaseItemResponse {
   quantity: number;
   unitCost: number;
   total: number;
+  // Texto libre, sin validación de formato/unicidad. Al recibir la compra,
+  // el movimiento In generado copia este valor automáticamente.
+  lotOrSerial: string | null;
 }
 
 export interface Purchase {
@@ -54,6 +57,8 @@ export interface PurchaseItemRequest {
   unitOfMeasureId: string | null;
   quantity: number;
   unitCost: number;
+  // Opcional, máx. 40 caracteres — texto libre, aunque se genere con /api/lots/next.
+  lotOrSerial?: string | null;
 }
 
 export interface SavePurchaseRequest {

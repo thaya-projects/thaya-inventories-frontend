@@ -77,10 +77,11 @@ export class Dashboard {
   primaryAction = computed<{ label: string; route: string; queryParams?: Record<string, string> }>(() => {
     // Warehouse: "Nueva entrada" queda bloqueada si la empresa usa
     // multi-almacén (ver movement-form-modal) — Compras siempre funciona, así
-    // que es el CTA seguro para ese rol. "Nueva compra"/"Nueva venta" ya no
-    // son páginas — se abren por modal desde sus listados (ver ?new=true).
+    // que es el CTA seguro para ese rol. "Nueva compra" ya no es una página —
+    // se abre por modal desde purchases-list (ver ?new=true). "Nueva venta"
+    // sí es página.
     if (this.isWarehouse()) return { label: 'Nueva compra', route: '/purchases', queryParams: { new: 'true' } };
-    return { label: 'Nueva venta', route: '/sales', queryParams: { new: 'true' } };
+    return { label: 'Nueva venta', route: '/sales/new' };
   });
 
   constructor() {

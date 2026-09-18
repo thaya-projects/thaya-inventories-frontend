@@ -1,0 +1,106 @@
+<div class="mb-8 flex flex-wrap items-center justify-between gap-4">
+  <div>
+    <h1 class="text-2xl font-bold text-gr-text">Producción</h1>
+    <p class="mt-1 text-gr-sub">Órdenes de producción — consumo de materia prima y entrada de producto terminado.</p>
+  </div>
+  <button
+    type="button"
+    (click)="openCreateModal()"
+    class="cursor-pointer rounded-sm bg-gr-primary-dark px-4 py-2.5 font-semibold text-gr-primary-lite transition hover:brightness-95"
+  >
+    + Nueva orden
+  </button>
+</div>
+
+@if (showCreateModal()) {
+  <app-production-order-register-modal (close)="closeCreateModal()" (saved)="onOrderCreated($event)" />
+}
+
+@if (selectedOrderId(); as orderId) {
+  <app-production-order-detail-modal [orderId]="orderId" (close)="closeDetail()" (updated)="onOrderUpdated($event)" />
+}
+
+<div class="mb-6 flex flex-wrap gap-2">
+  <button
+    type="button" (click)="setFilter('all')"
+    class="cursor-pointer rounded-sm px-3.5 py-2 text-sm font-medium transition-colors"
+    [class]="statusFilter() === 'all' ? 'bg-gr-primary-dark text-gr-primary-lite' : 'text-gr-sub hover:bg-gr-bg'"
+  >
+    Todas
+  </button>
+  <button
+    type="button" (click)="setFilter('Planned')"
+    class="cursor-pointer rounded-sm px-3.5 py-2 text-sm font-medium transition-colors"
+    [class]="statusFilter() === 'Planned' ? 'bg-gr-primary-dark text-gr-primary-lite' : 'text-gr-sub hover:bg-gr-bg'"
+  >
+    Planificadas
+  </button>
+  <button
+    type="button" (click)="setFilter('InProgress')"
+    class="cursor-pointer rounded-sm px-3.5 py-2 text-sm font-medium transition-colors"
+    [class]="statusFilter() === 'InProgress' ? 'bg-gr-primary-dark text-gr-primary-lite' : 'text-gr-sub hover:bg-gr-bg'"
+  >
+    En proceso
+  </button>
+  <button
+    type="button" (click)="setFilter('Completed')"
+    class="cursor-pointer rounded-sm px-3.5 py-2 text-sm font-medium transition-colors"
+    [class]="statusFilter() === 'Completed' ? 'bg-gr-primary-dark text-gr-primary-lite' : 'text-gr-sub hover:bg-gr-bg'"
+  >
+    Completadas
+  </button>
+  <button
+    type="button" (click)="setFilter('Cancelled')"
+    class="cursor-pointer rounded-sm px-3.5 py-2 text-sm font-medium transition-colors"
+    [class]="statusFilter() === 'Cancelled' ? 'bg-gr-primary-dark text-gr-primary-lite' : 'text-gr-sub hover:bg-gr-bg'"
+  >
+    Canceladas
+  </button>
+</div>
+
+@if (errorMessage()) {
+  <div class="mb-6 rounded-sm border border-gr-danger/20 bg-gr-danger-bg px-4 py-3 text-sm text-gr-danger">
+    {{ errorMessage() }}
+  </div>
+}
+
+@if (loading()) {
+  <p class="text-gr-sub">Cargando órdenes de producción...</p>
+} @else {
+  <app-data-table
+    [columns]="columns()"
+    [rows]="orders()"
+    [serverSide]="true"
+    [currentPage]="page()"
+    [totalItems]="totalCount()"
+    [pageSize]="pageSize()"
+    (pageChange)="onPageChange($event)"
+    (pageSizeChange)="onPageSizeChange($event)"
+    emptyMessage="No hay órdenes de producción registradas todavía."
+  />
+}
+
+<ng-template #dateTpl let-o>
+  {{ o.date | date: 'dd/MM/yyyy' }}
+</ng-template>
+
+<ng-template #statusTpl let-o>
+  <div class="flex flex-wrap items-center gap-1.5">
+    <span class="rounded-full px-2.5 py-0.5 text-xs font-medium" [class]="statusBadgeClass(o.status)">
+      {{ statusLabel(o.status) }}
+    </span>
+    @if (hasInsufficientStock(o)) {
+      <span class="rounded-full bg-gr-danger-bg px-2.5 py-0.5 text-xs font-medium text-gr-danger">
+        Stock MP insuficiente
+      </span>
+    }
+  </div>
+</ng-template>
+
+<ng-template #actionsTpl let-o>
+  <div class="flex items-center justify-end gap-3">
+    <button type="button" (click)="openDetail(o)" class="cursor-pointer text-sm font-medium text-gr-primary transition hover:text-gr-gold">
+      Ver
+    </button>
+  </div>
+</ng-template>

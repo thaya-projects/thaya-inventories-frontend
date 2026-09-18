@@ -1,4 +1,16 @@
-<app-modal [title]="orderId() ? 'Editar venta' : 'Nueva venta'" size="xl" (close)="close.emit()">
+<div class="mx-auto max-w-4xl">
+  <a routerLink="/sales" class="mb-6 inline-flex items-center gap-1.5 text-sm font-medium text-gr-sub transition hover:text-gr-text">
+    <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <polyline points="15 18 9 12 15 6"/>
+    </svg>
+    Volver a ventas
+  </a>
+
+  <div class="mb-8">
+    <h1 class="text-2xl font-bold text-gr-text">{{ isEditMode ? 'Editar venta' : 'Nueva venta' }}</h1>
+    <p class="mt-1 text-gr-sub">La remisión se genera automáticamente</p>
+  </div>
+
   <app-wizard-stepper [steps]="stepLabels" [currentStep]="step()" />
 
   @if (errorMessage()) {
@@ -15,8 +27,18 @@
       @if (step() === 1) {
         <div class="space-y-6">
           <div class="rounded-lg border border-gr-border bg-gr-surface p-6">
-            <h2 class="text-lg font-semibold text-gr-text">¿A quién le vendemos?</h2>
-            <p class="mb-4 text-sm text-gr-sub">Selecciona o busca el cliente.</p>
+            <div class="mb-4 flex items-start justify-between gap-4">
+              <div>
+                <h2 class="text-lg font-semibold text-gr-text">¿A quién le vendemos?</h2>
+                <p class="text-sm text-gr-sub">Selecciona o busca el cliente.</p>
+              </div>
+              <button
+                type="button" (click)="openCustomerModal()"
+                class="shrink-0 cursor-pointer rounded-sm bg-gr-bg px-3.5 py-2 text-sm font-medium text-gr-sub transition hover:bg-gr-border-lite hover:text-gr-text"
+              >
+                + Nuevo cliente
+              </button>
+            </div>
 
             <input
               type="text" placeholder="Buscar por nombre o ciudad..."
@@ -65,9 +87,9 @@
         </div>
 
         <div class="mt-8 flex items-center justify-between border-t border-gr-border-lite pt-5">
-          <button type="button" (click)="close.emit()" class="rounded-sm px-4 py-2.5 font-medium text-gr-sub transition hover:text-gr-text">
+          <a routerLink="/sales" class="rounded-sm px-4 py-2.5 font-medium text-gr-sub transition hover:text-gr-text">
             Cancelar
-          </button>
+          </a>
           <button
             type="button" (click)="next()"
             class="rounded-sm bg-gr-primary-dark px-5 py-2.5 font-semibold text-gr-primary-lite transition hover:brightness-95"
@@ -205,7 +227,8 @@
                           </button>
                           <input
                             type="number" step="any" formControlName="quantity"
-                            class="w-full rounded-sm border border-gr-border bg-gr-surface px-3 py-2 text-gr-text transition focus:border-gr-primary focus:outline-none focus:ring-2 focus:ring-gr-primary/30"
+                            class="w-full rounded-sm border bg-gr-surface px-3 py-2 text-gr-text transition focus:outline-none focus:ring-2"
+                            [class]="exceedsStock(i) ? 'border-gr-danger focus:border-gr-danger focus:ring-gr-danger/30' : 'border-gr-border focus:border-gr-primary focus:ring-gr-primary/30'"
                           >
                           <button
                             type="button" (click)="incrementProduct(productFor(item.get('productId')!.value)!)"
@@ -215,6 +238,9 @@
                             +
                           </button>
                         </div>
+                        @if (exceedsStock(i)) {
+                          <p class="mt-1.5 text-xs text-gr-danger">No alcanza el stock — quedarían {{ stockRemaining(i) }} {{ productFor(item.get('productId')!.value)?.unitOfMeasureName ?? '' }}</p>
+                        }
                       </div>
                       <div>
                         <label class="mb-1.5 block text-xs font-medium text-gr-sub">Precio unit. (Bs)</label>
@@ -231,6 +257,15 @@
                   </div>
                 }
               </div>
+            </div>
+          }
+
+          @if (hasStockIssue()) {
+            <div class="flex items-start gap-2 rounded-sm border border-gr-warning/20 bg-gr-warning-bg px-4 py-3 text-sm text-gr-warning">
+              <svg class="mt-0.5 h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z"/>
+              </svg>
+              <span>Esta venta se puede guardar como pedido. No se podrá despachar hasta que haya stock.</span>
             </div>
           }
 
@@ -399,6 +434,15 @@
               </div>
             }
           </div>
+
+          @if (hasStockIssue()) {
+            <div class="flex items-start gap-2 rounded-sm border border-gr-warning/20 bg-gr-warning-bg px-4 py-3 text-sm text-gr-warning">
+              <svg class="mt-0.5 h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z"/>
+              </svg>
+              <span>Esta venta se puede guardar como pedido. No se podrá despachar hasta que haya stock.</span>
+            </div>
+          }
         </div>
 
         <div class="mt-8 flex items-center justify-between border-t border-gr-border-lite pt-5">
@@ -417,11 +461,15 @@
               </svg>
               Guardando…
             } @else {
-              {{ orderId() ? 'Guardar cambios' : 'Confirmar venta' }}
+              {{ isEditMode ? 'Guardar cambios' : 'Confirmar venta' }}
             }
           </button>
         </div>
       }
     </form>
   }
-</app-modal>
+</div>
+
+@if (showCustomerModal()) {
+  <app-customer-form-modal (close)="closeCustomerModal()" (saved)="onCustomerCreated($event)" />
+}

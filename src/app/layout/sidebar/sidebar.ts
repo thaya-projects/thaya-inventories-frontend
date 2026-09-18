@@ -78,6 +78,10 @@ export class Sidebar {
     const showSales = features.sales !== false;
     const showWarehouses = on(features.multiWarehouse) && on(settings.usesMultiWarehouse);
     const isAdmin = role === 'Admin';
+    // Producción: solo Admin/Warehouse, y solo si el plan la incluye Y la
+    // empresa tiene el módulo habilitado (si no, el backend rechaza todo con
+    // 400 — ver production-orders-list).
+    const showProduction = on(features.production) && on(settings.usesProduction) && (isAdmin || role === 'Warehouse');
 
     const inventoryChildren: NavChild[] = [
       { label: 'Productos', route: '/inventory/products' },
@@ -107,6 +111,7 @@ export class Sidebar {
     const items: NavItem[] = [{ label: 'Dashboard', route: '/dashboard', icon: 'grid' }];
     if (showInventory) items.push({ label: 'Inventario', icon: 'box', children: inventoryChildren });
     if (showPurchases) items.push({ label: 'Compras', icon: 'inbox', children: purchasesChildren });
+    if (showProduction) items.push({ label: 'Producción', route: '/production', icon: 'factory' });
     if (showSales) items.push({ label: 'Ventas', icon: 'cart', children: salesChildren });
     items.push({ label: 'Caja', icon: 'wallet', children: cashChildren });
     if (isAdmin) items.push({ label: 'Gastos', route: '/expenses', icon: 'card' });

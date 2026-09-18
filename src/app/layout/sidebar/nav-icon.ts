@@ -84,6 +84,13 @@ import { ChangeDetectionStrategy, Component, Input } from '@angular/core';
           <path d="M10 21a2 2 0 0 0 4 0"/>
         </svg>
       }
+      @case ('factory') {
+        <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+          <path d="M2 20h20"/>
+          <path d="M4 20V10l5 4v-4l5 4v-4l5 4v6"/>
+          <path d="M17 10V6l3 2v2"/>
+        </svg>
+      }
     }
   `,
   changeDetection: ChangeDetectionStrategy.OnPush,

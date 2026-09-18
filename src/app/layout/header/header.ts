@@ -26,7 +26,9 @@ const PAGE_NAMES: Record<string, string> = {
   '/inventory/movements':          'Movimientos',
   '/purchases':                'Compras',
   '/purchases/suppliers':      'Proveedores',
+  '/production':               'Producción',
   '/sales':                    'Ventas',
+  '/sales/new':                'Nueva venta',
   '/sales/customers':          'Clientes',
   '/cash/payments':            'Pagos',
   '/cash/methods':             'Métodos de pago',
@@ -69,8 +71,7 @@ export class Header {
     if (path.startsWith('/team/')) return 'Editar usuario';
     if (path.startsWith('/inventory/warehouses/')) return 'Editar almacén';
     if (path.endsWith('/kardex')) return 'Kardex';
-    if (path.startsWith('/purchases/')) return 'Detalle de compra';
-    if (path.startsWith('/sales/')) return 'Detalle de venta';
+    if (path.startsWith('/sales/') && path.endsWith('/edit')) return 'Editar venta';
     if (path.startsWith('/cash/payments/')) return 'Detalle de pago';
     if (path.startsWith('/expenses/')) return 'Detalle de gasto';
     return 'THAYA';

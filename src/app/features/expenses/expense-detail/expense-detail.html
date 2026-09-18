@@ -143,6 +143,16 @@
         ></textarea>
       </div>
 
+      <div>
+        <label class="flex cursor-pointer items-center gap-2 text-sm text-gr-text">
+          <input type="checkbox" formControlName="markAsPaid" class="h-4 w-4 rounded-sm border-gr-border text-gr-primary-dark focus:ring-gr-primary/30">
+          Ya está pagado
+        </label>
+        @if (!paymentForm.controls.markAsPaid.value) {
+          <p class="mt-1.5 text-xs text-gr-muted">Si no marcas esto, el pago quedará pendiente de pago en Caja.</p>
+        }
+      </div>
+
       <div class="flex items-center justify-end gap-3 pt-2">
         <button
           type="button" (click)="closePaymentModal()"
