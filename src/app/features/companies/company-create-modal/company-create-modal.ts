@@ -6,11 +6,12 @@ import { WizardStepper } from '../../../shared/wizard-stepper/wizard-stepper';
 import { CompaniesService } from '../../../core/services/companies';
 import { CreateCompanyResponse } from '../../../core/models/company.model';
 import { generatePassword } from '../../../shared/password-generator';
+import { MODULE_PRESET_OPTIONS, MODULE_PRESETS, ModulePreset, ModulePresetValue } from '../../../shared/module-preset';
 
 type WizardStep = 1 | 2 | 3;
 
 const STEP_FIELDS: Record<WizardStep, string[]> = {
-  1: ['companyName', 'industry', 'taxId'],
+  1: ['companyName', 'industry', 'taxId', 'modulePreset'],
   2: ['adminFullName', 'adminEmail', 'adminPassword'],
   3: ['planCode', 'trialDays'],
 };
@@ -41,16 +42,29 @@ export class CompanyCreateModal {
     { code: 'enterprise', name: 'Empresarial' },
   ];
 
+  presetOptions = MODULE_PRESET_OPTIONS;
+  presets = MODULE_PRESETS;
+
   form = this.fb.group({
     companyName: ['', Validators.required],
     industry: [''],
     taxId: [''],
+    modulePreset: [ModulePreset.inventory as ModulePresetValue, Validators.required],
+    usesLots: [true],
     adminFullName: ['', Validators.required],
     adminEmail: ['', [Validators.required, Validators.email]],
     adminPassword: ['', [Validators.required, Validators.minLength(8)]],
     planCode: [this.plans[0].code, Validators.required],
     trialDays: [15, [Validators.required, Validators.min(1)]],
   });
+
+  // "Solo compran y venden" nunca usa lotes (no se pregunta multi-almacén ni
+  // variantes en esta pantalla, tampoco). Al elegir producción/planta, el
+  // checkbox arranca ON por defecto — el usuario lo puede apagar.
+  onPresetChange(preset: ModulePresetValue) {
+    this.form.controls.modulePreset.setValue(preset);
+    this.form.controls.usesLots.setValue(preset !== ModulePreset.inventory);
+  }
 
   next() {
     const fields = STEP_FIELDS[this.step()];
@@ -73,7 +87,7 @@ export class CompanyCreateModal {
   }
 
   generate() {
-    this.form.controls.adminPassword.setValue(generatePassword(8));
+    this.form.controls.adminPassword.setValue(generatePassword());
     this.showPassword.set(true);
     this.copied.set(false);
   }
@@ -112,6 +126,8 @@ export class CompanyCreateModal {
         adminPassword: value.adminPassword!,
         planCode: value.planCode!,
         trialDays: value.trialDays!,
+        modulePreset: value.modulePreset!,
+        usesLots: value.modulePreset === ModulePreset.inventory ? false : !!value.usesLots,
       })
       .subscribe({
         next: res => this.created.emit(res),

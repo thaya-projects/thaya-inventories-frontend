@@ -74,7 +74,7 @@
         <div class="mb-4 flex items-center justify-between">
           <span class="font-medium text-gr-text">{{ sub.planName }}</span>
           <span class="rounded-full px-2.5 py-0.5 text-xs font-medium" [class]="statusBadgeClass(sub.status)">
-            {{ sub.status }}
+            {{ statusLabel(sub.status) }}
           </span>
         </div>
 
@@ -113,29 +113,16 @@
     }
   </div>
 
-  <!-- Configuración / módulos -->
+  <!-- Operación (solo lectura) -->
   <div class="mt-6 rounded-lg border border-gr-border bg-gr-surface p-6">
     <h2 class="mb-1 text-lg font-semibold text-gr-text">Configuración</h2>
-    <p class="mb-5 text-sm text-gr-sub">Se guarda al cambiar cada opción.</p>
+    <p class="mb-4 text-sm text-gr-sub">Qué módulos tiene habilitados tu empresa.</p>
 
-    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
-      @for (toggle of toggles; track toggle.key) {
-        <label class="flex cursor-pointer items-start justify-between gap-4 rounded-sm border border-gr-border-lite px-4 py-3.5">
-          <span>
-            <span class="block text-sm font-medium text-gr-text">{{ toggle.label }}</span>
-            <span class="block text-xs text-gr-muted">{{ toggle.hint }}</span>
-          </span>
-
-          <input
-            type="checkbox"
-            class="mt-0.5 h-4 w-4 shrink-0 cursor-pointer accent-gr-primary-dark disabled:cursor-not-allowed"
-            [checked]="isChecked(toggle.key)"
-            [disabled]="savingSetting() === toggle.key"
-            (change)="toggleSetting(toggle.key)"
-          />
-        </label>
-      }
+    <div class="rounded-sm border border-gr-border-lite bg-gr-bg px-4 py-3.5">
+      <span class="block text-xs font-medium tracking-wide text-gr-muted uppercase">Operación</span>
+      <span class="mt-1 block font-medium text-gr-text">{{ presetLabel() }}</span>
     </div>
+    <p class="mt-3 text-sm text-gr-sub">Para cambiar módulos, contactá a Thaya.</p>
   </div>
 
   <!-- Códigos de lote -->

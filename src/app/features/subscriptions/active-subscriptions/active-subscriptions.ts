@@ -5,7 +5,7 @@ import { DataTable, DataTableColumn } from '../../../shared/data-table/data-tabl
 import { Modal } from '../../../shared/modal/modal';
 import { ConfirmDialog } from '../../../shared/confirm-dialog/confirm-dialog';
 import { ToastService } from '../../../shared/toast/toast.service';
-import { subscriptionStatusBadgeClass } from '../../../shared/subscription-status';
+import { subscriptionStatusBadgeClass, subscriptionStatusLabel } from '../../../shared/subscription-status';
 import { CompanySubscriptionsService } from '../../../core/services/company-subscriptions';
 import { SubscriptionPaymentsService } from '../../../core/services/subscription-payments';
 import { SubscriptionPlansService } from '../../../core/services/subscription-plans';
@@ -30,6 +30,7 @@ export class ActiveSubscriptions {
   statusOptions = STATUS_OPTIONS;
   paymentMethods = PAYMENT_METHODS;
   statusBadgeClass = subscriptionStatusBadgeClass;
+  statusLabel = subscriptionStatusLabel;
 
   subscriptions = signal<CompanySubscription[]>([]);
   totalCount = signal(0);

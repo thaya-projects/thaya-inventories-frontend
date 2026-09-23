@@ -5,6 +5,7 @@ import { Modal } from '../../../shared/modal/modal';
 import { WizardStepper } from '../../../shared/wizard-stepper/wizard-stepper';
 import { SubscriptionPlansService } from '../../../core/services/subscription-plans';
 import { SavePlanRequest, SubscriptionPlan } from '../../../core/models/subscription-plan.model';
+import { MODULE_PRESET_OPTIONS, MODULE_PRESETS, ModulePresetValue, presetToFeatureFlags } from '../../../shared/module-preset';
 
 type WizardStep = 1 | 2 | 3 | 4;
 
@@ -41,6 +42,10 @@ export class PlanFormModal implements OnInit {
   loading = signal(false);
   submitting = signal(false);
   errorMessage = signal<string | null>(null);
+
+  presetOptions = MODULE_PRESET_OPTIONS;
+  presets = MODULE_PRESETS;
+  showAdvancedFeatures = signal(false);
 
   form = this.fb.group({
     code: ['', Validators.required],
@@ -82,6 +87,26 @@ export class PlanFormModal implements OnInit {
         this.loading.set(false);
       },
     });
+  }
+
+  // Onboarding consultora: elegir un preset rellena "features" con esas keys
+  // (mismo mapa que MODULE_PRESETS, traducido a nombres cortos — ver
+  // presetToFeatureFlags), sin pisar otras keys que el plan ya tuviera en su
+  // JSON (merge, no reemplazo — "features" es un objeto libre sin schema).
+  applyPreset(preset: ModulePresetValue) {
+    let current: Record<string, unknown> = {};
+    try {
+      current = JSON.parse(this.form.controls.featuresJson.value || '{}');
+    } catch {
+      current = {};
+    }
+
+    const merged = { ...current, ...presetToFeatureFlags(preset) };
+    this.form.controls.featuresJson.setValue(JSON.stringify(merged, null, 2));
+  }
+
+  toggleAdvancedFeatures() {
+    this.showAdvancedFeatures.update(v => !v);
   }
 
   next() {

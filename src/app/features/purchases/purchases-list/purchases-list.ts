@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, TemplateRef, computed, inject, signal, viewChild } from '@angular/core';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, RouterLink } from '@angular/router';
 import { DatePipe } from '@angular/common';
 import { DataTable, DataTableColumn } from '../../../shared/data-table/data-table';
 import { PurchasesService } from '../../../core/services/purchases';
@@ -25,7 +25,7 @@ const STATUS_BADGE_CLASS: Record<PurchaseStatus, string> = {
 
 @Component({
   selector: 'app-purchases-list',
-  imports: [DataTable, DatePipe, PurchaseFormModal, PurchaseDetailModal],
+  imports: [DataTable, DatePipe, RouterLink, PurchaseFormModal, PurchaseDetailModal],
   templateUrl: './purchases-list.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })

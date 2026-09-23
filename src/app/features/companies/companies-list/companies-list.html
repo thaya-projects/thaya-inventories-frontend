@@ -61,7 +61,7 @@
       class="w-fit rounded-full px-2 py-0.5 text-xs font-medium"
       [class]="statusBadgeClass(company.subscriptionStatus)"
     >
-      {{ company.subscriptionStatus }}
+      {{ statusLabel(company.subscriptionStatus) }}
     </span>
   </div>
 </ng-template>

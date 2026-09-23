@@ -3,6 +3,7 @@ import { inject } from '@angular/core';
 import { Router } from '@angular/router';
 import { Subject, catchError, switchMap, take, throwError } from 'rxjs';
 import { AuthService } from '../services/auth';
+import { environment } from '../../../environments/environment';
 
 // login/refresh no pasan por el ciclo 401→refresh→reintento (login no tiene
 // token todavía, refresh directamente no lo exige) y logout se excluye a
@@ -27,13 +28,17 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
   const auth = inject(AuthService);
   const router = inject(Router);
 
+  // Nunca adjuntar el token (ni disparar el ciclo de refresh) fuera de nuestro
+  // propio backend — evita que se filtre a un tercero si el día de mañana se
+  // agrega una llamada externa (mapas, analytics, etc.).
+  const isOwnApi = req.url.startsWith(environment.apiUrl);
   const token = auth.accessToken;
-  const authedReq = token ? withAuth(req, token) : req;
+  const authedReq = token && isOwnApi ? withAuth(req, token) : req;
   const isAuthEndpoint = AUTH_ENDPOINTS.some(path => req.url.includes(path));
 
   return next(authedReq).pipe(
     catchError((err: unknown) => {
-      if (isAuthEndpoint || !(err instanceof HttpErrorResponse) || err.status !== 401) {
+      if (!isOwnApi || isAuthEndpoint || !(err instanceof HttpErrorResponse) || err.status !== 401) {
         return throwError(() => err);
       }
 

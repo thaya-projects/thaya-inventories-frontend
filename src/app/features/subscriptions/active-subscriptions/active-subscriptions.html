@@ -19,7 +19,7 @@
       class="cursor-pointer rounded-sm px-3.5 py-2 text-sm font-medium transition-colors"
       [class]="statusFilter() === status ? 'bg-gr-primary-dark text-gr-primary-lite' : 'text-gr-sub hover:bg-gr-bg'"
     >
-      {{ status }}
+      {{ statusLabel(status) }}
     </button>
   }
 </div>
@@ -55,7 +55,7 @@
 
 <ng-template #statusTpl let-sub>
   <span class="w-fit rounded-full px-3 py-1 text-xs font-medium" [class]="statusBadgeClass(sub.status)">
-    {{ sub.status }}
+    {{ statusLabel(sub.status) }}
   </span>
 </ng-template>
 

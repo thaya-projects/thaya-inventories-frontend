@@ -3,13 +3,21 @@
     <h1 class="text-2xl font-bold text-gr-text">Compras</h1>
     <p class="mt-1 text-gr-sub">Órdenes de compra a proveedores.</p>
   </div>
-  <button
-    type="button"
-    (click)="openCreateModal()"
-    class="cursor-pointer rounded-sm bg-gr-primary-dark px-4 py-2.5 font-semibold text-gr-primary-lite transition hover:brightness-95"
-  >
-    + Nueva compra
-  </button>
+  <div class="flex items-center gap-3">
+    <a
+      routerLink="/purchases/suppliers"
+      class="rounded-sm bg-gr-bg px-4 py-2.5 font-semibold text-gr-sub transition hover:bg-gr-border-lite hover:text-gr-text"
+    >
+      Proveedores
+    </a>
+    <button
+      type="button"
+      (click)="openCreateModal()"
+      class="cursor-pointer rounded-sm bg-gr-primary-dark px-4 py-2.5 font-semibold text-gr-primary-lite transition hover:brightness-95"
+    >
+      + Nueva compra
+    </button>
+  </div>
 </div>
 
 @if (showCreateModal()) {

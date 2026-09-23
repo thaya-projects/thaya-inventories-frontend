@@ -57,6 +57,21 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./features/subscriptions/payments/payments').then(m => m.Payments),
       },
+      // El sidebar de SuperAdmin ya mostraba "Reportes"/"Configuración" sin
+      // ruta registrada (link muerto, caía al wildcard). Se reconectan acá al
+      // placeholder genérico — exactamente el caso para el que existe.
+      {
+        path: 'reportes',
+        canActivate: [roleGuard('SuperAdmin')],
+        loadComponent: () => import('./shared/coming-soon/coming-soon').then(m => m.ComingSoon),
+        data: { title: 'Reportes', description: 'Reportes de la plataforma — todavía sin API confirmada.' },
+      },
+      {
+        path: 'configuracion',
+        canActivate: [roleGuard('SuperAdmin')],
+        loadComponent: () => import('./shared/coming-soon/coming-soon').then(m => m.ComingSoon),
+        data: { title: 'Configuración', description: 'Configuración de la plataforma — todavía sin API confirmada.' },
+      },
 
       // --- Empresa (Fase 2) ---
       {

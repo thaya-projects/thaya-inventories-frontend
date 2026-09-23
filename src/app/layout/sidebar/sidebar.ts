@@ -15,6 +15,9 @@ interface NavItem {
   icon: string;
   route?: string;
   children?: NavChild[];
+  // Label del separador visual a pintar arriba de este ítem (ej. "Empresa") —
+  // solo se setea en el primer ítem de un grupo, no es un acordeón.
+  dividerBefore?: string;
 }
 
 // Menú del super_admin (plataforma). No depende de plan/suscripción de ninguna
@@ -35,10 +38,18 @@ const SUPER_ADMIN_NAV: NavItem[] = [
   { label: 'Configuración', route: '/configuracion', icon: 'settings' },
 ];
 
-// Menú del admin de empresa (Fase 2), filtrado por settings de la empresa y
-// features del plan contratado (ver buildAdminNav). Claves faltantes = false.
-// TODO: warehouse/assistant ven menos ítems que admin — falta confirmar qué
-// catálogos exactos pierden (por ahora solo se gatea Equipo/Mi empresa por rol).
+// Menú del admin de empresa, filtrado por settings de la empresa y features
+// del plan contratado (ver buildAdminNav). Claves faltantes = false.
+//
+// Rediseño "menú corto" (prompt UX Admin): el sidebar deja de ser un mapa del
+// backend — catálogos (clientes, proveedores, categorías, unidades,
+// almacenes, movimientos, métodos de pago) se navegan desde dentro de
+// Ventas/Compras/Inventario/Caja, no como ítems hermanos acá. Por rol:
+//   Admin: Inicio, Ventas, Compras, Inventario, Caja, Producción (si aplica),
+//          + grupo "Empresa" (Gastos, Equipo, Mi empresa).
+//   Warehouse: Inicio, Inventario, Compras, Ventas, Producción (si aplica).
+//          Sin Caja, sin grupo Empresa.
+//   Assistant: Inicio, Ventas, Caja. Sin Compras/Inventario/Producción/Empresa.
 
 @Component({
   selector: 'app-sidebar',
@@ -73,51 +84,40 @@ export class Sidebar {
     const features = this.companyContext.subscription()?.features ?? {};
     const on = (v: unknown) => v === true;
 
-    const showInventory = features.inventory !== false;
-    const showPurchases = features.purchases !== false;
-    const showSales = features.sales !== false;
-    const showWarehouses = on(features.multiWarehouse) && on(settings.usesMultiWarehouse);
     const isAdmin = role === 'Admin';
+    const isWarehouse = role === 'Warehouse';
+    const isAssistant = role === 'Assistant';
+
+    // Assistant: solo Ventas + Caja — sin catálogo/compras/producción.
+    const showInventory = features.inventory !== false && !isAssistant;
+    const showPurchases = features.purchases !== false && !isAssistant;
+    const showSales = features.sales !== false;
+    // Warehouse no maneja plata — sin Caja en su menú (igual conserva acceso
+    // por URL vía roleGuard, esto es solo navegación).
+    const showCash = !isWarehouse;
     // Producción: solo Admin/Warehouse, y solo si el plan la incluye Y la
     // empresa tiene el módulo habilitado (si no, el backend rechaza todo con
     // 400 — ver production-orders-list).
-    const showProduction = on(features.production) && on(settings.usesProduction) && (isAdmin || role === 'Warehouse');
+    const showProduction = on(features.production) && on(settings.usesProduction) && (isAdmin || isWarehouse);
 
-    const inventoryChildren: NavChild[] = [
-      { label: 'Productos', route: '/inventory/products' },
-      { label: 'Movimientos', route: '/inventory/movements' },
-      { label: 'Categorías', route: '/inventory/categories' },
-      { label: 'Unidades', route: '/inventory/units' },
-    ];
-    if (showWarehouses) {
-      inventoryChildren.push({ label: 'Almacenes', route: '/inventory/warehouses' });
-    }
-
-    const purchasesChildren: NavChild[] = [
-      { label: 'Órdenes', route: '/purchases' },
-      { label: 'Proveedores', route: '/purchases/suppliers' },
-    ];
-
-    const salesChildren: NavChild[] = [
-      { label: 'Órdenes', route: '/sales' },
-      { label: 'Clientes', route: '/sales/customers' },
-    ];
-
-    const cashChildren: NavChild[] = [{ label: 'Pagos', route: '/cash/payments' }];
-    if (isAdmin) {
-      cashChildren.push({ label: 'Métodos de pago', route: '/cash/methods' });
-    }
-
-    const items: NavItem[] = [{ label: 'Dashboard', route: '/dashboard', icon: 'grid' }];
-    if (showInventory) items.push({ label: 'Inventario', icon: 'box', children: inventoryChildren });
-    if (showPurchases) items.push({ label: 'Compras', icon: 'inbox', children: purchasesChildren });
+    // Orden: lo que genera plata primero (Ventas, Compras, Inventario, Caja),
+    // Producción después. Catálogos (clientes, proveedores, categorías,
+    // unidades, almacenes, movimientos, métodos de pago) ya no son ítems acá
+    // — se navegan desde dentro de cada pantalla (ver toolbars de
+    // sales-orders-list/purchases-list/products-list/payments-list).
+    const items: NavItem[] = [{ label: 'Inicio', route: '/dashboard', icon: 'grid' }];
+    if (showSales) items.push({ label: 'Ventas', route: '/sales', icon: 'cart' });
+    if (showPurchases) items.push({ label: 'Compras', route: '/purchases', icon: 'inbox' });
+    if (showInventory) items.push({ label: 'Inventario', route: '/inventory/products', icon: 'box' });
+    if (showCash) items.push({ label: 'Caja', route: '/cash/payments', icon: 'wallet' });
     if (showProduction) items.push({ label: 'Producción', route: '/production', icon: 'factory' });
-    if (showSales) items.push({ label: 'Ventas', icon: 'cart', children: salesChildren });
-    items.push({ label: 'Caja', icon: 'wallet', children: cashChildren });
-    if (isAdmin) items.push({ label: 'Gastos', route: '/expenses', icon: 'card' });
-    if (isAdmin) items.push({ label: 'Equipo', route: '/team', icon: 'users' });
-    if (isAdmin) items.push({ label: 'Mi empresa', route: '/company', icon: 'building' });
-    items.push({ label: 'Notificaciones', route: '/notifications', icon: 'bell' });
+
+    if (isAdmin) {
+      items.push({ label: 'Gastos', route: '/expenses', icon: 'card', dividerBefore: 'Empresa' });
+      items.push({ label: 'Equipo', route: '/team', icon: 'users' });
+      items.push({ label: 'Mi empresa', route: '/company', icon: 'building' });
+    }
+
     return items;
   }
 

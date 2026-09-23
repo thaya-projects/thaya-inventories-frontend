@@ -1,4 +1,14 @@
-// Confirmado con GET /api/platform/companies (respuesta real de backend).
+import { ModulePresetValue } from '../../shared/module-preset';
+import { CompanySettings } from './company-profile.model';
+
+// Confirmado contra el OpenAPI real (PlatformCompanyResponse) — GET
+// /api/platform/companies y GET /api/platform/companies/{id} comparten este
+// shape, ambos incluyen `settings` (antes no lo teníamos tipado acá).
+//
+// isActive: el backend lo devuelve pero HOY NO HAY forma de cambiarlo — no
+// existe ningún endpoint activate/deactivate/PUT para una empresa de
+// plataforma (confirmado contra el spec real, no hay ni siquiera un intento
+// con otro nombre). El botón de company-detail-modal se sacó por eso.
 export interface Company {
   id: string;
   name: string;
@@ -11,6 +21,7 @@ export interface Company {
   trialEndsAt: string | null;
   currentPeriodEnd: string | null;
   createdAt: string;
+  settings: Partial<CompanySettings>;
 }
 
 export interface CompanyListFilters {
@@ -18,9 +29,10 @@ export interface CompanyListFilters {
   isActive?: boolean;
 }
 
-// Confirmado con POST /api/platform/companies. Requeridos: companyName,
-// adminFullName, adminEmail, adminPassword, planCode, trialDays.
-// industry/taxId son opcionales.
+// Confirmado contra el OpenAPI real (CreatePlatformCompanyHttpRequest):
+// companyName, adminFullName, adminEmail, adminPassword, planCode son
+// requeridos; industry/taxId/modulePreset/usesLots son nullable del lado del
+// back (opcionales), pero el front siempre los manda.
 export interface CreateCompanyRequest {
   companyName: string;
   industry?: string;
@@ -30,6 +42,16 @@ export interface CreateCompanyRequest {
   adminPassword: string;
   planCode: string;
   trialDays: number;
+  modulePreset: ModulePresetValue;
+  usesLots: boolean;
+}
+
+// Confirmado contra el OpenAPI real (ChangeCompanyModulePresetHttpRequest) —
+// PATCH /api/platform/companies/{id}/module-preset. Devuelve el Company
+// completo actualizado (mismo shape que GET).
+export interface ChangeCompanyModulePresetRequest {
+  modulePreset: ModulePresetValue;
+  usesLots: boolean;
 }
 
 export interface CreateCompanyResponse {
