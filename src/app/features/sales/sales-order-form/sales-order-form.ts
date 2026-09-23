@@ -33,6 +33,16 @@ interface ItemSeed {
   unitPrice: number;
 }
 
+// Shape real de itemsArray.getRawValue() — newItemGroup() más abajo define
+// exactamente estos controles.
+interface ItemFormValue {
+  id: string | null;
+  productId: string;
+  unitOfMeasureId: string;
+  quantity: number;
+  unitPrice: number;
+}
+
 type WizardStep = 1 | 2 | 3;
 
 @Component({
@@ -346,7 +356,7 @@ export class SalesOrderForm {
       freightAmount: value.freightAmount ?? 0,
       transporterId: value.transporterId || null,
       notes: value.notes || null,
-      items: value.items!.map((item: any) => ({
+      items: (value.items as unknown as ItemFormValue[]).map(item => ({
         // En alta no se manda id — solo en edición (id presente = actualiza, null = línea nueva).
         ...(this.isEditMode ? { id: item.id ?? null } : {}),
         productId: item.productId,

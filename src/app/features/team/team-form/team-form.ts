@@ -82,7 +82,7 @@ export class TeamForm {
   }
 
   generate() {
-    this.form.controls.password.setValue(generatePassword(8));
+    this.form.controls.password.setValue(generatePassword());
     this.showPassword.set(true);
     this.copied.set(false);
   }

@@ -38,6 +38,29 @@
             >
           </div>
         </div>
+
+        <div>
+          <label class="mb-1.5 block text-sm font-medium text-gr-sub">Tipo de operación</label>
+          <div class="grid grid-cols-1 gap-3">
+            @for (preset of presetOptions; track preset) {
+              <button
+                type="button" (click)="onPresetChange(preset)"
+                class="cursor-pointer rounded-sm border-2 px-4 py-3 text-left transition"
+                [class]="form.controls.modulePreset.value === preset ? 'border-gr-primary-dark bg-gr-primary-lite/30' : 'border-gr-border-lite hover:bg-gr-bg'"
+              >
+                <span class="block font-medium text-gr-text">{{ presets[preset].label }}</span>
+                <span class="block text-xs text-gr-muted">{{ presets[preset].hint }}</span>
+              </button>
+            }
+          </div>
+
+          @if (form.controls.modulePreset.value !== 'inventory') {
+            <label class="mt-3 flex w-fit cursor-pointer items-center gap-2.5">
+              <input type="checkbox" formControlName="usesLots" class="h-4 w-4 cursor-pointer accent-gr-primary-dark">
+              <span class="text-sm text-gr-sub">Usan lotes / vencimiento</span>
+            </label>
+          }
+        </div>
       </div>
     }
 

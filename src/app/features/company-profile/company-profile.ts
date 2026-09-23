@@ -3,24 +3,9 @@ import { DatePipe } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { CompanyService } from '../../core/services/company';
 import { CompanyContextService } from '../../core/services/company-context';
-import { CompanySettings } from '../../core/models/company-profile.model';
 import { ToastService } from '../../shared/toast/toast.service';
-import { subscriptionStatusBadgeClass } from '../../shared/subscription-status';
-
-interface SettingToggle {
-  key: keyof CompanySettings;
-  label: string;
-  hint: string;
-}
-
-const SETTINGS_TOGGLES: SettingToggle[] = [
-  { key: 'usesMultiWarehouse', label: 'Multi-almacén', hint: 'Habilita el módulo de Almacenes en Inventario.' },
-  { key: 'usesProduction', label: 'Producción', hint: 'Órdenes de producción y consumo de insumos.' },
-  { key: 'usesLots', label: 'Lotes', hint: 'Seguimiento de productos por lote.' },
-  { key: 'usesVariants', label: 'Variantes', hint: 'Productos con variantes (talla, color, etc).' },
-  { key: 'usesWeight', label: 'Peso', hint: 'Productos que se venden o compran por peso.' },
-  { key: 'usesLoaders', label: 'Cargadores', hint: 'Asignar cargadores a movimientos de almacén.' },
-];
+import { subscriptionStatusBadgeClass, subscriptionStatusLabel } from '../../shared/subscription-status';
+import { MODULE_PRESETS, inferPreset } from '../../shared/module-preset';
 
 @Component({
   selector: 'app-company-profile',
@@ -39,10 +24,13 @@ export class CompanyProfilePage {
   loading = this.companyContext.loading;
 
   statusBadgeClass = subscriptionStatusBadgeClass;
-  toggles = SETTINGS_TOGGLES;
+  statusLabel = subscriptionStatusLabel;
+
+  // Onboarding consultora: el Admin ya no prende/apaga módulos — solo ve qué
+  // paquete tiene, inferido de los settings que ya vinieron con la empresa.
+  presetLabel = computed(() => MODULE_PRESETS[inferPreset(this.company()?.settings)].label);
 
   savingProfile = signal(false);
-  savingSetting = signal<string | null>(null);
   savingLotSettings = signal(false);
 
   form = this.fb.nonNullable.group({
@@ -94,30 +82,6 @@ export class CompanyProfilePage {
         lotCodePrefixPt: c.settings.lotCodePrefixPt || 'PT',
         includeProductCode: c.settings.includeProductCode === true,
       });
-    });
-  }
-
-  isChecked(key: keyof CompanySettings): boolean {
-    return this.company()?.settings[key] === true;
-  }
-
-  toggleSetting(key: keyof CompanySettings) {
-    const current = this.company();
-    if (!current || this.savingSetting()) return;
-
-    this.savingSetting.set(key);
-    const nextSettings = { ...current.settings, [key]: !this.isChecked(key) };
-
-    this.companyService.updateSettings({ settings: nextSettings }).subscribe({
-      next: updated => {
-        this.companyContext.setCompany(updated);
-        this.savingSetting.set(null);
-        this.toast.success('Configuración actualizada.');
-      },
-      error: () => {
-        this.savingSetting.set(null);
-        this.toast.error('No se pudo actualizar la configuración.');
-      },
     });
   }
 

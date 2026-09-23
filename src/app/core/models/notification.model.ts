@@ -104,12 +104,16 @@ export function routeForNotification(n: Notification): string | null {
 
   if (sourceType && id) {
     switch (sourceType) {
+      // Product no tiene página de detalle — se edita por modal desde
+      // products-list (mismo patrón que el link de "Stock bajo" del dashboard).
       case NotificationSourceType.Product:
-        return `/inventory/products/${id}`;
+        return `/inventory/products?edit=${encodeURIComponent(id)}`;
+      // SalesOrder/Purchase: el detalle ya no es página — "Ver" abre un modal
+      // desde el listado vía ?view=<id> (ver app.routes.ts).
       case NotificationSourceType.SalesOrder:
-        return `/sales/${id}`;
+        return `/sales?view=${encodeURIComponent(id)}`;
       case NotificationSourceType.Purchase:
-        return `/purchases/${id}`;
+        return `/purchases?view=${encodeURIComponent(id)}`;
       case NotificationSourceType.Payment:
         return '/cash/payments';
       case NotificationSourceType.Expense:

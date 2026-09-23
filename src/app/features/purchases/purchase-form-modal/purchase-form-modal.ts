@@ -26,6 +26,17 @@ interface ItemSeed {
   lotOrSerial?: string | null;
 }
 
+// Shape real de itemsArray.getRawValue() — newItemGroup() más abajo define
+// exactamente estos controles.
+interface ItemFormValue {
+  id: string | null;
+  productId: string;
+  unitOfMeasureId: string;
+  quantity: number;
+  unitCost: number;
+  lotOrSerial: string;
+}
+
 @Component({
   selector: 'app-purchase-form-modal',
   imports: [ReactiveFormsModule, Modal, LotCodeField],
@@ -217,7 +228,7 @@ export class PurchaseFormModal implements OnInit {
       supplierId: value.supplierId!,
       discount: value.discount ?? 0,
       notes: value.notes || null,
-      items: value.items!.map((item: any) => ({
+      items: (value.items as unknown as ItemFormValue[]).map(item => ({
         // En alta no se manda id — solo en edición (id presente = actualiza, null = línea nueva).
         ...(id ? { id: item.id ?? null } : {}),
         productId: item.productId,

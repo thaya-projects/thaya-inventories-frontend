@@ -1,7 +1,6 @@
 import { ChangeDetectionStrategy, Component, OnInit, computed, inject, input, output, signal } from '@angular/core';
 import { FormArray, FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { HttpErrorResponse } from '@angular/common/http';
-import { forkJoin } from 'rxjs';
 import { Modal } from '../../../shared/modal/modal';
 import { LotCodeField } from '../../../shared/lot-code-field/lot-code-field';
 import { ProductionOrdersService } from '../../../core/services/production-orders';
@@ -15,6 +14,17 @@ const PRODUCTS_PAGE_SIZE = 200;
 
 interface ConsumptionSeed {
   id?: string | null;
+  productId: string;
+  unitOfMeasureId: string;
+  quantity: number;
+  wasteQuantity: number;
+  unitCost: number | null;
+}
+
+// Shape real de consumptionsArray.getRawValue() — el fb.group() más abajo
+// define exactamente estos controles.
+interface ConsumptionFormValue {
+  id: string | null;
   productId: string;
   unitOfMeasureId: string;
   quantity: number;
@@ -218,7 +228,7 @@ export class ProductionOrderFormModal implements OnInit {
       referencePrice: value.referencePrice,
       wasteQuantity: value.wasteQuantity ?? 0,
       wasteNotes: value.wasteNotes || null,
-      consumptions: value.consumptions!.map((c: any) => ({
+      consumptions: (value.consumptions as unknown as ConsumptionFormValue[]).map(c => ({
         ...(id ? { id: c.id ?? null } : {}),
         productId: c.productId,
         variantId: null,

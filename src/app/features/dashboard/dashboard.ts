@@ -74,14 +74,31 @@ export class Dashboard {
   showDispatchList = computed(() => true);
   showPaymentsList = computed(() => this.isCompanyAdmin() || this.isAssistant());
 
-  primaryAction = computed<{ label: string; route: string; queryParams?: Record<string, string> }>(() => {
-    // Warehouse: "Nueva entrada" queda bloqueada si la empresa usa
-    // multi-almacén (ver movement-form-modal) — Compras siempre funciona, así
-    // que es el CTA seguro para ese rol. "Nueva compra" ya no es una página —
-    // se abre por modal desde purchases-list (ver ?new=true). "Nueva venta"
-    // sí es página.
-    if (this.isWarehouse()) return { label: 'Nueva compra', route: '/purchases', queryParams: { new: 'true' } };
-    return { label: 'Nueva venta', route: '/sales/new' };
+  // "Inicio con botones gordos" (prompt UX Admin): hasta 4 acciones grandes
+  // según rol, en vez de un solo CTA chico arriba a la derecha. Admin ve las
+  // 4 (está en ambos grupos); Assistant/Warehouse ven solo lo suyo.
+  quickActions = computed<{ label: string; route: string; queryParams?: Record<string, string>; tone: 'primary' | 'warning' }[]>(() => {
+    const actions: { label: string; route: string; queryParams?: Record<string, string>; tone: 'primary' | 'warning' }[] = [];
+
+    if (this.isCompanyAdmin() || this.isAssistant()) {
+      actions.push({ label: 'Nueva venta', route: '/sales/new', tone: 'primary' });
+      actions.push({
+        label: 'Por cobrar',
+        route: '/cash/payments',
+        queryParams: { sourceType: 'SalesOrder', status: 'Pending' },
+        tone: 'warning',
+      });
+    }
+    if (this.isCompanyAdmin() || this.isWarehouse()) {
+      // "Nueva compra", no "nueva entrada" — una entrada de movimiento queda
+      // bloqueada si la empresa usa multi-almacén (ver movement-form-modal),
+      // compras siempre funciona. Ya no es página — abre por modal desde
+      // purchases-list (ver ?new=true).
+      actions.push({ label: 'Nueva compra', route: '/purchases', queryParams: { new: 'true' }, tone: 'primary' });
+      actions.push({ label: 'Stock bajo', route: '/inventory/products', tone: 'warning' });
+    }
+
+    return actions;
   });
 
   constructor() {
@@ -105,7 +122,9 @@ export class Dashboard {
   onCompanyCreated(res: CreateCompanyResponse) {
     this.showCreateModal.set(false);
     this.toast.success(`Empresa "${res.companyName}" creada.`);
-    this.router.navigate(['/companies', res.companyId]);
+    // 'companies/:id' ya no es página — el detalle es un modal desde
+    // companies-list, abierto vía ?view=<id>.
+    this.router.navigate(['/companies'], { queryParams: { view: res.companyId } });
   }
 
   private loadSuperAdmin() {

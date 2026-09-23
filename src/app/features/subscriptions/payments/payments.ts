@@ -2,7 +2,7 @@ import { ChangeDetectionStrategy, Component, TemplateRef, computed, inject, sign
 import { DatePipe } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import { DataTable, DataTableColumn } from '../../../shared/data-table/data-table';
-import { paymentStatusBadgeClass } from '../../../shared/payment-status';
+import { paymentStatusBadgeClass, paymentStatusLabel } from '../../../shared/payment-status';
 import { ToastService } from '../../../shared/toast/toast.service';
 import { SubscriptionPaymentsService } from '../../../core/services/subscription-payments';
 import { CompanySubscriptionsService } from '../../../core/services/company-subscriptions';
@@ -23,6 +23,7 @@ export class Payments {
 
   statusOptions = STATUS_OPTIONS;
   statusBadgeClass = paymentStatusBadgeClass;
+  statusLabel = paymentStatusLabel;
 
   payments = signal<SubscriptionPayment[]>([]);
   totalCount = signal(0);

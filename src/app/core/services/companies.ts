@@ -3,6 +3,7 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import {
+  ChangeCompanyModulePresetRequest,
   Company,
   CompanyListFilters,
   CreateCompanyRequest,
@@ -40,8 +41,10 @@ export class CompaniesService {
     return this.http.get<Company>(`${BASE_URL}/${id}`);
   }
 
-  setActive(id: string, isActive: boolean): Observable<Company> {
-    return this.http.put<Company>(`${BASE_URL}/${id}`, { isActive });
+  // PATCH /platform/companies/{id}/module-preset — confirmado contra el
+  // OpenAPI real. Devuelve la empresa completa actualizada.
+  changeModulePreset(id: string, payload: ChangeCompanyModulePresetRequest): Observable<Company> {
+    return this.http.patch<Company>(`${BASE_URL}/${id}/module-preset`, payload);
   }
 
   resetAdminPassword(

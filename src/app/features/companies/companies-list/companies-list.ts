@@ -1,11 +1,12 @@
 import { ChangeDetectionStrategy, Component, TemplateRef, computed, inject, signal, viewChild } from '@angular/core';
+import { ActivatedRoute } from '@angular/router';
 import { DatePipe } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import { DataTable, DataTableColumn } from '../../../shared/data-table/data-table';
 import { SearchInput } from '../../../shared/search-input/search-input';
 import { CompaniesService } from '../../../core/services/companies';
 import { Company, CreateCompanyResponse } from '../../../core/models/company.model';
-import { subscriptionStatusBadgeClass } from '../../../shared/subscription-status';
+import { subscriptionStatusBadgeClass, subscriptionStatusLabel } from '../../../shared/subscription-status';
 import { CompanyCreateModal } from '../company-create-modal/company-create-modal';
 import { CompanyDetailModal } from '../company-detail-modal/company-detail-modal';
 import { ToastService } from '../../../shared/toast/toast.service';
@@ -21,6 +22,7 @@ const SEARCH_DEBOUNCE_MS = 400;
 export class CompaniesList {
   private companiesService = inject(CompaniesService);
   private toast = inject(ToastService);
+  private route = inject(ActivatedRoute);
 
   showCreateModal = signal(false);
   selectedCompany = signal<Company | null>(null);
@@ -50,6 +52,16 @@ export class CompaniesList {
 
   constructor() {
     this.load();
+
+    // Permite llegar con el detalle de una empresa puntual ya abierto
+    // (?view=<id>) — usado por el dashboard tras crear una empresa nueva.
+    const viewId = this.route.snapshot.queryParamMap.get('view');
+    if (viewId) {
+      this.companiesService.get(viewId).subscribe({
+        next: company => this.selectedCompany.set(company),
+        error: () => { /* no bloquea el listado si el id no carga */ },
+      });
+    }
   }
 
   private load() {
@@ -80,6 +92,7 @@ export class CompaniesList {
   }
 
   statusBadgeClass = subscriptionStatusBadgeClass;
+  statusLabel = subscriptionStatusLabel;
 
   onSearch(value: string) {
     this.search.set(value);

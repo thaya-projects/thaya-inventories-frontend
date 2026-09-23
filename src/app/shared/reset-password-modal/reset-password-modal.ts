@@ -58,7 +58,7 @@ export class ResetPasswordModal implements OnInit {
   }
 
   generate() {
-    const value = generatePassword(8);
+    const value = generatePassword();
     this.form.patchValue({ password: value, confirmPassword: value });
     this.showPassword.set(true);
     this.mismatch.set(false);
