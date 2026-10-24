@@ -1,0 +1,216 @@
+<div class="mb-6">
+  <h1 class="text-2xl font-bold text-gr-text">Rentabilidad</h1>
+  <p class="mt-1 text-gr-sub">Ingresos, costos y utilidad en el período seleccionado.</p>
+</div>
+
+<div class="mb-6 flex flex-wrap items-end gap-3 rounded-lg border border-gr-border bg-gr-surface p-4">
+  <div>
+    <label for="from" class="mb-1.5 block text-xs font-medium text-gr-sub">Desde</label>
+    <input
+      id="from" type="date" [(ngModel)]="from" name="from"
+      class="rounded-sm border border-gr-border bg-gr-surface px-3 py-2 text-sm text-gr-text focus:border-gr-primary focus:outline-none focus:ring-2 focus:ring-gr-primary/30"
+    >
+  </div>
+  <div>
+    <label for="to" class="mb-1.5 block text-xs font-medium text-gr-sub">Hasta</label>
+    <input
+      id="to" type="date" [(ngModel)]="to" name="to"
+      class="rounded-sm border border-gr-border bg-gr-surface px-3 py-2 text-sm text-gr-text focus:border-gr-primary focus:outline-none focus:ring-2 focus:ring-gr-primary/30"
+    >
+  </div>
+  <div>
+    <label for="groupBy" class="mb-1.5 block text-xs font-medium text-gr-sub">Agrupar por</label>
+    <select
+      id="groupBy" [(ngModel)]="groupBy" name="groupBy"
+      class="rounded-sm border border-gr-border bg-gr-surface px-3 py-2 text-sm text-gr-text focus:border-gr-primary focus:outline-none focus:ring-2 focus:ring-gr-primary/30"
+    >
+      @for (opt of groupByOptions; track opt.value) {
+        <option [value]="opt.value">{{ opt.label }}</option>
+      }
+    </select>
+  </div>
+  <button
+    type="button" (click)="load()"
+    class="cursor-pointer rounded-sm bg-gr-primary-dark px-4 py-2 text-sm font-semibold text-gr-primary-lite transition hover:brightness-95"
+  >
+    Aplicar
+  </button>
+</div>
+
+@if (errorMessage()) {
+  <div class="mb-6 rounded-sm border border-gr-danger/20 bg-gr-danger-bg px-4 py-3 text-sm text-gr-danger">
+    {{ errorMessage() }}
+  </div>
+}
+
+<div class="mb-6 flex gap-2">
+  <button
+    type="button" (click)="activeTab.set('profit')"
+    class="cursor-pointer rounded-sm px-3.5 py-2 text-sm font-medium transition-colors"
+    [class]="activeTab() === 'profit' ? 'bg-gr-primary-dark text-gr-primary-lite' : 'text-gr-sub hover:bg-gr-bg'"
+  >
+    Rentabilidad
+  </button>
+  <button
+    type="button" (click)="activeTab.set('cashFlow')"
+    class="cursor-pointer rounded-sm px-3.5 py-2 text-sm font-medium transition-colors"
+    [class]="activeTab() === 'cashFlow' ? 'bg-gr-primary-dark text-gr-primary-lite' : 'text-gr-sub hover:bg-gr-bg'"
+  >
+    Flujo de caja
+  </button>
+</div>
+
+@if (loading()) {
+  <p class="text-gr-sub">Cargando reporte...</p>
+} @else if (report(); as r) {
+  <ng-template #revenueTpl let-p>Bs {{ p.revenue.toFixed(2) }}</ng-template>
+  <ng-template #cogsTpl let-p>Bs {{ p.cogs.toFixed(2) }}</ng-template>
+  <ng-template #grossProfitTpl let-p>
+    <span [class]="p.grossProfit >= 0 ? 'text-gr-success' : 'text-gr-danger'">Bs {{ p.grossProfit.toFixed(2) }}</span>
+  </ng-template>
+  <ng-template #marginTpl let-p>{{ p.marginPercent != null ? p.marginPercent.toFixed(1) + '%' : '—' }}</ng-template>
+
+  @if (activeTab() === 'cashFlow') {
+    <p class="mb-6 text-sm text-gr-sub">
+      Plata que realmente entró y salió (pagos marcados como pagados), sin importar si el producto ya se vendió.
+    </p>
+
+    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
+      <app-stat-card label="Cobrado de ventas" [value]="'Bs ' + r.cashFlow.collectedFromSales.toFixed(2)" tone="success" />
+      <app-stat-card label="Pagado a proveedores" [value]="'Bs ' + r.cashFlow.paidForPurchases.toFixed(2)" tone="warning" />
+      <app-stat-card label="Pagado en gastos" [value]="'Bs ' + r.cashFlow.paidForExpenses.toFixed(2)" tone="danger" />
+      <app-stat-card label="Pagado en planilla" [value]="'Bs ' + r.cashFlow.paidForLabor.toFixed(2)" tone="warning" />
+      <app-stat-card
+        label="Flujo de caja neto"
+        [value]="'Bs ' + r.cashFlow.netCashFlow.toFixed(2)"
+        [tone]="netCashFlowTone()"
+      />
+    </div>
+
+    <section class="mt-6 rounded-lg border border-gr-border bg-gr-surface p-6">
+      <h2 class="mb-4 text-lg font-semibold text-gr-text">Entradas y salidas de caja</h2>
+      <div class="space-y-4">
+        @for (bar of cashFlowBars(); track bar.label) {
+          <div>
+            <div class="mb-1.5 flex items-center justify-between text-sm">
+              <span class="text-gr-sub">{{ bar.label }}</span>
+              <span class="font-medium text-gr-text">Bs {{ bar.value.toFixed(2) }}</span>
+            </div>
+            <div class="h-2.5 w-full overflow-hidden rounded-full bg-gr-bg">
+              <div class="h-full rounded-full" [class]="bar.colorClass" [style.width.%]="cashFlowBarWidth(bar.value)"></div>
+            </div>
+          </div>
+        }
+      </div>
+    </section>
+  } @else {
+    <div class="mb-3 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
+      <app-stat-card label="Ingresos" [value]="'Bs ' + r.summary.revenue.toFixed(2)" />
+      <app-stat-card label="Costo de venta" [value]="'Bs ' + r.summary.cogs.toFixed(2)" tone="warning" />
+      <app-stat-card
+        label="Utilidad bruta"
+        [value]="'Bs ' + r.summary.grossProfit.toFixed(2) + ' · ' + (r.summary.grossMarginPercent != null ? r.summary.grossMarginPercent.toFixed(1) + '%' : '—')"
+        [tone]="grossProfitTone()"
+      />
+      <app-stat-card label="Gastos" [value]="'Bs ' + r.summary.expenses.toFixed(2)" tone="danger" />
+      <app-stat-card
+        label="Utilidad neta"
+        [value]="'Bs ' + r.summary.netProfit.toFixed(2) + ' · ' + (r.summary.netMarginPercent != null ? r.summary.netMarginPercent.toFixed(1) + '%' : '—')"
+        [tone]="netProfitTone()"
+      />
+    </div>
+
+    <p class="mb-6 text-xs text-gr-muted">
+      Esto es margen real: solo cuenta lo que ya se vendió. Las ventas despachadas antes de que el sistema guardara su costo real pueden mostrar la utilidad inflada.
+    </p>
+
+    @if (r.series.length === 0) {
+      <p class="mb-8 text-gr-sub">No hay datos en este rango.</p>
+    } @else {
+      <section class="mb-8 rounded-lg border border-gr-border bg-gr-surface p-6">
+        <div class="mb-4 flex flex-wrap items-center justify-between gap-3">
+          <h2 class="text-lg font-semibold text-gr-text">Utilidad neta por período</h2>
+          <div class="flex items-center gap-4 text-xs text-gr-sub">
+            <span class="flex items-center gap-1.5"><span class="h-2.5 w-2.5 rounded-full bg-gr-success"></span>Ganancia</span>
+            <span class="flex items-center gap-1.5"><span class="h-2.5 w-2.5 rounded-full bg-gr-danger"></span>Pérdida</span>
+          </div>
+        </div>
+
+        <p class="mb-3 h-5 text-sm">
+          @if (hoveredPoint(); as p) {
+            <span class="text-gr-text">
+              {{ p.label }} — Ingresos Bs {{ p.revenue.toFixed(2) }} · Costo Bs {{ p.cogs.toFixed(2) }} · Gastos Bs {{ p.expenses.toFixed(2) }} ·
+            </span>
+            <span [class]="p.netProfit >= 0 ? 'font-semibold text-gr-success' : 'font-semibold text-gr-danger'">
+              Utilidad Bs {{ p.netProfit.toFixed(2) }}
+            </span>
+          } @else {
+            <span class="text-gr-muted">Pasá el cursor sobre una barra para ver el detalle.</span>
+          }
+        </p>
+
+        <div class="flex h-48 items-stretch gap-1 overflow-x-auto pb-1">
+          @for (point of r.series; track point.label; let i = $index) {
+            <div
+              class="flex min-w-7 flex-1 cursor-default flex-col items-center"
+              (mouseenter)="hoveredIndex.set(i)"
+              (mouseleave)="hoveredIndex.set(null)"
+            >
+              <div class="flex h-20 w-full items-end justify-center">
+                @if (point.netProfit > 0) {
+                  <div class="w-3 rounded-t-sm bg-gr-success" [style.height.%]="barHeightPercent(point)"></div>
+                }
+              </div>
+              <div class="h-px w-full shrink-0 bg-gr-border"></div>
+              <div class="flex h-20 w-full items-start justify-center">
+                @if (point.netProfit < 0) {
+                  <div class="w-3 rounded-b-sm bg-gr-danger" [style.height.%]="barHeightPercent(point)"></div>
+                }
+              </div>
+              <span class="mt-1.5 whitespace-nowrap text-[10px] text-gr-muted">{{ point.label }}</span>
+            </div>
+          }
+        </div>
+      </section>
+
+      <section class="mb-8 overflow-x-auto rounded-lg border border-gr-border bg-gr-surface">
+        <table class="w-full text-left text-sm">
+          <thead>
+            <tr class="border-b border-gr-border-lite text-xs font-medium tracking-wide text-gr-muted uppercase">
+              <th class="px-4 py-3">Período</th>
+              <th class="px-4 py-3 text-right">Ingresos</th>
+              <th class="px-4 py-3 text-right">Costo de venta</th>
+              <th class="px-4 py-3 text-right">Gastos</th>
+              <th class="px-4 py-3 text-right">Utilidad neta</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (point of r.series; track point.label) {
+              <tr class="border-b border-gr-border-lite last:border-b-0">
+                <td class="px-4 py-3 text-gr-text">{{ point.label }}</td>
+                <td class="px-4 py-3 text-right text-gr-text">Bs {{ point.revenue.toFixed(2) }}</td>
+                <td class="px-4 py-3 text-right text-gr-text">Bs {{ point.cogs.toFixed(2) }}</td>
+                <td class="px-4 py-3 text-right text-gr-text">Bs {{ point.expenses.toFixed(2) }}</td>
+                <td
+                  class="px-4 py-3 text-right font-medium"
+                  [class]="point.netProfit >= 0 ? 'text-gr-success' : 'text-gr-danger'"
+                >
+                  Bs {{ point.netProfit.toFixed(2) }}
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </section>
+    }
+
+    <section>
+      <h2 class="mb-4 text-lg font-semibold text-gr-text">Rentabilidad por producto</h2>
+      <app-data-table
+        [columns]="byProductColumns()"
+        [rows]="r.byProduct"
+        emptyMessage="No hay ventas con costo registrado en este rango."
+      />
+    </section>
+  }
+}

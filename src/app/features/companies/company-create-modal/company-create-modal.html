@@ -152,14 +152,27 @@
       <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <div>
           <label for="planCode" class="mb-1.5 block text-sm font-medium text-gr-sub">Plan</label>
-          <select
-            id="planCode" formControlName="planCode"
-            class="w-full rounded-sm border border-gr-border bg-gr-surface px-4 py-2.5 text-gr-text transition focus:border-gr-primary focus:outline-none focus:ring-2 focus:ring-gr-primary/30"
-          >
-            @for (plan of plans; track plan.code) {
-              <option [value]="plan.code">{{ plan.name }}</option>
-            }
-          </select>
+          @if (plansLoading()) {
+            <p class="text-sm text-gr-sub">Cargando planes...</p>
+          } @else if (plansError()) {
+            <div class="rounded-sm border border-gr-danger/20 bg-gr-danger-bg px-4 py-3 text-sm text-gr-danger">
+              {{ plansError() }}
+              <button type="button" (click)="retryLoadPlans()" class="ml-2 cursor-pointer font-semibold underline">
+                Reintentar
+              </button>
+            </div>
+          } @else if (plans().length === 0) {
+            <p class="text-sm text-gr-sub">No hay planes activos — creá uno primero desde Suscripciones → Planes.</p>
+          } @else {
+            <select
+              id="planCode" formControlName="planCode"
+              class="w-full rounded-sm border border-gr-border bg-gr-surface px-4 py-2.5 text-gr-text transition focus:border-gr-primary focus:outline-none focus:ring-2 focus:ring-gr-primary/30"
+            >
+              @for (plan of plans(); track plan.code) {
+                <option [value]="plan.code">{{ plan.name }}</option>
+              }
+            </select>
+          }
         </div>
 
         <div>

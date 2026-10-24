@@ -50,6 +50,12 @@ export class ProductsService {
     return this.http.patch<void>(`${BASE_URL}/${id}/deactivate`, null);
   }
 
+  // PATCH /products/{id}/feature — sin body, 204. Marcar uno desmarca al
+  // anterior solo (lo resuelve el backend, no hay que gestionarlo acá).
+  feature(id: string): Observable<void> {
+    return this.http.patch<void>(`${BASE_URL}/${id}/feature`, null);
+  }
+
   kardex(id: string, filters?: KardexFilters): Observable<ProductKardex> {
     let params = new HttpParams();
     if (filters?.dateFrom) params = params.set('dateFrom', filters.dateFrom);

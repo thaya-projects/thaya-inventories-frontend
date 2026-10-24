@@ -28,7 +28,7 @@
   } @else {
     <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
       <app-stat-card label="Empresas activas" [value]="activeCount()" tone="success" />
-      <app-stat-card label="Trials por vencer" [value]="trialsExpiringCount()" tone="warning" />
+      <app-stat-card label="Pruebas por vencer" [value]="trialsExpiringCount()" tone="warning" />
       <app-stat-card label="Suscripciones vencidas / expiradas" [value]="pastDueCount()" tone="danger" />
     </div>
   }

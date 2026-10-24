@@ -1,4 +1,4 @@
-<div class="mb-8 flex flex-wrap items-center justify-between gap-4">
+<div class="mb-6 flex flex-col items-start gap-4 sm:flex-row sm:items-center sm:justify-between">
   <div>
     <h1 class="text-2xl font-bold text-gr-text">Clientes</h1>
     <p class="mt-1 text-gr-sub">Clientes de tu empresa.</p>
@@ -11,6 +11,8 @@
     + Nuevo cliente
   </button>
 </div>
+
+<app-sales-tabs active="customers" />
 
 @if (showFormModal()) {
   <app-customer-form-modal [customerId]="editingCustomerId()" (close)="closeFormModal()" (saved)="onCustomerSaved()" />

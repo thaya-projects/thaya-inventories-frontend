@@ -14,10 +14,31 @@
         <span class="shrink-0 rounded-full bg-gr-danger-bg px-3 py-1 text-xs font-medium text-gr-danger">Inactiva</span>
       }
     </div>
-    <!-- Activar/desactivar todavía no tiene endpoint en el backend (se
-    confirmó contra el OpenAPI real que no existe) — se saca la acción hasta
-    que exista, para no dejar un botón que siempre falla. -->
-    <p class="mb-4 text-xs text-gr-muted">Activar/desactivar empresas está pendiente del lado del backend.</p>
+    <!-- Sin endpoint de activar/desactivar todavía. -->
+    <p class="mb-4 text-xs text-gr-muted">Activar o desactivar empresas no está disponible todavía.</p>
+
+    <div class="mb-6 flex items-center gap-4">
+      @if (c.logoUrl) {
+        <img [src]="c.logoUrl" alt="Logo" class="h-14 w-14 rounded-sm border border-gr-border object-contain" />
+      } @else {
+        <div class="flex h-14 w-14 shrink-0 items-center justify-center rounded-sm border border-dashed border-gr-border text-xs text-gr-muted">
+          Logo
+        </div>
+      }
+      <div>
+        <label class="inline-block cursor-pointer rounded-sm bg-gr-bg px-3.5 py-2 text-sm font-medium text-gr-sub transition hover:bg-gr-border-lite hover:text-gr-text">
+          {{ uploadingLogo() ? 'Subiendo...' : 'Cambiar logo' }}
+          <input
+            type="file" accept="image/jpeg,image/png,image/webp" class="hidden"
+            [disabled]="uploadingLogo()" (change)="onLogoSelected($event)"
+          >
+        </label>
+        <p class="mt-1 text-xs text-gr-muted">JPG, PNG o WEBP, máx. 5MB.</p>
+        @if (logoError()) {
+          <p class="mt-1 text-xs text-gr-danger">{{ logoError() }}</p>
+        }
+      </div>
+    </div>
 
     <dl class="grid grid-cols-1 gap-4 sm:grid-cols-2">
       <div>
@@ -49,7 +70,7 @@
       </div>
       @if (c.trialEndsAt) {
         <div>
-          <dt class="text-xs font-medium tracking-wide text-gr-muted uppercase">Fin del trial</dt>
+          <dt class="text-xs font-medium tracking-wide text-gr-muted uppercase">Fin de la prueba</dt>
           <dd class="mt-1 text-gr-text">{{ c.trialEndsAt | date: 'dd/MM/yyyy' }}</dd>
         </div>
       }
@@ -95,6 +116,31 @@
           class="cursor-pointer rounded-sm bg-gr-primary-dark px-5 py-2.5 font-semibold text-gr-primary-lite transition hover:brightness-95 disabled:cursor-not-allowed disabled:opacity-60"
         >
           Guardar paquete
+        </button>
+      </div>
+    </div>
+
+    <div class="mt-6 border-t border-gr-border-lite pt-6">
+      <h2 class="mb-1 text-sm font-semibold text-gr-text">Landing pública</h2>
+      <p class="mb-4 text-xs text-gr-sub">
+        Página pública de la empresa con su catálogo. El slug arma la URL una vez que el sitio esté alojado.
+      </p>
+
+      <div class="flex flex-wrap items-center justify-between gap-3 rounded-sm border border-gr-border-lite bg-gr-bg px-4 py-3">
+        <div>
+          <p class="text-sm text-gr-text">
+            Slug: <span class="font-mono font-medium">{{ c.slug }}</span>
+          </p>
+          <p class="mt-1 text-xs text-gr-muted">
+            {{ c.settings.hasPublicStorefront ? 'La landing está activada.' : 'La landing está desactivada.' }}
+          </p>
+        </div>
+        <button
+          type="button" (click)="toggleStorefront()" [disabled]="savingStorefront()"
+          class="cursor-pointer rounded-sm px-4 py-2 text-sm font-semibold transition disabled:cursor-not-allowed disabled:opacity-60"
+          [class]="c.settings.hasPublicStorefront ? 'bg-gr-danger-bg text-gr-danger hover:brightness-95' : 'bg-gr-primary-dark text-gr-primary-lite hover:brightness-95'"
+        >
+          {{ savingStorefront() ? 'Guardando…' : (c.settings.hasPublicStorefront ? 'Desactivar landing' : 'Activar landing') }}
         </button>
       </div>
     </div>

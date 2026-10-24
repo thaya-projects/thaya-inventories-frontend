@@ -23,6 +23,13 @@ export class CompanyService {
     return this.http.put<CompanyProfile>(`${environment.apiUrl}/company/settings`, body);
   }
 
+  // POST /company/logo — multipart, campo "file".
+  uploadLogo(file: File): Observable<CompanyProfile> {
+    const form = new FormData();
+    form.append('file', file);
+    return this.http.post<CompanyProfile>(`${environment.apiUrl}/company/logo`, form);
+  }
+
   getSubscription(): Observable<CompanySubscriptionView> {
     return this.http.get<CompanySubscriptionView>(`${environment.apiUrl}/company/subscription`);
   }

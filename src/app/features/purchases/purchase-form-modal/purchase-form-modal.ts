@@ -85,8 +85,8 @@ export class PurchaseFormModal implements OnInit {
 
   ngOnInit(): void {
     forkJoin({
-      // Solo RawMaterial — se compra materia prima/insumos, no producto terminado.
-      products: this.productsService.list(1, PRODUCTS_PAGE_SIZE, { isActive: true, productType: 'RawMaterial' }),
+      // Una compra puede ser de cualquier tipo de producto, no solo materia prima.
+      products: this.productsService.list(1, PRODUCTS_PAGE_SIZE, { isActive: true }),
       suppliers: this.suppliersService.list({ isActive: true }),
       warehouses: this.warehousesService.list({ isActive: true }),
     }).subscribe({

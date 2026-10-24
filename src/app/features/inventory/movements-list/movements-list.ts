@@ -7,6 +7,7 @@ import { CompanyContextService } from '../../../core/services/company-context';
 import { MovementFormModal } from '../movement-form-modal/movement-form-modal';
 import { MovementAdjustmentModal } from '../movement-adjustment-modal/movement-adjustment-modal';
 import { ToastService } from '../../../shared/toast/toast.service';
+import { InventoryTabs } from '../inventory-tabs/inventory-tabs';
 
 const TYPE_LABELS: Record<MovementType, string> = {
   In: 'Entrada',
@@ -21,7 +22,7 @@ const TYPE_LABELS: Record<MovementType, string> = {
 
 @Component({
   selector: 'app-movements-list',
-  imports: [DataTable, DatePipe, MovementFormModal, MovementAdjustmentModal],
+  imports: [DataTable, DatePipe, MovementFormModal, MovementAdjustmentModal, InventoryTabs],
   templateUrl: './movements-list.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })

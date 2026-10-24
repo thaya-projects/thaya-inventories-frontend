@@ -129,6 +129,34 @@
               >
             </div>
           </div>
+
+          <div class="rounded-sm border border-gr-border-lite bg-gr-bg p-4">
+            <p class="mb-3 text-sm font-medium text-gr-text">Descuento (opcional)</p>
+            <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
+              <div>
+                <label for="discountPrice" class="mb-1.5 block text-sm font-medium text-gr-sub">Precio con descuento</label>
+                <input
+                  id="discountPrice" type="number" step="any" formControlName="discountPrice"
+                  class="w-full rounded-sm border border-gr-border bg-gr-surface px-4 py-2.5 text-gr-text transition focus:border-gr-primary focus:outline-none focus:ring-2 focus:ring-gr-primary/30"
+                >
+              </div>
+              <div>
+                <label for="discountStartsAt" class="mb-1.5 block text-sm font-medium text-gr-sub">Desde (opcional)</label>
+                <input
+                  id="discountStartsAt" type="datetime-local" formControlName="discountStartsAt"
+                  class="w-full rounded-sm border border-gr-border bg-gr-surface px-4 py-2.5 text-gr-text transition focus:border-gr-primary focus:outline-none focus:ring-2 focus:ring-gr-primary/30"
+                >
+              </div>
+              <div>
+                <label for="discountEndsAt" class="mb-1.5 block text-sm font-medium text-gr-sub">Hasta (opcional)</label>
+                <input
+                  id="discountEndsAt" type="datetime-local" formControlName="discountEndsAt"
+                  class="w-full rounded-sm border border-gr-border bg-gr-surface px-4 py-2.5 text-gr-text transition focus:border-gr-primary focus:outline-none focus:ring-2 focus:ring-gr-primary/30"
+                >
+              </div>
+            </div>
+            <p class="mt-2 text-xs text-gr-muted">Sin fechas, el descuento queda activo hasta que lo cambies a mano.</p>
+          </div>
         </div>
       }
 
@@ -187,6 +215,23 @@
     <!-- Paso 4: Imágenes -->
     @if (step() === 4) {
       <div>
+        <div class="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-sm border border-gr-gold/30 bg-gr-gold-lite px-4 py-3">
+          <span class="flex items-center gap-2 text-sm font-medium text-gr-gold-dark">
+            <svg class="h-4 w-4 shrink-0" [attr.fill]="isFeatured() ? 'currentColor' : 'none'" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <polygon points="12 2 15 8.5 22 9.5 17 14.5 18.5 21.5 12 18 5.5 21.5 7 14.5 2 9.5 9 8.5"/>
+            </svg>
+            {{ isFeatured() ? 'Es el producto destacado de la empresa.' : 'Todavía no es el producto destacado.' }}
+          </span>
+          @if (!isFeatured()) {
+            <button
+              type="button" (click)="markAsFeatured()" [disabled]="featuring()"
+              class="cursor-pointer rounded-sm bg-gr-primary-dark px-3.5 py-1.5 text-xs font-semibold text-gr-primary-lite transition hover:brightness-95 disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              {{ featuring() ? 'Marcando…' : 'Destacar este producto' }}
+            </button>
+          }
+        </div>
+
         @if (imageError()) {
           <div class="mb-4 rounded-sm border border-gr-danger/20 bg-gr-danger-bg px-4 py-3 text-sm text-gr-danger">
             {{ imageError() }}

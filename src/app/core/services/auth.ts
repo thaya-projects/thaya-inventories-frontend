@@ -3,6 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { Observable, tap, throwError } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { CurrentUser, LoginRequest, LoginResponse, RefreshRequest, RefreshResponse } from '../models/auth.model';
+import { CompanyContextService } from './company-context';
 
 const STORAGE_KEY = 'thaya.auth';
 
@@ -21,6 +22,7 @@ interface StoredSession {
 @Injectable({ providedIn: 'root' })
 export class AuthService {
   private http = inject(HttpClient);
+  private companyContext = inject(CompanyContextService);
 
   private accessTokenSig = signal<string | null>(null);
   private currentUserSig = signal<CurrentUser | null>(null);
@@ -99,6 +101,7 @@ export class AuthService {
     sessionStorage.removeItem(STORAGE_KEY);
     this.accessTokenSig.set(null);
     this.currentUserSig.set(null);
+    this.companyContext.reset();
   }
 
   private setSession(res: LoginResponse, storage: Storage): void {

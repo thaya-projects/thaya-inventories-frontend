@@ -49,9 +49,6 @@ export class PaymentsList {
   // Assistant: el API ignora el filtro de sourceType y solo devuelve pagos de
   // venta — el filtro de origen no tiene sentido para ese rol, se oculta.
   isAssistant = computed(() => this.auth.currentUser()?.role === 'Assistant');
-  // Métodos de pago ya no es ítem del sidebar — vive acá adentro (mismo
-  // criterio de rol que tenía antes en buildAdminNav).
-  isAdmin = computed(() => this.auth.currentUser()?.role === 'Admin');
 
   payments = signal<Payment[]>([]);
   totalCount = signal(0);

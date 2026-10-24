@@ -13,6 +13,21 @@ const TYPES: { value: UnitType; label: string }[] = [
   { value: 'Time', label: 'Tiempo' },
 ];
 
+// El backend exige "code" (sin autogeneración propia) — se sugiere acá a partir
+// del nombre: siglas si hay varias palabras, dos letras si es una sola.
+function suggestUnitCode(name: string): string {
+  const clean = name
+    .normalize('NFD')
+    .replace(/[̀-ͯ]/g, '')
+    .toUpperCase()
+    .replace(/[^A-Z0-9\s]/g, '')
+    .trim();
+  if (!clean) return '';
+
+  const words = clean.split(/\s+/).filter(Boolean);
+  return words.length > 1 ? words.slice(0, 4).map(w => w[0]).join('') : words[0].slice(0, 2);
+}
+
 @Component({
   selector: 'app-unit-form-modal',
   imports: [ReactiveFormsModule, Modal],
@@ -34,6 +49,9 @@ export class UnitFormModal implements OnInit {
   submitting = signal(false);
   errorMessage = signal<string | null>(null);
 
+  // Mientras está en true, el código se sigue regenerando solo desde el nombre.
+  codeAutoSynced = signal(true);
+
   form = this.fb.group({
     code: ['', Validators.required],
     name: ['', Validators.required],
@@ -48,6 +66,9 @@ export class UnitFormModal implements OnInit {
       this.loading.set(false);
       return;
     }
+
+    // Editando: el código ya existe, no se debe pisar al tocar el nombre.
+    this.codeAutoSynced.set(false);
 
     this.unitsService.get(id).subscribe({
       next: unit => {
@@ -65,6 +86,15 @@ export class UnitFormModal implements OnInit {
         this.loading.set(false);
       },
     });
+  }
+
+  onNameInput() {
+    if (!this.codeAutoSynced()) return;
+    this.form.controls.code.setValue(suggestUnitCode(this.form.controls.name.value ?? ''));
+  }
+
+  onCodeInput() {
+    this.codeAutoSynced.set(false);
   }
 
   submit() {

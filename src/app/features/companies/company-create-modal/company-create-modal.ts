@@ -1,10 +1,12 @@
-import { ChangeDetectionStrategy, Component, inject, output, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit, inject, output, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Modal } from '../../../shared/modal/modal';
 import { WizardStepper } from '../../../shared/wizard-stepper/wizard-stepper';
 import { CompaniesService } from '../../../core/services/companies';
 import { CreateCompanyResponse } from '../../../core/models/company.model';
+import { SubscriptionPlansService } from '../../../core/services/subscription-plans';
+import { SubscriptionPlan } from '../../../core/models/subscription-plan.model';
 import { generatePassword } from '../../../shared/password-generator';
 import { MODULE_PRESET_OPTIONS, MODULE_PRESETS, ModulePreset, ModulePresetValue } from '../../../shared/module-preset';
 
@@ -22,9 +24,10 @@ const STEP_FIELDS: Record<WizardStep, string[]> = {
   templateUrl: './company-create-modal.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class CompanyCreateModal {
+export class CompanyCreateModal implements OnInit {
   private fb = inject(FormBuilder);
   private companiesService = inject(CompaniesService);
+  private plansService = inject(SubscriptionPlansService);
 
   close = output<void>();
   created = output<CreateCompanyResponse>();
@@ -35,12 +38,13 @@ export class CompanyCreateModal {
   showPassword = signal(false);
   copied = signal(false);
 
-  // TODO: reemplazar por un GET real a /api/platform/plans cuando exista ese endpoint.
-  plans = [
-    { code: 'basic', name: 'Básico' },
-    { code: 'pro', name: 'Profesional' },
-    { code: 'enterprise', name: 'Empresarial' },
-  ];
+  // GET /api/subscription-plans?isActive=true — no existe un endpoint
+  // "/platform/plans" separado, es el mismo catálogo que administra la
+  // pantalla de Planes. Solo activos: no tiene sentido ofrecer de alta un
+  // plan que el propio SuperAdmin desactivó.
+  plans = signal<SubscriptionPlan[]>([]);
+  plansLoading = signal(true);
+  plansError = signal<string | null>(null);
 
   presetOptions = MODULE_PRESET_OPTIONS;
   presets = MODULE_PRESETS;
@@ -54,11 +58,38 @@ export class CompanyCreateModal {
     adminFullName: ['', Validators.required],
     adminEmail: ['', [Validators.required, Validators.email]],
     adminPassword: ['', [Validators.required, Validators.minLength(8)]],
-    planCode: [this.plans[0].code, Validators.required],
+    planCode: ['', Validators.required],
     trialDays: [15, [Validators.required, Validators.min(1)]],
   });
 
-  // "Solo compran y venden" nunca usa lotes (no se pregunta multi-almacén ni
+  ngOnInit(): void {
+    this.loadPlans();
+  }
+
+  private loadPlans() {
+    this.plansLoading.set(true);
+    this.plansError.set(null);
+
+    this.plansService.list(true).subscribe({
+      next: result => {
+        this.plans.set(result.items);
+        if (result.items.length > 0 && !this.form.controls.planCode.value) {
+          this.form.controls.planCode.setValue(result.items[0].code);
+        }
+        this.plansLoading.set(false);
+      },
+      error: () => {
+        this.plansError.set('No se pudieron cargar los planes.');
+        this.plansLoading.set(false);
+      },
+    });
+  }
+
+  retryLoadPlans() {
+    this.loadPlans();
+  }
+
+  // "Compran y venden" nunca usa lotes (no se pregunta multi-almacén ni
   // variantes en esta pantalla, tampoco). Al elegir producción/planta, el
   // checkbox arranca ON por defecto — el usuario lo puede apagar.
   onPresetChange(preset: ModulePresetValue) {

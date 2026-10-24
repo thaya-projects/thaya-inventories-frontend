@@ -2,7 +2,12 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
-import { SavePlanRequest, SubscriptionPlan, SubscriptionPlanListResponse } from '../models/subscription-plan.model';
+import {
+  CreatePlanRequest,
+  SavePlanRequest,
+  SubscriptionPlan,
+  SubscriptionPlanListResponse,
+} from '../models/subscription-plan.model';
 
 const BASE_URL = `${environment.apiUrl}/subscription-plans`;
 
@@ -23,7 +28,7 @@ export class SubscriptionPlansService {
     return this.http.get<SubscriptionPlan>(`${BASE_URL}/${id}`);
   }
 
-  create(payload: SavePlanRequest): Observable<SubscriptionPlan> {
+  create(payload: CreatePlanRequest): Observable<SubscriptionPlan> {
     return this.http.post<SubscriptionPlan>(BASE_URL, payload);
   }
 

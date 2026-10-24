@@ -7,6 +7,7 @@ import { UnitOfMeasure } from '../../../core/models/unit-of-measure.model';
 import { UnitFormModal } from '../unit-form-modal/unit-form-modal';
 import { ConfirmDialog } from '../../../shared/confirm-dialog/confirm-dialog';
 import { ToastService } from '../../../shared/toast/toast.service';
+import { InventoryTabs } from '../inventory-tabs/inventory-tabs';
 
 type StatusFilter = 'all' | 'active' | 'inactive';
 
@@ -22,7 +23,7 @@ const TYPE_LABELS: Record<string, string> = {
 
 @Component({
   selector: 'app-units-list',
-  imports: [DataTable, SearchInput, UnitFormModal, ConfirmDialog],
+  imports: [DataTable, SearchInput, UnitFormModal, ConfirmDialog, InventoryTabs],
   templateUrl: './units-list.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })

@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, TemplateRef, computed, inject, signal, viewChild } from '@angular/core';
-import { ActivatedRoute, RouterLink } from '@angular/router';
+import { ActivatedRoute } from '@angular/router';
 import { DatePipe } from '@angular/common';
 import { DataTable, DataTableColumn } from '../../../shared/data-table/data-table';
 import { PurchasesService } from '../../../core/services/purchases';
@@ -7,6 +7,7 @@ import { Purchase, PurchaseStatus } from '../../../core/models/purchase.model';
 import { PurchaseFormModal } from '../purchase-form-modal/purchase-form-modal';
 import { PurchaseDetailModal } from '../purchase-detail-modal/purchase-detail-modal';
 import { ToastService } from '../../../shared/toast/toast.service';
+import { PurchasesTabs } from '../purchases-tabs/purchases-tabs';
 
 type StatusFilter = 'all' | PurchaseStatus;
 const STATUS_VALUES: PurchaseStatus[] = ['Pending', 'Received', 'Cancelled'];
@@ -25,7 +26,7 @@ const STATUS_BADGE_CLASS: Record<PurchaseStatus, string> = {
 
 @Component({
   selector: 'app-purchases-list',
-  imports: [DataTable, DatePipe, RouterLink, PurchaseFormModal, PurchaseDetailModal],
+  imports: [DataTable, DatePipe, PurchaseFormModal, PurchaseDetailModal, PurchasesTabs],
   templateUrl: './purchases-list.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })

@@ -118,8 +118,8 @@ export class SalesOrderForm {
 
   constructor() {
     forkJoin({
-      // Solo Finished — lo que se compra (RawMaterial) no se vende directo, se consume en producción.
-      products: this.productsService.list(1, PRODUCTS_PAGE_SIZE, { isActive: true, productType: 'Finished' }),
+      // Una venta puede ser de cualquier tipo de producto, no solo terminado.
+      products: this.productsService.list(1, PRODUCTS_PAGE_SIZE, { isActive: true }),
       customers: this.customersService.list({ isActive: true }),
       transporters: this.transportersService.list(true),
     }).subscribe({

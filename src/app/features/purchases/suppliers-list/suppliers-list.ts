@@ -7,6 +7,7 @@ import { Supplier } from '../../../core/models/supplier.model';
 import { SupplierFormModal } from '../supplier-form-modal/supplier-form-modal';
 import { ConfirmDialog } from '../../../shared/confirm-dialog/confirm-dialog';
 import { ToastService } from '../../../shared/toast/toast.service';
+import { PurchasesTabs } from '../purchases-tabs/purchases-tabs';
 
 type StatusFilter = 'all' | 'active' | 'inactive';
 
@@ -14,7 +15,7 @@ const SEARCH_DEBOUNCE_MS = 400;
 
 @Component({
   selector: 'app-suppliers-list',
-  imports: [DataTable, SearchInput, SupplierFormModal, ConfirmDialog],
+  imports: [DataTable, SearchInput, SupplierFormModal, ConfirmDialog, PurchasesTabs],
   templateUrl: './suppliers-list.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })

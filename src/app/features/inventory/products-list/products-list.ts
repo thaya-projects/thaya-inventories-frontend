@@ -6,9 +6,9 @@ import { SearchInput } from '../../../shared/search-input/search-input';
 import { ProductsService } from '../../../core/services/products';
 import { Product } from '../../../core/models/product.model';
 import { AuthService } from '../../../core/services/auth';
-import { CompanyContextService } from '../../../core/services/company-context';
 import { ToastService } from '../../../shared/toast/toast.service';
 import { ProductFormModal } from '../product-form-modal/product-form-modal';
+import { InventoryTabs } from '../inventory-tabs/inventory-tabs';
 
 type StatusFilter = 'all' | 'active' | 'inactive';
 
@@ -16,7 +16,7 @@ const SEARCH_DEBOUNCE_MS = 400;
 
 @Component({
   selector: 'app-products-list',
-  imports: [DataTable, RouterLink, SearchInput, ProductFormModal],
+  imports: [DataTable, RouterLink, SearchInput, ProductFormModal, InventoryTabs],
   templateUrl: './products-list.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
@@ -25,20 +25,9 @@ export class ProductsList {
   private auth = inject(AuthService);
   private toast = inject(ToastService);
   private route = inject(ActivatedRoute);
-  private companyContext = inject(CompanyContextService);
 
   // Assistant solo tiene List/Get — sin alta, edición, activar/desactivar ni kardex.
   canWrite = computed(() => this.auth.currentUser()?.role !== 'Assistant');
-
-  // Menú "UX Admin": Almacenes ya no es un ítem hermano de Inventario en el
-  // sidebar — vive acá adentro, gateado por multi-almacén (mismo AND entre
-  // feature del plan y setting de la empresa que antes tenía el sidebar).
-  showWarehousesLink = computed(
-    () =>
-      this.companyContext.subscription()?.features.multiWarehouse === true &&
-      this.companyContext.company()?.settings.usesMultiWarehouse === true,
-  );
-  catalogMenuOpen = signal(false);
 
   showFormModal = signal(false);
   editingProductId = signal<string | null>(null);
@@ -55,13 +44,14 @@ export class ProductsList {
 
   private searchTimeout?: ReturnType<typeof setTimeout>;
 
+  private nameTpl = viewChild.required<TemplateRef<{ $implicit: Product }>>('nameTpl');
   private priceTpl = viewChild.required<TemplateRef<{ $implicit: Product }>>('priceTpl');
   private activeTpl = viewChild.required<TemplateRef<{ $implicit: Product }>>('activeTpl');
   private actionsTpl = viewChild.required<TemplateRef<{ $implicit: Product }>>('actionsTpl');
 
   columns = computed<DataTableColumn<Product>[]>(() => [
     { key: 'code', label: 'Código' },
-    { key: 'name', label: 'Nombre' },
+    { key: 'name', label: 'Nombre', cellTemplate: this.nameTpl() },
     { key: 'currentStock', label: 'Stock' },
     { key: 'salePrice', label: 'Precio', cellTemplate: this.priceTpl() },
     { key: 'isActive', label: 'Estado', cellTemplate: this.activeTpl() },
@@ -121,14 +111,6 @@ export class ProductsList {
     this.pageSize.set(size);
     this.page.set(1);
     this.load();
-  }
-
-  toggleCatalogMenu() {
-    this.catalogMenuOpen.update(v => !v);
-  }
-
-  closeCatalogMenu() {
-    this.catalogMenuOpen.set(false);
   }
 
   openCreateModal() {
