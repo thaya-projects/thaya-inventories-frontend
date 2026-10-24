@@ -1,0 +1,217 @@
+<div class="mb-8">
+  <h1 class="text-2xl font-bold text-gr-text">Mi empresa</h1>
+  <p class="mt-1 text-gr-sub">Datos, configuración de módulos y tu plan actual.</p>
+</div>
+
+@if (loading()) {
+  <p class="text-gr-sub">Cargando...</p>
+}
+
+@if (!loading()) {
+  <div class="grid grid-cols-1 gap-6 lg:grid-cols-3">
+    <!-- Datos de la empresa -->
+    <form [formGroup]="form" (ngSubmit)="saveProfile()" class="rounded-lg border border-gr-border bg-gr-surface p-6 lg:col-span-2">
+      <h2 class="mb-5 text-lg font-semibold text-gr-text">Datos de la empresa</h2>
+
+      <div class="mb-6 flex items-center gap-4">
+        @if (company()?.logoUrl) {
+          <img [src]="company()!.logoUrl" alt="Logo" class="h-14 w-14 rounded-sm border border-gr-border object-contain" />
+        } @else {
+          <div class="flex h-14 w-14 shrink-0 items-center justify-center rounded-sm border border-dashed border-gr-border text-xs text-gr-muted">
+            Logo
+          </div>
+        }
+        <div>
+          <label class="inline-block cursor-pointer rounded-sm bg-gr-bg px-3.5 py-2 text-sm font-medium text-gr-sub transition hover:bg-gr-border-lite hover:text-gr-text">
+            {{ uploadingLogo() ? 'Subiendo...' : 'Cambiar logo' }}
+            <input
+              type="file" accept="image/jpeg,image/png,image/webp" class="hidden"
+              [disabled]="uploadingLogo()" (change)="onLogoSelected($event)"
+            >
+          </label>
+          <p class="mt-1 text-xs text-gr-muted">JPG, PNG o WEBP, máx. 5MB.</p>
+          @if (logoError()) {
+            <p class="mt-1 text-xs text-gr-danger">{{ logoError() }}</p>
+          }
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <div class="sm:col-span-2">
+          <label class="mb-1.5 block text-sm font-medium text-gr-sub">Nombre</label>
+          <input
+            type="text" formControlName="name"
+            class="w-full rounded-sm border border-gr-border bg-gr-bg px-3.5 py-2.5 text-gr-text outline-none focus:border-gr-primary-mid"
+          />
+          @if (form.controls.name.invalid && form.controls.name.touched) {
+            <p class="mt-1 text-xs text-gr-danger">El nombre es obligatorio.</p>
+          }
+        </div>
+
+        <div>
+          <label class="mb-1.5 block text-sm font-medium text-gr-sub">Industria</label>
+          <input type="text" formControlName="industry" class="w-full rounded-sm border border-gr-border bg-gr-bg px-3.5 py-2.5 text-gr-text outline-none focus:border-gr-primary-mid" />
+        </div>
+        <div>
+          <label class="mb-1.5 block text-sm font-medium text-gr-sub">NIT</label>
+          <input type="text" formControlName="taxId" class="w-full rounded-sm border border-gr-border bg-gr-bg px-3.5 py-2.5 text-gr-text outline-none focus:border-gr-primary-mid" />
+        </div>
+        <div>
+          <label class="mb-1.5 block text-sm font-medium text-gr-sub">Teléfono</label>
+          <input type="text" formControlName="phone" class="w-full rounded-sm border border-gr-border bg-gr-bg px-3.5 py-2.5 text-gr-text outline-none focus:border-gr-primary-mid" />
+        </div>
+        <div>
+          <label class="mb-1.5 block text-sm font-medium text-gr-sub">Correo</label>
+          <input type="email" formControlName="email" class="w-full rounded-sm border border-gr-border bg-gr-bg px-3.5 py-2.5 text-gr-text outline-none focus:border-gr-primary-mid" />
+        </div>
+        <div>
+          <label class="mb-1.5 block text-sm font-medium text-gr-sub">Ciudad</label>
+          <input type="text" formControlName="city" class="w-full rounded-sm border border-gr-border bg-gr-bg px-3.5 py-2.5 text-gr-text outline-none focus:border-gr-primary-mid" />
+        </div>
+        <div>
+          <label class="mb-1.5 block text-sm font-medium text-gr-sub">Dirección</label>
+          <input type="text" formControlName="address" class="w-full rounded-sm border border-gr-border bg-gr-bg px-3.5 py-2.5 text-gr-text outline-none focus:border-gr-primary-mid" />
+        </div>
+      </div>
+
+      <div class="mt-6 border-t border-gr-border-lite pt-5">
+        <button
+          type="submit"
+          [disabled]="savingProfile()"
+          class="rounded-sm bg-gr-primary-dark px-5 py-2.5 font-semibold text-gr-primary-lite transition hover:brightness-95 disabled:cursor-not-allowed disabled:opacity-60"
+        >
+          {{ savingProfile() ? 'Guardando...' : 'Guardar cambios' }}
+        </button>
+      </div>
+    </form>
+
+    <!-- Plan y suscripción (solo lectura) -->
+    @if (subscription(); as sub) {
+      <div class="rounded-lg border border-gr-border bg-gr-surface p-6">
+        <h2 class="mb-4 text-lg font-semibold text-gr-text">Plan y suscripción</h2>
+
+        <div class="mb-4 flex items-center justify-between">
+          <span class="font-medium text-gr-text">{{ sub.planName }}</span>
+          <span class="rounded-full px-2.5 py-0.5 text-xs font-medium" [class]="statusBadgeClass(sub.status)">
+            {{ statusLabel(sub.status) }}
+          </span>
+        </div>
+
+        <dl class="space-y-2.5 text-sm">
+          <div class="flex justify-between">
+            <dt class="text-gr-muted">Ciclo</dt>
+            <dd class="text-gr-text">{{ billingCycleLabel(sub.billingCycle) }}</dd>
+          </div>
+          @if (sub.trialEndsAt) {
+            <div class="flex justify-between">
+              <dt class="text-gr-muted">Fin de la prueba</dt>
+              <dd class="text-gr-text">{{ sub.trialEndsAt | date: 'dd/MM/yyyy' }}</dd>
+            </div>
+          }
+          @if (sub.currentPeriodEnd) {
+            <div class="flex justify-between">
+              <dt class="text-gr-muted">Fin del período actual</dt>
+              <dd class="text-gr-text">{{ sub.currentPeriodEnd | date: 'dd/MM/yyyy' }}</dd>
+            </div>
+          }
+        </dl>
+
+        @if (activeModules().length) {
+          <div class="mt-5 border-t border-gr-border-lite pt-4">
+            <p class="mb-2 text-xs font-medium tracking-wide text-gr-muted uppercase">Módulos activos</p>
+            <div class="flex flex-wrap gap-1.5">
+              @for (mod of activeModules(); track mod) {
+                <span class="rounded-full bg-gr-primary-lite/60 px-2.5 py-0.5 text-xs font-medium text-gr-primary-dark">
+                  {{ moduleLabel(mod) }}
+                </span>
+              }
+            </div>
+          </div>
+        }
+      </div>
+    }
+  </div>
+
+  <!-- Operación (solo lectura) -->
+  <div class="mt-6 rounded-lg border border-gr-border bg-gr-surface p-6">
+    <h2 class="mb-1 text-lg font-semibold text-gr-text">Configuración</h2>
+    <p class="mb-4 text-sm text-gr-sub">Qué módulos tiene habilitados tu empresa.</p>
+
+    <div class="rounded-sm border border-gr-border-lite bg-gr-bg px-4 py-3.5">
+      <span class="block text-xs font-medium tracking-wide text-gr-muted uppercase">Operación</span>
+      <span class="mt-1 block font-medium text-gr-text">{{ presetLabel() }}</span>
+    </div>
+    <p class="mt-3 text-sm text-gr-sub">Para cambiar módulos, contactá a Thaya.</p>
+  </div>
+
+  <!-- Códigos de lote — solo si la empresa usa lotes (no aplica para "Compran y venden") -->
+  <!-- @if (showLotCodes()) { -->
+  <form [formGroup]="lotSettingsForm" (ngSubmit)="saveLotSettings()" class="mt-6 rounded-lg border border-gr-border bg-gr-surface p-6">
+    <h2 class="mb-1 text-lg font-semibold text-gr-text">Códigos de lote</h2>
+    <p class="mb-5 text-sm text-gr-sub">
+      El código que el sistema sugiere al registrar un lote de materia prima o de producto terminado. Siempre se puede editar a mano al momento de cargarlo.
+    </p>
+
+    <div>
+      <label class="mb-1.5 block text-sm font-medium text-gr-sub">¿Quién arma el código?</label>
+      <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+        <button
+          type="button" (click)="setLotCodeMode('auto')"
+          class="cursor-pointer rounded-sm border-2 px-4 py-3 text-left transition"
+          [class]="lotSettingsForm.controls.lotCodeMode.value === 'auto' ? 'border-gr-primary-dark bg-gr-primary-lite/30' : 'border-gr-border-lite hover:bg-gr-bg'"
+        >
+          <span class="block font-medium text-gr-text">Automático</span>
+          <span class="block text-xs text-gr-muted">El sistema sugiere el siguiente código disponible. Se puede cambiar a mano si hace falta.</span>
+        </button>
+        <button
+          type="button" (click)="setLotCodeMode('manual')"
+          class="cursor-pointer rounded-sm border-2 px-4 py-3 text-left transition"
+          [class]="lotSettingsForm.controls.lotCodeMode.value === 'manual' ? 'border-gr-primary-dark bg-gr-primary-lite/30' : 'border-gr-border-lite hover:bg-gr-bg'"
+        >
+          <span class="block font-medium text-gr-text">Manual</span>
+          <span class="block text-xs text-gr-muted">No se sugiere nada — cada vez se escribe el código a mano.</span>
+        </button>
+      </div>
+    </div>
+
+    <div class="mt-5 grid grid-cols-1 gap-4" [class.sm:grid-cols-2]="showMpPrefix()">
+      @if (showMpPrefix()) {
+        <div>
+          <label class="mb-1.5 block text-sm font-medium text-gr-sub">Prefijo para materia prima (MP)</label>
+          <input
+            type="text" formControlName="lotCodePrefixMp" placeholder="MP"
+            class="w-full rounded-sm border border-gr-border bg-gr-surface px-3.5 py-2.5 text-gr-text placeholder-gr-muted transition focus:border-gr-primary focus:outline-none focus:ring-2 focus:ring-gr-primary/30"
+          >
+          <p class="mt-1.5 text-xs text-gr-muted">Se usa al registrar compras de insumos. Ejemplo: <span class="font-mono text-gr-sub">{{ mpCodeExample() }}</span></p>
+        </div>
+      }
+      <div>
+        <label class="mb-1.5 block text-sm font-medium text-gr-sub">Prefijo para producto terminado (PT)</label>
+        <input
+          type="text" formControlName="lotCodePrefixPt" placeholder="PT"
+          class="w-full rounded-sm border border-gr-border bg-gr-surface px-3.5 py-2.5 text-gr-text placeholder-gr-muted transition focus:border-gr-primary focus:outline-none focus:ring-2 focus:ring-gr-primary/30"
+        >
+        <p class="mt-1.5 text-xs text-gr-muted">Se usa al registrar producción. Ejemplo: <span class="font-mono text-gr-sub">{{ ptCodeExample() }}</span></p>
+      </div>
+    </div>
+
+    <label class="mt-4 flex w-fit cursor-pointer items-start gap-2.5">
+      <input type="checkbox" formControlName="includeProductCode" class="mt-0.5 h-4 w-4 cursor-pointer accent-gr-primary-dark">
+      <span class="text-sm text-gr-sub">
+        Incluir el código del producto en el lote
+        <span class="block text-xs text-gr-muted">Suma el código del producto en el medio, para distinguir lotes de distintos productos a simple vista.</span>
+      </span>
+    </label>
+
+    <div class="mt-5 border-t border-gr-border-lite pt-5">
+      <button
+        type="submit"
+        [disabled]="savingLotSettings()"
+        class="rounded-sm bg-gr-primary-dark px-5 py-2.5 font-semibold text-gr-primary-lite transition hover:brightness-95 disabled:cursor-not-allowed disabled:opacity-60"
+      >
+        {{ savingLotSettings() ? 'Guardando...' : 'Guardar' }}
+      </button>
+    </div>
+  </form>
+  <!-- } -->
+}

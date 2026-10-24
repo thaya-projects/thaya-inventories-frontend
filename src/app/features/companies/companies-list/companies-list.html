@@ -1,0 +1,81 @@
+<div class="mb-8 flex flex-wrap items-center justify-between gap-4">
+  <div>
+    <h1 class="text-2xl font-bold text-gr-text">Empresas</h1>
+    <p class="mt-1 text-gr-sub">Listado de empresas registradas en la plataforma.</p>
+  </div>
+  <button
+    type="button"
+    (click)="openCreateModal()"
+    class="cursor-pointer rounded-sm bg-gr-primary-dark px-4 py-2.5 font-semibold text-gr-primary-lite transition hover:brightness-95"
+  >
+    + Nueva empresa
+  </button>
+</div>
+
+@if (showCreateModal()) {
+  <app-company-create-modal (close)="closeCreateModal()" (created)="onCompanyCreated($event)" />
+}
+
+<div class="mb-6">
+  <app-search-input
+    placeholder="Buscar por nombre o NIT..."
+    [value]="search()"
+    (valueChange)="onSearch($event)"
+  />
+</div>
+
+@if (errorMessage()) {
+  <div class="mb-6 rounded-sm border border-gr-danger/20 bg-gr-danger-bg px-4 py-3 text-sm text-gr-danger">
+    {{ errorMessage() }}
+  </div>
+}
+
+@if (loading()) {
+  <p class="text-gr-sub">Cargando empresas...</p>
+} @else {
+  <app-data-table
+    [columns]="columns()"
+    [rows]="companies()"
+    [serverSide]="true"
+    [currentPage]="page()"
+    [totalItems]="totalCount()"
+    [pageSize]="pageSize()"
+    (pageChange)="onPageChange($event)"
+    (pageSizeChange)="onPageSizeChange($event)"
+    emptyMessage="No hay empresas registradas todavía."
+  />
+}
+
+<ng-template #activeTpl let-company>
+  @if (company.isActive) {
+    <span class="rounded-full bg-gr-success-bg px-3 py-1 text-xs font-medium text-gr-success">Activa</span>
+  } @else {
+    <span class="rounded-full bg-gr-danger-bg px-3 py-1 text-xs font-medium text-gr-danger">Inactiva</span>
+  }
+</ng-template>
+
+<ng-template #planTpl let-company>
+  <div class="flex flex-col items-start gap-1">
+    <span class="font-medium text-gr-text">{{ company.planCode }}</span>
+    <span
+      class="w-fit rounded-full px-2 py-0.5 text-xs font-medium"
+      [class]="statusBadgeClass(company.subscriptionStatus)"
+    >
+      {{ statusLabel(company.subscriptionStatus) }}
+    </span>
+  </div>
+</ng-template>
+
+<ng-template #dateTpl let-company>
+  {{ company.createdAt | date: 'dd/MM/yyyy' }}
+</ng-template>
+
+<ng-template #actionsTpl let-company>
+  <button type="button" (click)="openDetail(company)" class="cursor-pointer text-sm font-medium text-gr-primary transition hover:text-gr-gold">
+    Ver
+  </button>
+</ng-template>
+
+@if (selectedCompany(); as company) {
+  <app-company-detail-modal [company]="company" (close)="closeDetail()" (updated)="onCompanyUpdated($event)" />
+}

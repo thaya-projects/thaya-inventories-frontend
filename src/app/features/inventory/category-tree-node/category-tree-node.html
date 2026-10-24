@@ -1,0 +1,36 @@
+<div class="flex items-center justify-between gap-3 border-b border-gr-border-lite py-3 last:border-b-0" [class]="indentClass()">
+  <div class="flex min-w-0 items-center gap-2.5">
+    @if (depth() > 0) {
+      <span class="shrink-0 text-gr-muted">└</span>
+    }
+    <span class="truncate font-medium text-gr-text">{{ category().name }}</span>
+    @if (!category().isActive) {
+      <span class="shrink-0 rounded-full bg-gr-danger-bg px-2 py-0.5 text-xs font-medium text-gr-danger">Inactiva</span>
+    }
+  </div>
+
+  <div class="flex shrink-0 items-center gap-3">
+    <button type="button" (click)="edit.emit(category())" class="cursor-pointer text-sm font-medium text-gr-primary transition hover:text-gr-gold">
+      Editar
+    </button>
+    <button
+      type="button"
+      (click)="toggleActive.emit(category())"
+      [disabled]="updatingId() === category().id"
+      class="cursor-pointer text-sm font-medium transition disabled:cursor-not-allowed disabled:opacity-50"
+      [class]="category().isActive ? 'text-gr-danger hover:brightness-90' : 'text-gr-success hover:brightness-90'"
+    >
+      {{ category().isActive ? 'Desactivar' : 'Activar' }}
+    </button>
+  </div>
+</div>
+
+@for (child of category().children; track child.id) {
+  <app-category-tree-node
+    [category]="child"
+    [depth]="depth() + 1"
+    [updatingId]="updatingId()"
+    (edit)="edit.emit($event)"
+    (toggleActive)="toggleActive.emit($event)"
+  />
+}

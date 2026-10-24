@@ -1,0 +1,200 @@
+@if (isSuperAdmin()) {
+  <div class="mb-8 flex flex-wrap items-center justify-between gap-4">
+    <div>
+      <h1 class="text-2xl font-bold text-gr-text">Dashboard</h1>
+      <p class="mt-1 text-gr-sub">Resumen general de la plataforma.</p>
+    </div>
+    <button
+      type="button"
+      (click)="openCreateModal()"
+      class="cursor-pointer rounded-sm bg-gr-primary-dark px-4 py-2.5 font-semibold text-gr-primary-lite transition hover:brightness-95"
+    >
+      + Nueva empresa
+    </button>
+  </div>
+
+  @if (showCreateModal()) {
+    <app-company-create-modal (close)="closeCreateModal()" (created)="onCompanyCreated($event)" />
+  }
+
+  @if (errorMessage()) {
+    <div class="mb-6 rounded-sm border border-gr-danger/20 bg-gr-danger-bg px-4 py-3 text-sm text-gr-danger">
+      {{ errorMessage() }}
+    </div>
+  }
+
+  @if (loading()) {
+    <p class="text-gr-sub">Cargando...</p>
+  } @else {
+    <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
+      <app-stat-card label="Empresas activas" [value]="activeCount()" tone="success" />
+      <app-stat-card label="Pruebas por vencer" [value]="trialsExpiringCount()" tone="warning" />
+      <app-stat-card label="Suscripciones vencidas / expiradas" [value]="pastDueCount()" tone="danger" />
+    </div>
+  }
+} @else {
+  <div class="mb-6">
+    <h1 class="text-2xl font-bold text-gr-text">Inicio</h1>
+    <p class="mt-1 text-gr-sub">Lo que necesitás hacer hoy.</p>
+  </div>
+
+  @if (errorMessage()) {
+    <div class="mb-6 rounded-sm border border-gr-danger/20 bg-gr-danger-bg px-4 py-3 text-sm text-gr-danger">
+      {{ errorMessage() }}
+    </div>
+  }
+
+  @if (loading()) {
+    <p class="text-gr-sub">Cargando...</p>
+  } @else if (dashboard(); as d) {
+    <div class="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      @for (action of quickActions(); track action.label) {
+        <a
+          [routerLink]="action.route"
+          [queryParams]="action.queryParams ?? null"
+          class="flex items-center justify-between rounded-lg px-5 py-6 font-semibold transition hover:brightness-95"
+          [class]="action.tone === 'primary' ? 'bg-gr-primary-dark text-gr-primary-lite' : 'bg-gr-warning-bg text-gr-warning'"
+        >
+          <span class="text-lg">{{ action.label }}</span>
+          <svg class="h-5 w-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="5" y1="12" x2="19" y2="12"/>
+            <polyline points="12 5 19 12 12 19"/>
+          </svg>
+        </a>
+      }
+    </div>
+
+    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      @if (showSalesAmountCards()) {
+        <a routerLink="/sales" class="block transition hover:opacity-90">
+          <app-stat-card label="Ventas hoy" [value]="'Bs ' + d.kpis.salesTodayAmount.toFixed(2) + ' · ' + d.kpis.salesTodayCount" />
+        </a>
+        <a routerLink="/sales" class="block transition hover:opacity-90">
+          <app-stat-card label="Ventas del mes" [value]="'Bs ' + d.kpis.salesMonthAmount.toFixed(2)" />
+        </a>
+        <a
+          routerLink="/cash/payments"
+          [queryParams]="{ sourceType: 'SalesOrder', status: 'Pending' }"
+          class="block transition hover:opacity-90"
+        >
+          <app-stat-card label="Por cobrar" [value]="'Bs ' + d.kpis.receivablesAmount.toFixed(2)" tone="warning" />
+        </a>
+      }
+      @if (showPayablesCard()) {
+        <a routerLink="/cash/payments" [queryParams]="{ status: 'Pending' }" class="block transition hover:opacity-90">
+          <app-stat-card label="Por pagar" [value]="'Bs ' + d.kpis.payablesAmount.toFixed(2)" tone="danger" />
+        </a>
+      }
+      @if (showLowStockCard()) {
+        <a routerLink="/inventory/products" class="block transition hover:opacity-90">
+          <app-stat-card label="Stock bajo" [value]="d.kpis.lowStockCount" [tone]="d.kpis.lowStockCount > 0 ? 'danger' : 'default'" />
+        </a>
+      }
+      <a routerLink="/sales" [queryParams]="{ status: 'Pending' }" class="block transition hover:opacity-90">
+        <app-stat-card label="Por despachar" [value]="d.kpis.salesPendingDispatchCount" tone="warning" />
+      </a>
+      @if (showReceiveCard()) {
+        <a routerLink="/purchases" [queryParams]="{ status: 'Pending' }" class="block transition hover:opacity-90">
+          <app-stat-card label="Por recibir" [value]="d.kpis.purchasesPendingCount" tone="warning" />
+        </a>
+      }
+      @if (showMovementsLink()) {
+        <a
+          routerLink="/inventory/movements"
+          class="flex items-center justify-center rounded-lg border border-dashed border-gr-border p-5 text-sm font-medium text-gr-sub transition hover:border-gr-primary hover:text-gr-text"
+        >
+          Ver movimientos →
+        </a>
+      }
+    </div>
+
+    <div class="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-2">
+      @if (showLowStockList()) {
+        <section class="rounded-lg border border-gr-border bg-gr-surface p-6">
+          <h2 class="mb-4 text-lg font-semibold text-gr-text">Stock bajo</h2>
+          @if (d.lowStock.length === 0) {
+            <p class="text-sm text-gr-sub">No hay alertas de stock bajo.</p>
+          } @else {
+            <div class="space-y-2">
+              @for (item of d.lowStock; track item.productId) {
+                <a
+                  routerLink="/inventory/products"
+                  [queryParams]="{ edit: item.productId }"
+                  class="flex items-center justify-between border-b border-gr-border-lite py-2 text-sm last:border-b-0 hover:text-gr-primary"
+                >
+                  <span class="text-gr-text">{{ item.code }} — {{ item.name }}</span>
+                  <span class="font-medium text-gr-danger">{{ item.currentStock }} / {{ item.minimumStock }}</span>
+                </a>
+              }
+            </div>
+          }
+        </section>
+      }
+
+      @if (showDispatchList()) {
+        <section class="rounded-lg border border-gr-border bg-gr-surface p-6">
+          <h2 class="mb-4 text-lg font-semibold text-gr-text">Por despachar</h2>
+          @if (d.pendingDispatch.length === 0) {
+            <p class="text-sm text-gr-sub">Sin ventas pendientes de despachar.</p>
+          } @else {
+            <div class="space-y-2">
+              @for (item of d.pendingDispatch; track item.id) {
+                <a
+                  routerLink="/sales"
+                  [queryParams]="{ view: item.id }"
+                  class="flex items-center justify-between border-b border-gr-border-lite py-2 text-sm last:border-b-0 hover:text-gr-primary"
+                >
+                  <span class="text-gr-text">#{{ item.number }} — {{ item.customerName }}</span>
+                  <span class="font-medium text-gr-text">Bs {{ item.total.toFixed(2) }}</span>
+                </a>
+              }
+            </div>
+          }
+        </section>
+      }
+
+      @if (showReceiveList()) {
+        <section class="rounded-lg border border-gr-border bg-gr-surface p-6">
+          <h2 class="mb-4 text-lg font-semibold text-gr-text">Por recibir</h2>
+          @if (d.pendingReceive.length === 0) {
+            <p class="text-sm text-gr-sub">Sin compras pendientes de recibir.</p>
+          } @else {
+            <div class="space-y-2">
+              @for (item of d.pendingReceive; track item.id) {
+                <a
+                  routerLink="/purchases"
+                  [queryParams]="{ view: item.id }"
+                  class="flex items-center justify-between border-b border-gr-border-lite py-2 text-sm last:border-b-0 hover:text-gr-primary"
+                >
+                  <span class="text-gr-text">#{{ item.number }} — {{ item.supplierName }}</span>
+                  <span class="font-medium text-gr-text">Bs {{ item.total.toFixed(2) }}</span>
+                </a>
+              }
+            </div>
+          }
+        </section>
+      }
+
+      @if (showPaymentsList()) {
+        <section class="rounded-lg border border-gr-border bg-gr-surface p-6">
+          <h2 class="mb-4 text-lg font-semibold text-gr-text">Pagos recientes</h2>
+          @if (d.recentPayments.length === 0) {
+            <p class="text-sm text-gr-sub">No hay pagos recientes.</p>
+          } @else {
+            <div class="space-y-2">
+              @for (item of d.recentPayments; track item.id) {
+                <a
+                  [routerLink]="['/cash/payments', item.id]"
+                  class="flex items-center justify-between border-b border-gr-border-lite py-2 text-sm last:border-b-0 hover:text-gr-primary"
+                >
+                  <span class="text-gr-text">{{ item.sourceLabel }}</span>
+                  <span class="font-medium text-gr-text">Bs {{ item.amount.toFixed(2) }}</span>
+                </a>
+              }
+            </div>
+          }
+        </section>
+      }
+    </div>
+  }
+}

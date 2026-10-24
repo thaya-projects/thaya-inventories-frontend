@@ -1,0 +1,17 @@
+<div class="mb-8">
+  <h1 class="text-2xl font-bold text-gr-text">{{ title }}</h1>
+  @if (description) {
+    <p class="mt-1 text-gr-sub">{{ description }}</p>
+  }
+</div>
+
+<div class="flex flex-col items-center gap-3 rounded-lg border border-dashed border-gr-border bg-gr-surface p-10 text-center">
+  <span class="flex h-12 w-12 items-center justify-center rounded-full bg-gr-bg text-gr-muted">
+    <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="12" cy="12" r="9"/>
+      <polyline points="12 7 12 12 15 14"/>
+    </svg>
+  </span>
+  <p class="font-semibold text-gr-text">Próximamente</p>
+  <p class="max-w-sm text-sm text-gr-sub">{{ message }}</p>
+</div>

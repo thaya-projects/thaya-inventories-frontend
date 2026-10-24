@@ -1,0 +1,55 @@
+<div class="mb-8 flex flex-wrap items-center justify-between gap-4">
+  <div>
+    <h1 class="text-2xl font-bold text-gr-text">Equipo</h1>
+    <p class="mt-1 text-gr-sub">Usuarios de tu empresa.</p>
+  </div>
+  <a
+    routerLink="/team/new"
+    class="rounded-sm bg-gr-primary-dark px-4 py-2.5 font-semibold text-gr-primary-lite transition hover:brightness-95"
+  >
+    + Nuevo usuario
+  </a>
+</div>
+
+@if (errorMessage()) {
+  <div class="mb-6 rounded-sm border border-gr-danger/20 bg-gr-danger-bg px-4 py-3 text-sm text-gr-danger">
+    {{ errorMessage() }}
+  </div>
+}
+
+@if (loading()) {
+  <p class="text-gr-sub">Cargando equipo...</p>
+} @else {
+  <app-data-table [columns]="columns()" [rows]="users()" emptyMessage="Todavía no hay usuarios en el equipo." />
+}
+
+<ng-template #roleTpl let-user>
+  <span class="rounded-full bg-gr-primary-lite/60 px-2.5 py-0.5 text-xs font-medium text-gr-primary-dark">
+    {{ roleLabel(user.role) }}
+  </span>
+</ng-template>
+
+<ng-template #activeTpl let-user>
+  @if (user.isActive) {
+    <span class="rounded-full bg-gr-success-bg px-3 py-1 text-xs font-medium text-gr-success">Activo</span>
+  } @else {
+    <span class="rounded-full bg-gr-danger-bg px-3 py-1 text-xs font-medium text-gr-danger">Inactivo</span>
+  }
+</ng-template>
+
+<ng-template #actionsTpl let-user>
+  <div class="flex items-center justify-end gap-3">
+    <a [routerLink]="['/team', user.id]" class="text-sm font-medium text-gr-primary transition hover:text-gr-gold">
+      Editar
+    </a>
+    <button
+      type="button"
+      (click)="toggleActive(user)"
+      [disabled]="updatingId() === user.id"
+      class="cursor-pointer text-sm font-medium transition disabled:cursor-not-allowed disabled:opacity-50"
+      [class]="user.isActive ? 'text-gr-danger hover:brightness-90' : 'text-gr-success hover:brightness-90'"
+    >
+      {{ user.isActive ? 'Desactivar' : 'Activar' }}
+    </button>
+  </div>
+</ng-template>

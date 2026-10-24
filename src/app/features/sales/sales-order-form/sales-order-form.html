@@ -1,0 +1,475 @@
+<div class="mx-auto max-w-4xl">
+  <a routerLink="/sales" class="mb-6 inline-flex items-center gap-1.5 text-sm font-medium text-gr-sub transition hover:text-gr-text">
+    <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <polyline points="15 18 9 12 15 6"/>
+    </svg>
+    Volver a ventas
+  </a>
+
+  <div class="mb-8">
+    <h1 class="text-2xl font-bold text-gr-text">{{ isEditMode ? 'Editar venta' : 'Nueva venta' }}</h1>
+    <p class="mt-1 text-gr-sub">La remisión se genera automáticamente</p>
+  </div>
+
+  <app-wizard-stepper [steps]="stepLabels" [currentStep]="step()" />
+
+  @if (errorMessage()) {
+    <div class="mb-6 rounded-sm border border-gr-danger/20 bg-gr-danger-bg px-4 py-3 text-sm text-gr-danger">
+      {{ errorMessage() }}
+    </div>
+  }
+
+  @if (loading()) {
+    <p class="text-gr-sub">Cargando...</p>
+  } @else {
+    <form [formGroup]="form" (ngSubmit)="submit()">
+      <!-- Paso 1: Cliente -->
+      @if (step() === 1) {
+        <div class="space-y-6">
+          <div class="rounded-lg border border-gr-border bg-gr-surface p-6">
+            <div class="mb-4 flex items-start justify-between gap-4">
+              <div>
+                <h2 class="text-lg font-semibold text-gr-text">¿A quién le vendemos?</h2>
+                <p class="text-sm text-gr-sub">Selecciona o busca el cliente.</p>
+              </div>
+              <button
+                type="button" (click)="openCustomerModal()"
+                class="shrink-0 cursor-pointer rounded-sm bg-gr-bg px-3.5 py-2 text-sm font-medium text-gr-sub transition hover:bg-gr-border-lite hover:text-gr-text"
+              >
+                + Nuevo cliente
+              </button>
+            </div>
+
+            <input
+              type="text" placeholder="Buscar por nombre o ciudad..."
+              [value]="customerSearch()" (input)="customerSearch.set($any($event.target).value)"
+              class="mb-4 w-full rounded-sm border border-gr-border bg-gr-surface px-4 py-2.5 text-gr-text placeholder-gr-muted transition focus:border-gr-primary focus:outline-none focus:ring-2 focus:ring-gr-primary/30"
+            >
+
+            @if (filteredCustomers().length === 0) {
+              <p class="text-sm text-gr-sub">No se encontraron clientes.</p>
+            } @else {
+              <div class="max-h-72 space-y-2 overflow-y-auto">
+                @for (c of filteredCustomers(); track c.id) {
+                  <button
+                    type="button" (click)="selectCustomer(c)"
+                    class="flex w-full cursor-pointer items-center gap-3 rounded-sm border px-4 py-3 text-left transition"
+                    [class]="form.controls.customerId.value === c.id ? 'border-gr-primary-dark bg-gr-primary-lite/40' : 'border-gr-border-lite hover:bg-gr-bg'"
+                  >
+                    <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gr-bg text-gr-muted">
+                      <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                      </svg>
+                    </span>
+                    <span class="min-w-0">
+                      <span class="block truncate font-medium text-gr-text">{{ c.name }}</span>
+                      <span class="flex flex-wrap items-center gap-3 text-xs text-gr-muted">
+                        @if (c.city) { <span>{{ c.city }}</span> }
+                        @if (c.phone) { <span>{{ c.phone }}</span> }
+                      </span>
+                    </span>
+                  </button>
+                }
+              </div>
+            }
+            @if (form.controls.customerId.invalid && form.controls.customerId.touched) {
+              <p class="mt-3 text-xs text-gr-danger">Selecciona un cliente.</p>
+            }
+          </div>
+
+          <div>
+            <label for="date" class="mb-1.5 block text-sm font-medium text-gr-sub">Fecha de la venta</label>
+            <input
+              id="date" type="date" formControlName="date"
+              class="w-full rounded-sm border border-gr-border bg-gr-surface px-4 py-2.5 text-gr-text transition focus:border-gr-primary focus:outline-none focus:ring-2 focus:ring-gr-primary/30"
+            >
+          </div>
+        </div>
+
+        <div class="mt-8 flex items-center justify-between border-t border-gr-border-lite pt-5">
+          <a routerLink="/sales" class="rounded-sm px-4 py-2.5 font-medium text-gr-sub transition hover:text-gr-text">
+            Cancelar
+          </a>
+          <button
+            type="button" (click)="next()"
+            class="rounded-sm bg-gr-primary-dark px-5 py-2.5 font-semibold text-gr-primary-lite transition hover:brightness-95"
+          >
+            Continuar
+          </button>
+        </div>
+      }
+
+      <!-- Paso 2: Productos -->
+      @if (step() === 2) {
+        <div class="space-y-6">
+          @if (selectedCustomer(); as customer) {
+            <div class="flex items-center justify-between gap-3 rounded-sm bg-gr-primary-lite/30 px-4 py-3">
+              <div class="flex items-center gap-3">
+                <svg class="h-5 w-5 text-gr-primary-dark" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                </svg>
+                <span>
+                  <span class="block font-medium text-gr-text">{{ customer.name }}</span>
+                  @if (customer.city) { <span class="block text-xs text-gr-muted">{{ customer.city }}</span> }
+                </span>
+              </div>
+              <button type="button" (click)="step.set(1)" class="cursor-pointer text-sm font-medium text-gr-primary underline transition hover:text-gr-gold">
+                Cambiar
+              </button>
+            </div>
+          }
+
+          <div class="rounded-lg border border-gr-border bg-gr-surface p-6">
+            <h2 class="text-lg font-semibold text-gr-text">Agregar productos</h2>
+            <p class="mb-4 text-sm text-gr-sub">Busca y agrega los productos al pedido.</p>
+
+            <input
+              type="text" placeholder="Buscar producto..."
+              [value]="productSearch()" (input)="productSearch.set($any($event.target).value)"
+              class="mb-4 w-full rounded-sm border border-gr-border bg-gr-surface px-4 py-2.5 text-gr-text placeholder-gr-muted transition focus:border-gr-primary focus:outline-none focus:ring-2 focus:ring-gr-primary/30"
+            >
+
+            @if (filteredProducts().length === 0) {
+              <p class="text-sm text-gr-sub">No se encontraron productos.</p>
+            } @else {
+              <div class="max-h-64 space-y-2 overflow-y-auto">
+                @for (p of filteredProducts(); track p.id) {
+                  <div class="flex items-center gap-3 rounded-sm border border-gr-border-lite px-4 py-3">
+                    <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-sm bg-gr-bg text-gr-muted">
+                      <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
+                      </svg>
+                    </span>
+                    <span class="min-w-0 flex-1">
+                      <span class="block truncate font-medium text-gr-text">{{ p.name }}</span>
+                      <span class="text-xs text-gr-muted">{{ p.unitOfMeasureName ?? '—' }} · Stock: {{ p.currentStock }}</span>
+                    </span>
+                    @if (cartQuantity(p.id) === 0) {
+                      <button
+                        type="button" (click)="incrementProduct(p)"
+                        class="flex h-8 w-8 shrink-0 cursor-pointer items-center justify-center rounded-full bg-gr-primary-dark text-gr-primary-lite transition hover:brightness-95"
+                        aria-label="Agregar producto"
+                      >
+                        <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+                          <line x1="12" y1="5" x2="12" y2="19"/>
+                          <line x1="5" y1="12" x2="19" y2="12"/>
+                        </svg>
+                      </button>
+                    } @else {
+                      <div class="flex shrink-0 items-center gap-2">
+                        <button
+                          type="button" (click)="decrementProduct(p)"
+                          class="flex h-8 w-8 cursor-pointer items-center justify-center rounded-full border border-gr-border text-gr-sub transition hover:bg-gr-bg"
+                          aria-label="Quitar uno"
+                        >
+                          <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+                            <line x1="5" y1="12" x2="19" y2="12"/>
+                          </svg>
+                        </button>
+                        <span class="w-5 text-center font-medium text-gr-text">{{ cartQuantity(p.id) }}</span>
+                        <button
+                          type="button" (click)="incrementProduct(p)"
+                          class="flex h-8 w-8 cursor-pointer items-center justify-center rounded-full bg-gr-primary-dark text-gr-primary-lite transition hover:brightness-95"
+                          aria-label="Agregar uno"
+                        >
+                          <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+                            <line x1="12" y1="5" x2="12" y2="19"/>
+                            <line x1="5" y1="12" x2="19" y2="12"/>
+                          </svg>
+                        </button>
+                      </div>
+                    }
+                  </div>
+                }
+              </div>
+            }
+          </div>
+
+          @if (itemsArray.length > 0) {
+            <div class="rounded-lg border border-gr-border bg-gr-surface p-6">
+              <h2 class="mb-4 flex items-center gap-2 text-lg font-semibold text-gr-text">
+                <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m-10 0a2 2 0 100 4 2 2 0 000-4zm10 0a2 2 0 100 4 2 2 0 000-4z"/>
+                </svg>
+                Pedido ({{ itemsArray.length }} {{ itemsArray.length === 1 ? 'ítem' : 'ítems' }})
+              </h2>
+
+              <div formArrayName="items" class="space-y-4">
+                @for (item of itemsArray.controls; track $index; let i = $index) {
+                  <div [formGroupName]="i" class="rounded-sm border border-gr-border-lite p-4">
+                    <div class="mb-3 flex items-start justify-between gap-3">
+                      <div>
+                        <p class="font-medium text-gr-text">{{ productFor(item.get('productId')!.value)?.name ?? '—' }}</p>
+                        <p class="text-xs text-gr-muted">Stock: {{ productFor(item.get('productId')!.value)?.currentStock ?? '—' }}</p>
+                      </div>
+                      <button
+                        type="button" (click)="removeItem(i)"
+                        class="cursor-pointer text-gr-danger transition hover:brightness-90"
+                        aria-label="Quitar producto"
+                      >
+                        <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                          <polyline points="3 6 5 6 21 6"/>
+                          <path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/>
+                        </svg>
+                      </button>
+                    </div>
+
+                    <div class="grid grid-cols-1 gap-4 sm:grid-cols-3 sm:items-end">
+                      <div>
+                        <label class="mb-1.5 block text-xs font-medium text-gr-sub">Cantidad</label>
+                        <div class="flex items-center gap-2">
+                          <button
+                            type="button" (click)="decrementProduct(productFor(item.get('productId')!.value)!)"
+                            class="flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-sm border border-gr-border text-gr-sub transition hover:bg-gr-bg"
+                            aria-label="Restar"
+                          >
+                            −
+                          </button>
+                          <input
+                            type="number" step="any" formControlName="quantity"
+                            class="w-full rounded-sm border bg-gr-surface px-3 py-2 text-gr-text transition focus:outline-none focus:ring-2"
+                            [class]="exceedsStock(i) ? 'border-gr-danger focus:border-gr-danger focus:ring-gr-danger/30' : 'border-gr-border focus:border-gr-primary focus:ring-gr-primary/30'"
+                          >
+                          <button
+                            type="button" (click)="incrementProduct(productFor(item.get('productId')!.value)!)"
+                            class="flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-sm border border-gr-border text-gr-sub transition hover:bg-gr-bg"
+                            aria-label="Sumar"
+                          >
+                            +
+                          </button>
+                        </div>
+                        @if (exceedsStock(i)) {
+                          <p class="mt-1.5 text-xs text-gr-danger">No alcanza el stock — quedarían {{ stockRemaining(i) }} {{ productFor(item.get('productId')!.value)?.unitOfMeasureName ?? '' }}</p>
+                        }
+                      </div>
+                      <div>
+                        <label class="mb-1.5 block text-xs font-medium text-gr-sub">Precio unit. (Bs)</label>
+                        <input
+                          type="number" step="any" formControlName="unitPrice"
+                          class="w-full rounded-sm border border-gr-border bg-gr-surface px-3 py-2 text-gr-text transition focus:border-gr-primary focus:outline-none focus:ring-2 focus:ring-gr-primary/30"
+                        >
+                      </div>
+                      <div class="text-right">
+                        <p class="text-xs font-medium tracking-wide text-gr-muted uppercase">Subtotal</p>
+                        <p class="text-lg font-semibold text-gr-text">Bs {{ lineTotal(i).toFixed(2) }}</p>
+                      </div>
+                    </div>
+                  </div>
+                }
+              </div>
+            </div>
+          }
+
+          @if (hasStockIssue()) {
+            <div class="flex items-start gap-2 rounded-sm border border-gr-warning/20 bg-gr-warning-bg px-4 py-3 text-sm text-gr-warning">
+              <svg class="mt-0.5 h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z"/>
+              </svg>
+              <span>Esta venta se puede guardar como pedido. No se podrá despachar hasta que haya stock.</span>
+            </div>
+          }
+
+          <div>
+            <label for="discount" class="mb-1.5 block text-sm font-medium text-gr-sub">Descuento (Bs)</label>
+            <input
+              id="discount" type="number" step="any" formControlName="discount"
+              class="w-full rounded-sm border border-gr-border bg-gr-surface px-4 py-2.5 text-gr-text transition focus:border-gr-primary focus:outline-none focus:ring-2 focus:ring-gr-primary/30"
+            >
+          </div>
+
+          <div class="rounded-lg border border-gr-border bg-gr-surface p-6">
+            <h2 class="mb-4 flex items-center gap-2 text-lg font-semibold text-gr-text">
+              <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M3 13h13V6H3v7zm0 0l3 5h7l3-5m-3 0V6m0 7h5l3 4v-4h-3M6 18a1.5 1.5 0 103 0 1.5 1.5 0 00-3 0zm10 0a1.5 1.5 0 103 0 1.5 1.5 0 00-3 0z"/>
+              </svg>
+              Flete y transporte
+            </h2>
+
+            <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              @for (f of freightTypes; track f.value) {
+                <button
+                  type="button" (click)="form.controls.freightType.setValue(f.value)"
+                  class="cursor-pointer rounded-sm border-2 px-4 py-3 text-left transition"
+                  [class]="form.controls.freightType.value === f.value ? 'border-gr-primary-dark bg-gr-primary-lite/30' : 'border-gr-border-lite hover:bg-gr-bg'"
+                >
+                  <span class="block font-medium text-gr-text">{{ f.label }}</span>
+                  <span class="block text-xs text-gr-muted">{{ f.hint }}</span>
+                </button>
+              }
+            </div>
+
+            @if (form.controls.freightType.value !== 'None') {
+              <div class="mt-4">
+                <label for="freightAmount" class="mb-1.5 block text-sm font-medium text-gr-sub">Monto flete (Bs)</label>
+                <input
+                  id="freightAmount" type="number" step="any" formControlName="freightAmount"
+                  class="w-full max-w-xs rounded-sm border border-gr-border bg-gr-surface px-4 py-2.5 text-gr-text transition focus:border-gr-primary focus:outline-none focus:ring-2 focus:ring-gr-primary/30"
+                >
+                @if (form.controls.freightType.value !== 'Included') {
+                  <p class="mt-1.5 text-xs text-gr-muted">Solo suma al total si el flete es "Flete en la venta".</p>
+                }
+              </div>
+            }
+
+            <div class="mt-4">
+              <label for="transporterId" class="mb-1.5 block text-sm font-medium text-gr-sub">Transportista</label>
+              <select
+                id="transporterId" formControlName="transporterId"
+                class="w-full rounded-sm border border-gr-border bg-gr-surface px-4 py-2.5 text-gr-text transition focus:border-gr-primary focus:outline-none focus:ring-2 focus:ring-gr-primary/30"
+              >
+                <option value="">— Sin asignar —</option>
+                @for (t of transporters(); track t.id) {
+                  <option [value]="t.id">{{ t.name }}</option>
+                }
+              </select>
+              <p class="mt-1.5 text-xs text-gr-muted">Opcional</p>
+            </div>
+
+            <div class="mt-4">
+              <label for="notes" class="mb-1.5 block text-sm font-medium text-gr-sub">Observaciones</label>
+              <input
+                id="notes" type="text" formControlName="notes" placeholder="Instrucciones especiales..."
+                class="w-full rounded-sm border border-gr-border bg-gr-surface px-4 py-2.5 text-gr-text placeholder-gr-muted transition focus:border-gr-primary focus:outline-none focus:ring-2 focus:ring-gr-primary/30"
+              >
+              <p class="mt-1.5 text-xs text-gr-muted">Opcional</p>
+            </div>
+          </div>
+
+          @if (itemsArray.length > 0) {
+            <div class="flex items-center justify-between rounded-lg border border-gr-border bg-gr-surface px-6 py-4">
+              <div class="flex gap-6 text-sm text-gr-sub">
+                <span>Ítems <span class="ml-1 font-semibold text-gr-text">{{ itemsArray.length }}</span></span>
+                @if (freight() > 0) {
+                  <span>Flete <span class="ml-1 font-semibold text-gr-info">Bs {{ freight().toFixed(2) }}</span></span>
+                }
+              </div>
+              <div class="text-right">
+                <p class="text-xs font-medium tracking-wide text-gr-muted uppercase">Total</p>
+                <p class="text-2xl font-bold text-gr-text">Bs {{ total().toFixed(2) }}</p>
+              </div>
+            </div>
+          }
+        </div>
+
+        <div class="mt-8 flex items-center justify-between border-t border-gr-border-lite pt-5">
+          <button type="button" (click)="back()" class="rounded-sm px-4 py-2.5 font-medium text-gr-sub transition hover:text-gr-text">
+            Volver
+          </button>
+          <button
+            type="button" (click)="review()"
+            [disabled]="itemsArray.length === 0"
+            class="rounded-sm bg-gr-primary-dark px-5 py-2.5 font-semibold text-gr-primary-lite transition hover:brightness-95 disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            Revisar pedido
+          </button>
+        </div>
+      }
+
+      <!-- Paso 3: Confirmar -->
+      @if (step() === 3) {
+        <div class="space-y-6">
+          <div class="rounded-lg border border-gr-border bg-gr-surface p-6">
+            @if (selectedCustomer(); as customer) {
+              <div class="flex items-center gap-3 border-b border-gr-border-lite pb-4">
+                <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gr-bg text-gr-muted">
+                  <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                  </svg>
+                </span>
+                <span>
+                  <span class="block font-medium text-gr-text">{{ customer.name }}</span>
+                  <span class="block text-xs text-gr-muted">
+                    {{ customer.city ?? '—' }}
+                    @if (customer.taxId) { · NIT {{ customer.taxId }} }
+                    · {{ form.controls.date.value }}
+                  </span>
+                </span>
+              </div>
+            }
+
+            <div class="divide-y divide-gr-border-lite">
+              @for (item of itemsArray.controls; track $index; let i = $index) {
+                <div class="flex items-center justify-between gap-3 py-3">
+                  <div class="min-w-0">
+                    <p class="truncate font-medium text-gr-text">{{ productFor(item.get('productId')!.value)?.name ?? '—' }}</p>
+                    <p class="text-xs text-gr-muted">
+                      {{ item.get('quantity')!.value }} × Bs {{ (item.get('unitPrice')!.value || 0).toFixed(2) }}
+                    </p>
+                  </div>
+                  <p class="shrink-0 font-medium text-gr-text">Bs {{ lineTotal(i).toFixed(2) }}</p>
+                </div>
+              }
+            </div>
+
+            <div class="mt-3 space-y-1.5 border-t border-gr-border-lite pt-3 text-sm">
+              <div class="flex justify-between">
+                <span class="text-gr-sub">Subtotal productos</span>
+                <span class="text-gr-text">Bs {{ subtotal().toFixed(2) }}</span>
+              </div>
+              @if ((form.controls.discount.value || 0) > 0) {
+                <div class="flex justify-between">
+                  <span class="text-gr-sub">Descuento</span>
+                  <span class="text-gr-text">− Bs {{ (form.controls.discount.value || 0).toFixed(2) }}</span>
+                </div>
+              }
+              @if (freight() > 0) {
+                <div class="flex justify-between">
+                  <span class="text-gr-info">Flete incluido</span>
+                  <span class="text-gr-info">+ Bs {{ freight().toFixed(2) }}</span>
+                </div>
+              }
+            </div>
+
+            <div class="mt-3 flex justify-between border-t border-gr-border-lite pt-3">
+              <span class="text-lg font-semibold text-gr-text">Total</span>
+              <span class="text-lg font-bold text-gr-text">Bs {{ total().toFixed(2) }}</span>
+            </div>
+
+            @if (selectedTransporter(); as t) {
+              <div class="mt-4 flex items-center gap-2 rounded-sm bg-gr-bg px-4 py-3 text-sm text-gr-sub">
+                <svg class="h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M3 13h13V6H3v7zm0 0l3 5h7l3-5m-3 0V6m0 7h5l3 4v-4h-3M6 18a1.5 1.5 0 103 0 1.5 1.5 0 00-3 0zm10 0a1.5 1.5 0 103 0 1.5 1.5 0 00-3 0z"/>
+                </svg>
+                {{ t.name }} @if (t.plate) { · {{ t.plate }} }
+              </div>
+            }
+          </div>
+
+          @if (hasStockIssue()) {
+            <div class="flex items-start gap-2 rounded-sm border border-gr-warning/20 bg-gr-warning-bg px-4 py-3 text-sm text-gr-warning">
+              <svg class="mt-0.5 h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z"/>
+              </svg>
+              <span>Esta venta se puede guardar como pedido. No se podrá despachar hasta que haya stock.</span>
+            </div>
+          }
+        </div>
+
+        <div class="mt-8 flex items-center justify-between border-t border-gr-border-lite pt-5">
+          <button type="button" (click)="back()" class="rounded-sm px-4 py-2.5 font-medium text-gr-sub transition hover:text-gr-text">
+            Volver
+          </button>
+          <button
+            type="submit"
+            [disabled]="submitting()"
+            class="flex items-center gap-2 rounded-sm bg-gr-primary-dark px-5 py-2.5 font-semibold text-gr-primary-lite transition hover:brightness-95 disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            @if (submitting()) {
+              <svg class="h-4 w-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+              </svg>
+              Guardando…
+            } @else {
+              {{ isEditMode ? 'Guardar cambios' : 'Confirmar venta' }}
+            }
+          </button>
+        </div>
+      }
+    </form>
+  }
+</div>
+
+@if (showCustomerModal()) {
+  <app-customer-form-modal (close)="closeCustomerModal()" (saved)="onCustomerCreated($event)" />
+}

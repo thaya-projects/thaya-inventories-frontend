@@ -1,0 +1,93 @@
+<div class="mb-8 flex flex-wrap items-center justify-between gap-4">
+  <div>
+    <h1 class="text-2xl font-bold text-gr-text">Notificaciones</h1>
+    <p class="mt-1 text-gr-sub">Alertas y avisos de tu empresa.</p>
+  </div>
+  <button
+    type="button" (click)="markAllRead()"
+    [disabled]="markingAllRead()"
+    class="rounded-sm bg-gr-bg px-4 py-2.5 font-semibold text-gr-sub transition hover:bg-gr-border-lite hover:text-gr-text disabled:cursor-not-allowed disabled:opacity-60"
+  >
+    Marcar todas como leídas
+  </button>
+</div>
+
+<div class="mb-6 flex gap-2">
+  <button
+    type="button" (click)="setFilter('all')"
+    class="cursor-pointer rounded-sm px-3.5 py-2 text-sm font-medium transition-colors"
+    [class]="readFilter() === 'all' ? 'bg-gr-primary-dark text-gr-primary-lite' : 'text-gr-sub hover:bg-gr-bg'"
+  >
+    Todas
+  </button>
+  <button
+    type="button" (click)="setFilter('unread')"
+    class="cursor-pointer rounded-sm px-3.5 py-2 text-sm font-medium transition-colors"
+    [class]="readFilter() === 'unread' ? 'bg-gr-primary-dark text-gr-primary-lite' : 'text-gr-sub hover:bg-gr-bg'"
+  >
+    No leídas
+  </button>
+  <button
+    type="button" (click)="setFilter('read')"
+    class="cursor-pointer rounded-sm px-3.5 py-2 text-sm font-medium transition-colors"
+    [class]="readFilter() === 'read' ? 'bg-gr-primary-dark text-gr-primary-lite' : 'text-gr-sub hover:bg-gr-bg'"
+  >
+    Leídas
+  </button>
+</div>
+
+@if (errorMessage()) {
+  <div class="mb-6 rounded-sm border border-gr-danger/20 bg-gr-danger-bg px-4 py-3 text-sm text-gr-danger">
+    {{ errorMessage() }}
+  </div>
+}
+
+@if (loading()) {
+  <p class="text-gr-sub">Cargando notificaciones...</p>
+} @else if (notifications().length === 0) {
+  <p class="text-gr-sub">No hay notificaciones.</p>
+} @else {
+  <div class="overflow-hidden rounded-lg border border-gr-border bg-gr-surface">
+    @for (n of notifications(); track n.id) {
+      <div
+        (click)="selectItem(n)"
+        class="flex cursor-pointer items-start gap-3 border-b border-gr-border-lite px-5 py-4 transition-colors last:border-b-0 hover:bg-gr-bg"
+        [class]="n.isRead ? '' : 'bg-gr-primary-lite/10'"
+      >
+        <span class="mt-1.5 h-2 w-2 shrink-0 rounded-full" [class]="dotClass(n.type)"></span>
+        <div class="min-w-0 flex-1">
+          <div class="flex items-start justify-between gap-3">
+            <span class="text-sm" [class]="n.isRead ? 'font-medium text-gr-sub' : 'font-semibold text-gr-text'">
+              {{ n.title }}
+            </span>
+            <span class="shrink-0 text-xs text-gr-muted">{{ n.createdAt | date: 'dd/MM/yyyy HH:mm' }}</span>
+          </div>
+          <p class="mt-1 text-sm text-gr-sub">{{ n.message }}</p>
+        </div>
+        <button
+          type="button"
+          (click)="remove(n, $event)"
+          [disabled]="removingId() === n.id"
+          aria-label="Eliminar notificación"
+          class="shrink-0 cursor-pointer rounded-sm p-1 text-gr-muted transition-colors hover:bg-gr-danger-bg hover:text-gr-danger disabled:cursor-not-allowed disabled:opacity-50"
+        >
+          <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18"/>
+            <line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </button>
+      </div>
+    }
+  </div>
+
+  <div class="mt-6">
+    <app-pagination
+      [currentPage]="page()"
+      [totalPages]="totalPages()"
+      [pageSize]="pageSize()"
+      [totalItems]="totalCount()"
+      (pageChange)="onPageChange($event)"
+      (pageSizeChange)="onPageSizeChange($event)"
+    />
+  </div>
+}

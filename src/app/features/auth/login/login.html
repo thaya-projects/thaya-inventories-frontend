@@ -1,0 +1,183 @@
+<div class="flex min-h-screen">
+
+  <!-- Lado izquierdo: branding -->
+  <div class="relative hidden flex-col justify-between overflow-hidden bg-gr-primary-dark p-12 text-gr-primary-lite lg:flex lg:w-1/2">
+
+    <div class="absolute top-0 right-0 h-96 w-96 -translate-y-1/2 translate-x-1/2 rounded-full bg-gr-primary-lite/5"></div>
+    <div class="absolute bottom-0 left-0 h-72 w-72 -translate-x-1/2 translate-y-1/2 rounded-full bg-gr-primary-lite/5"></div>
+
+    <div>
+      <h1 class="text-4xl font-bold tracking-tight text-gr-gold">Thaya</h1>
+      <p class="mt-2 text-xl font-medium text-gr-primary-lite">Plataforma de gestión de inventarios</p>
+      <p class="mt-2 max-w-md text-lg text-gr-primary-lite/75">Control total de tu negocio</p>
+    </div>
+
+    <div class="relative z-10 space-y-5">
+      <div class="flex items-start gap-4 rounded-2xl bg-gr-primary-lite/10 p-5 backdrop-blur-sm">
+        <div class="mt-1 flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gr-gold/20 text-gr-gold">
+          <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
+          </svg>
+        </div>
+        <div>
+          <h3 class="font-semibold text-gr-primary-lite">Gestión de Stock</h3>
+          <p class="mt-1 text-sm text-gr-primary-lite/70">Inventario en tiempo real, entradas, salidas y alertas de stock mínimo</p>
+        </div>
+      </div>
+
+      <div class="flex items-start gap-4 rounded-2xl bg-gr-primary-lite/10 p-5 backdrop-blur-sm">
+        <div class="mt-1 flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gr-gold/20 text-gr-gold">
+          <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
+          </svg>
+        </div>
+        <div>
+          <h3 class="font-semibold text-gr-primary-lite">Producción</h3>
+          <p class="mt-1 text-sm text-gr-primary-lite/70">Control de procesos productivos y consumo de materia prima</p>
+        </div>
+      </div>
+
+      <div class="flex items-start gap-4 rounded-2xl bg-gr-primary-lite/10 p-5 backdrop-blur-sm">
+        <div class="mt-1 flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gr-gold/20 text-gr-gold">
+          <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"/>
+          </svg>
+        </div>
+        <div>
+          <h3 class="font-semibold text-gr-primary-lite">Ventas, Despachos y Cobros</h3>
+          <p class="mt-1 text-sm text-gr-primary-lite/70">Desde la venta hasta el cobro, con trazabilidad completa</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="relative z-10 text-sm text-gr-primary-lite/50">Thaya v1.0 · 2026</div>
+  </div>
+
+  <!-- Lado derecho: formulario -->
+  <div class="flex w-full items-center justify-center bg-gr-bg p-8 lg:w-1/2">
+    <div class="w-full max-w-md">
+
+      <!-- Marca: solo se ve en mobile/tablet, en desktop ya está en el panel izquierdo -->
+      <div class="mb-8 lg:hidden">
+        <span class="text-2xl font-extrabold tracking-widest text-gr-primary-dark">THAYA</span>
+      </div>
+
+      <div class="mb-10">
+        <h2 class="text-3xl font-bold text-gr-text">Bienvenido de nuevo</h2>
+        <p class="mt-2 text-gr-sub">Ingresa tus credenciales para acceder a la plataforma</p>
+      </div>
+
+      @if (errorMessage()) {
+        <div class="mb-6 rounded-xl border border-gr-danger/20 bg-gr-danger-bg px-4 py-3 text-sm text-gr-danger">
+          {{ errorMessage() }}
+        </div>
+      }
+
+      <form [formGroup]="form" (ngSubmit)="submit()" class="space-y-6">
+
+        <!-- Correo o usuario -->
+        <div>
+          <label for="identifier" class="mb-1.5 block text-sm font-medium text-gr-sub">Correo o usuario</label>
+          <div class="relative">
+            <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5">
+              <svg class="h-5 w-5 text-gr-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+              </svg>
+            </div>
+            <input
+              id="identifier"
+              type="text"
+              formControlName="identifier"
+              placeholder="correo@ejemplo.com o usuario"
+              class="w-full rounded-xl border border-gr-border bg-gr-surface py-3 pl-11 pr-4 text-gr-text placeholder-gr-muted transition focus:border-gr-primary focus:ring-2 focus:ring-gr-primary/30 focus:outline-none"
+            >
+          </div>
+          @if (form.controls.identifier.invalid && form.controls.identifier.touched) {
+            <p class="mt-1.5 text-xs text-gr-danger">Ingresa tu correo o usuario.</p>
+          }
+        </div>
+
+        <!-- Contraseña -->
+        <div>
+          <label for="password" class="mb-1.5 block text-sm font-medium text-gr-sub">Contraseña</label>
+          <div class="relative">
+            <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5">
+              <svg class="h-5 w-5 text-gr-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+              </svg>
+            </div>
+            <input
+              id="password"
+              [type]="showPassword() ? 'text' : 'password'"
+              formControlName="password"
+              placeholder="••••••••"
+              class="w-full rounded-xl border border-gr-border bg-gr-surface py-3 pl-11 pr-12 text-gr-text placeholder-gr-muted transition focus:border-gr-primary focus:ring-2 focus:ring-gr-primary/30 focus:outline-none"
+            >
+            <button
+              type="button"
+              (click)="togglePassword()"
+              [attr.aria-label]="showPassword() ? 'Ocultar contraseña' : 'Mostrar contraseña'"
+              class="absolute inset-y-0 right-0 flex items-center pr-3.5 text-gr-muted transition-colors hover:text-gr-sub"
+            >
+              @if (showPassword()) {
+                <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M3 3l18 18"/>
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M10.58 10.58a2 2 0 002.83 2.83"/>
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M9.88 4.24A9.53 9.53 0 0112 4c4.478 0 8.268 2.943 9.542 7a10.94 10.94 0 01-1.68 3.04M6.61 6.61A10.94 10.94 0 002.458 12c.66 2.1 1.99 3.93 3.75 5.24"/>
+                </svg>
+              } @else {
+                <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                </svg>
+              }
+            </button>
+          </div>
+          @if (form.controls.password.invalid && form.controls.password.touched) {
+            <p class="mt-1.5 text-xs text-gr-danger">La contraseña es obligatoria.</p>
+          }
+        </div>
+
+        <!-- Recordar + Olvidé -->
+        <div class="space-y-2">
+          <label class="flex cursor-pointer items-center gap-2">
+            <input type="checkbox" formControlName="remember" class="h-4 w-4 rounded border-gr-border text-gr-primary-dark focus:ring-gr-primary-dark">
+            <span class="text-sm text-gr-sub">Recordarme</span>
+          </label>
+          <p class="text-sm text-gr-muted">
+            ¿Olvidaste tu contraseña? Contacta a tu administrador.
+          </p>
+        </div>
+
+        <!-- Botón -->
+        <button
+          type="submit"
+          [disabled]="submitting()"
+          class="flex w-full items-center justify-center gap-2 rounded-xl bg-gr-primary-dark px-4 py-3.5 font-semibold text-gr-primary-lite shadow-lg shadow-gr-primary-dark/20 transition-all duration-200 hover:brightness-90 disabled:cursor-not-allowed disabled:opacity-60"
+        >
+          @if (submitting()) {
+            <svg class="h-5 w-5 animate-spin" fill="none" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+            </svg>
+            Ingresando…
+          } @else {
+            <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"/>
+            </svg>
+            Ingresar
+          }
+        </button>
+      </form>
+
+      <div class="mt-12 text-center">
+        <p class="text-sm text-gr-muted">
+          Powered by <span class="font-semibold text-gr-primary-dark">Thaya</span>
+        </p>
+        <p class="mt-1 text-xs text-gr-muted/70">© 2026 Thaya. Todos los derechos reservados.</p>
+      </div>
+
+    </div>
+  </div>
+
+</div>

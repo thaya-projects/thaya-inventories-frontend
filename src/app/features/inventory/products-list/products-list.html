@@ -1,0 +1,127 @@
+<div class="mb-6 flex flex-col items-start gap-4 sm:flex-row sm:items-center sm:justify-between">
+  <div>
+    <h1 class="text-2xl font-bold text-gr-text">Productos</h1>
+    <p class="mt-1 text-gr-sub">Catálogo de productos de tu empresa.</p>
+  </div>
+  @if (canWrite()) {
+    <button
+      type="button"
+      (click)="openCreateModal()"
+      class="cursor-pointer rounded-sm bg-gr-primary-dark px-4 py-2.5 font-semibold text-gr-primary-lite transition hover:brightness-95"
+    >
+      + Nuevo producto
+    </button>
+  }
+</div>
+
+<app-inventory-tabs active="products" />
+
+@if (showFormModal()) {
+  <app-product-form-modal [productId]="editingProductId()" (close)="closeFormModal()" (saved)="onProductSaved($event)" />
+}
+
+<div class="mb-6 flex flex-wrap items-center gap-4">
+  <app-search-input
+    placeholder="Buscar por código o nombre..."
+    [value]="search()"
+    (valueChange)="onSearch($event)"
+  />
+
+  <div class="flex gap-2">
+    <button
+      type="button" (click)="setFilter('all')"
+      class="cursor-pointer rounded-sm px-3.5 py-2 text-sm font-medium transition-colors"
+      [class]="statusFilter() === 'all' ? 'bg-gr-primary-dark text-gr-primary-lite' : 'text-gr-sub hover:bg-gr-bg'"
+    >
+      Todos
+    </button>
+    <button
+      type="button" (click)="setFilter('active')"
+      class="cursor-pointer rounded-sm px-3.5 py-2 text-sm font-medium transition-colors"
+      [class]="statusFilter() === 'active' ? 'bg-gr-primary-dark text-gr-primary-lite' : 'text-gr-sub hover:bg-gr-bg'"
+    >
+      Activos
+    </button>
+    <button
+      type="button" (click)="setFilter('inactive')"
+      class="cursor-pointer rounded-sm px-3.5 py-2 text-sm font-medium transition-colors"
+      [class]="statusFilter() === 'inactive' ? 'bg-gr-primary-dark text-gr-primary-lite' : 'text-gr-sub hover:bg-gr-bg'"
+    >
+      Inactivos
+    </button>
+  </div>
+</div>
+
+@if (errorMessage()) {
+  <div class="mb-6 rounded-sm border border-gr-danger/20 bg-gr-danger-bg px-4 py-3 text-sm text-gr-danger">
+    {{ errorMessage() }}
+  </div>
+}
+
+@if (loading()) {
+  <p class="text-gr-sub">Cargando productos...</p>
+} @else {
+  <app-data-table
+    [columns]="columns()"
+    [rows]="products()"
+    [serverSide]="true"
+    [currentPage]="page()"
+    [totalItems]="totalCount()"
+    [pageSize]="pageSize()"
+    (pageChange)="onPageChange($event)"
+    (pageSizeChange)="onPageSizeChange($event)"
+    emptyMessage="No hay productos registrados todavía."
+  />
+}
+
+<ng-template #nameTpl let-product>
+  <span class="flex items-center gap-1.5">
+    @if (product.isFeatured) {
+      <svg class="h-4 w-4 shrink-0 text-gr-gold" fill="currentColor" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <polygon points="12 2 15 8.5 22 9.5 17 14.5 18.5 21.5 12 18 5.5 21.5 7 14.5 2 9.5 9 8.5"/>
+      </svg>
+    }
+    {{ product.name }}
+  </span>
+</ng-template>
+
+<ng-template #priceTpl let-product>
+  @if (product.isDiscountActive && product.discountPrice != null) {
+    <span class="flex flex-col items-end">
+      <span class="text-xs text-gr-muted line-through">Bs {{ product.salePrice?.toFixed(2) }}</span>
+      <span class="font-medium text-gr-success">Bs {{ product.discountPrice.toFixed(2) }}</span>
+    </span>
+  } @else {
+    {{ product.salePrice != null ? 'Bs ' + product.salePrice.toFixed(2) : '—' }}
+  }
+</ng-template>
+
+<ng-template #activeTpl let-product>
+  @if (product.isActive) {
+    <span class="rounded-full bg-gr-success-bg px-3 py-1 text-xs font-medium text-gr-success">Activo</span>
+  } @else {
+    <span class="rounded-full bg-gr-danger-bg px-3 py-1 text-xs font-medium text-gr-danger">Inactivo</span>
+  }
+</ng-template>
+
+<ng-template #actionsTpl let-product>
+  <div class="flex items-center justify-end gap-3">
+    @if (canWrite()) {
+      <a [routerLink]="['/inventory/products', product.id, 'kardex']" class="text-sm font-medium text-gr-sub transition hover:text-gr-text">
+        Kardex
+      </a>
+      <button type="button" (click)="openEditModal(product.id)" class="cursor-pointer text-sm font-medium text-gr-primary transition hover:text-gr-gold">
+        Editar
+      </button>
+      <button
+        type="button"
+        (click)="toggleActive(product)"
+        [disabled]="updatingId() === product.id"
+        class="cursor-pointer text-sm font-medium transition disabled:cursor-not-allowed disabled:opacity-50"
+        [class]="product.isActive ? 'text-gr-danger hover:brightness-90' : 'text-gr-success hover:brightness-90'"
+      >
+        {{ product.isActive ? 'Desactivar' : 'Activar' }}
+      </button>
+    }
+  </div>
+</ng-template>

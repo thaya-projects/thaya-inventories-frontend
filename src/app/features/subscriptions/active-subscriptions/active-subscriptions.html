@@ -1,0 +1,187 @@
+<div class="mb-8">
+  <h1 class="text-2xl font-bold text-gr-text">Suscripciones activas</h1>
+  <p class="mt-1 text-gr-sub">Todas las suscripciones de empresas, no solo las activas.</p>
+</div>
+
+<div class="mb-6 flex flex-wrap gap-2">
+  <button
+    type="button"
+    (click)="setStatusFilter('')"
+    class="cursor-pointer rounded-sm px-3.5 py-2 text-sm font-medium transition-colors"
+    [class]="statusFilter() === '' ? 'bg-gr-primary-dark text-gr-primary-lite' : 'text-gr-sub hover:bg-gr-bg'"
+  >
+    Todas
+  </button>
+  @for (status of statusOptions; track status) {
+    <button
+      type="button"
+      (click)="setStatusFilter(status)"
+      class="cursor-pointer rounded-sm px-3.5 py-2 text-sm font-medium transition-colors"
+      [class]="statusFilter() === status ? 'bg-gr-primary-dark text-gr-primary-lite' : 'text-gr-sub hover:bg-gr-bg'"
+    >
+      {{ statusLabel(status) }}
+    </button>
+  }
+</div>
+
+@if (errorMessage()) {
+  <div class="mb-6 rounded-sm border border-gr-danger/20 bg-gr-danger-bg px-4 py-3 text-sm text-gr-danger">
+    {{ errorMessage() }}
+  </div>
+}
+
+@if (loading()) {
+  <p class="text-gr-sub">Cargando suscripciones...</p>
+} @else {
+  <app-data-table
+    [columns]="columns()"
+    [rows]="subscriptions()"
+    [serverSide]="true"
+    [currentPage]="page()"
+    [totalItems]="totalCount()"
+    [pageSize]="pageSize()"
+    (pageChange)="onPageChange($event)"
+    (pageSizeChange)="onPageSizeChange($event)"
+    emptyMessage="No hay suscripciones registradas todavía."
+  />
+}
+
+<ng-template #planTpl let-sub>
+  <div class="flex flex-col">
+    <span class="font-medium text-gr-text">{{ sub.planName }}</span>
+    <span class="text-xs text-gr-muted">{{ billingCycleLabel(sub.billingCycle) }}</span>
+  </div>
+</ng-template>
+
+<ng-template #statusTpl let-sub>
+  <span class="w-fit rounded-full px-3 py-1 text-xs font-medium" [class]="statusBadgeClass(sub.status)">
+    {{ statusLabel(sub.status) }}
+  </span>
+</ng-template>
+
+<ng-template #trialTpl let-sub>
+  {{ sub.trialEndsAt ?? sub.currentPeriodEnd ?? '—' }}
+</ng-template>
+
+<ng-template #actionsTpl let-sub>
+  <div class="flex flex-wrap items-center justify-end gap-2">
+    @if (sub.status === 'Trial') {
+      <input
+        type="date"
+        [value]="extendDateFor(sub.id)"
+        (change)="onExtendDateChange(sub.id, $event)"
+        class="rounded-sm border border-gr-border bg-gr-surface px-2 py-1 text-xs text-gr-text focus:border-gr-primary focus:outline-none focus:ring-2 focus:ring-gr-primary/30"
+      >
+      <button
+        type="button"
+        (click)="extendTrial(sub)"
+        [disabled]="updatingId() === sub.id || !extendDateFor(sub.id)"
+        class="cursor-pointer text-sm font-medium text-gr-primary transition hover:text-gr-gold disabled:cursor-not-allowed disabled:opacity-50"
+      >
+        Extender
+      </button>
+    }
+    @if (sub.status !== 'Cancelled') {
+      <button
+        type="button"
+        (click)="openCancelDialog(sub)"
+        [disabled]="updatingId() === sub.id"
+        class="cursor-pointer text-sm font-medium text-gr-danger transition hover:brightness-90 disabled:cursor-not-allowed disabled:opacity-50"
+      >
+        Cancelar
+      </button>
+    }
+    <button
+      type="button"
+      (click)="openPaymentModal(sub)"
+      class="cursor-pointer text-sm font-medium text-gr-primary transition hover:text-gr-gold"
+    >
+      Registrar pago
+    </button>
+  </div>
+</ng-template>
+
+@if (payingSub(); as sub) {
+  <app-modal [title]="'Registrar pago — ' + sub.companyName" (close)="closePaymentModal()">
+    @if (paymentError()) {
+      <div class="mb-4 rounded-sm border border-gr-danger/20 bg-gr-danger-bg px-4 py-3 text-sm text-gr-danger">
+        {{ paymentError() }}
+      </div>
+    }
+
+    <form [formGroup]="paymentForm" (ngSubmit)="submitPayment()" class="space-y-4">
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+          <label for="amount" class="mb-1.5 block text-sm font-medium text-gr-sub">Monto</label>
+          <input
+            id="amount"
+            type="number"
+            step="0.01"
+            min="0.01"
+            formControlName="amount"
+            class="w-full rounded-sm border border-gr-border bg-gr-surface px-4 py-2.5 text-gr-text transition focus:border-gr-primary focus:outline-none focus:ring-2 focus:ring-gr-primary/30"
+          >
+          @if (paymentForm.controls.amount.invalid && paymentForm.controls.amount.touched) {
+            <p class="mt-1.5 text-xs text-gr-danger">El monto debe ser mayor que cero.</p>
+          }
+        </div>
+        <div>
+          <label for="currency" class="mb-1.5 block text-sm font-medium text-gr-sub">Moneda</label>
+          <input
+            id="currency"
+            type="text"
+            formControlName="currency"
+            class="w-full rounded-sm border border-gr-border bg-gr-surface px-4 py-2.5 text-gr-text transition focus:border-gr-primary focus:outline-none focus:ring-2 focus:ring-gr-primary/30"
+          >
+        </div>
+      </div>
+
+      <div>
+        <label for="paymentMethod" class="mb-1.5 block text-sm font-medium text-gr-sub">Método</label>
+        <select
+          id="paymentMethod"
+          formControlName="paymentMethod"
+          class="w-full rounded-sm border border-gr-border bg-gr-surface px-4 py-2.5 text-gr-text transition focus:border-gr-primary focus:outline-none focus:ring-2 focus:ring-gr-primary/30"
+        >
+          @for (method of paymentMethods; track method) {
+            <option [value]="method">{{ method }}</option>
+          }
+        </select>
+      </div>
+
+      <label class="flex cursor-pointer items-center gap-2">
+        <input type="checkbox" formControlName="markAsPaid" class="h-4 w-4 rounded border-gr-border text-gr-primary-dark focus:ring-gr-primary-dark">
+        <span class="text-sm text-gr-sub">Ya está pagado (confirmar el cobro de una vez)</span>
+      </label>
+
+      <div class="flex items-center justify-end gap-3 pt-2">
+        <button
+          type="button"
+          (click)="closePaymentModal()"
+          class="cursor-pointer rounded-sm px-4 py-2.5 font-medium text-gr-sub transition hover:text-gr-text"
+        >
+          Cancelar
+        </button>
+        <button
+          type="submit"
+          [disabled]="paymentSubmitting()"
+          class="cursor-pointer rounded-sm bg-gr-primary-dark px-5 py-2.5 font-semibold text-gr-primary-lite transition hover:brightness-95 disabled:cursor-not-allowed disabled:opacity-60"
+        >
+          {{ paymentSubmitting() ? 'Guardando…' : 'Registrar pago' }}
+        </button>
+      </div>
+    </form>
+  </app-modal>
+}
+
+@if (cancelTarget(); as sub) {
+  <app-confirm-dialog
+    title="Cancelar suscripción"
+    [message]="'¿Cancelar la suscripción de ' + sub.companyName + '? Esta acción no se puede deshacer.'"
+    confirmLabel="Cancelar suscripción"
+    cancelLabel="Volver"
+    [working]="cancelling()"
+    (close)="closeCancelDialog()"
+    (confirmed)="confirmCancel()"
+  />
+}

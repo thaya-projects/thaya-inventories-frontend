@@ -1,0 +1,225 @@
+<app-modal title="Nueva empresa" size="lg" (close)="close.emit()">
+  <app-wizard-stepper [steps]="['Datos', 'Administrador', 'Plan']" [currentStep]="step()" />
+
+  @if (errorMessage()) {
+    <div class="mb-6 rounded-sm border border-gr-danger/20 bg-gr-danger-bg px-4 py-3 text-sm text-gr-danger">
+      {{ errorMessage() }}
+    </div>
+  }
+
+  <form [formGroup]="form" (ngSubmit)="submit()">
+    <!-- Paso 1: Datos de la empresa -->
+    @if (step() === 1) {
+      <div class="space-y-4">
+        <div>
+          <label for="companyName" class="mb-1.5 block text-sm font-medium text-gr-sub">Nombre de la empresa</label>
+          <input
+            id="companyName" type="text" formControlName="companyName" placeholder="Ej. Molinos del Valle S.A."
+            class="w-full rounded-sm border border-gr-border bg-gr-surface px-4 py-2.5 text-gr-text placeholder-gr-muted transition focus:border-gr-primary focus:outline-none focus:ring-2 focus:ring-gr-primary/30"
+          >
+          @if (form.controls.companyName.invalid && form.controls.companyName.touched) {
+            <p class="mt-1.5 text-xs text-gr-danger">El nombre de la empresa es obligatorio.</p>
+          }
+        </div>
+
+        <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <div>
+            <label for="industry" class="mb-1.5 block text-sm font-medium text-gr-sub">Industria (opcional)</label>
+            <input
+              id="industry" type="text" formControlName="industry" placeholder="Ej. Alimentos"
+              class="w-full rounded-sm border border-gr-border bg-gr-surface px-4 py-2.5 text-gr-text placeholder-gr-muted transition focus:border-gr-primary focus:outline-none focus:ring-2 focus:ring-gr-primary/30"
+            >
+          </div>
+          <div>
+            <label for="taxId" class="mb-1.5 block text-sm font-medium text-gr-sub">NIT (opcional)</label>
+            <input
+              id="taxId" type="text" formControlName="taxId" placeholder="Ej. 123456789"
+              class="w-full rounded-sm border border-gr-border bg-gr-surface px-4 py-2.5 text-gr-text placeholder-gr-muted transition focus:border-gr-primary focus:outline-none focus:ring-2 focus:ring-gr-primary/30"
+            >
+          </div>
+        </div>
+
+        <div>
+          <label class="mb-1.5 block text-sm font-medium text-gr-sub">Tipo de operación</label>
+          <div class="grid grid-cols-1 gap-3">
+            @for (preset of presetOptions; track preset) {
+              <button
+                type="button" (click)="onPresetChange(preset)"
+                class="cursor-pointer rounded-sm border-2 px-4 py-3 text-left transition"
+                [class]="form.controls.modulePreset.value === preset ? 'border-gr-primary-dark bg-gr-primary-lite/30' : 'border-gr-border-lite hover:bg-gr-bg'"
+              >
+                <span class="block font-medium text-gr-text">{{ presets[preset].label }}</span>
+                <span class="block text-xs text-gr-muted">{{ presets[preset].hint }}</span>
+              </button>
+            }
+          </div>
+
+          @if (form.controls.modulePreset.value !== 'inventory') {
+            <label class="mt-3 flex w-fit cursor-pointer items-center gap-2.5">
+              <input type="checkbox" formControlName="usesLots" class="h-4 w-4 cursor-pointer accent-gr-primary-dark">
+              <span class="text-sm text-gr-sub">Usan lotes / vencimiento</span>
+            </label>
+          }
+        </div>
+      </div>
+    }
+
+    <!-- Paso 2: Administrador de la empresa -->
+    @if (step() === 2) {
+      <div class="space-y-4">
+        <div>
+          <label for="adminFullName" class="mb-1.5 block text-sm font-medium text-gr-sub">Nombre completo</label>
+          <input
+            id="adminFullName" type="text" formControlName="adminFullName" placeholder="Nombre y apellido"
+            class="w-full rounded-sm border border-gr-border bg-gr-surface px-4 py-2.5 text-gr-text placeholder-gr-muted transition focus:border-gr-primary focus:outline-none focus:ring-2 focus:ring-gr-primary/30"
+          >
+          @if (form.controls.adminFullName.invalid && form.controls.adminFullName.touched) {
+            <p class="mt-1.5 text-xs text-gr-danger">El nombre del administrador es obligatorio.</p>
+          }
+        </div>
+
+        <div>
+          <label for="adminEmail" class="mb-1.5 block text-sm font-medium text-gr-sub">Correo electrónico</label>
+          <input
+            id="adminEmail" type="email" formControlName="adminEmail" placeholder="admin@empresa.com"
+            class="w-full rounded-sm border border-gr-border bg-gr-surface px-4 py-2.5 text-gr-text placeholder-gr-muted transition focus:border-gr-primary focus:outline-none focus:ring-2 focus:ring-gr-primary/30"
+          >
+          @if (form.controls.adminEmail.invalid && form.controls.adminEmail.touched) {
+            <p class="mt-1.5 text-xs text-gr-danger">Ingresa un correo válido.</p>
+          }
+        </div>
+
+        <div>
+          <div class="mb-1.5 flex items-center justify-between">
+            <label for="adminPassword" class="text-sm font-medium text-gr-sub">Contraseña temporal</label>
+            <button type="button" (click)="generate()" class="text-sm font-medium text-gr-primary transition hover:text-gr-gold">
+              Generar
+            </button>
+          </div>
+          <div class="relative">
+            <input
+              id="adminPassword" [type]="showPassword() ? 'text' : 'password'" formControlName="adminPassword" placeholder="Mínimo 8 caracteres"
+              class="w-full rounded-sm border border-gr-border bg-gr-surface py-2.5 pr-20 pl-4 text-gr-text placeholder-gr-muted transition focus:border-gr-primary focus:outline-none focus:ring-2 focus:ring-gr-primary/30"
+            >
+            <div class="absolute inset-y-0 right-0 flex items-center gap-1 pr-2.5">
+              <button
+                type="button" (click)="copyPassword()"
+                [attr.aria-label]="copied() ? 'Contraseña copiada' : 'Copiar contraseña'"
+                class="flex h-7 w-7 cursor-pointer items-center justify-center rounded-sm text-gr-muted transition-colors hover:bg-gr-bg hover:text-gr-sub"
+              >
+                @if (copied()) {
+                  <svg class="h-4 w-4 text-gr-success" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="20 6 9 17 4 12"/>
+                  </svg>
+                } @else {
+                  <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="9" y="9" width="13" height="13" rx="2"/>
+                    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+                  </svg>
+                }
+              </button>
+              <button
+                type="button" (click)="togglePassword()"
+                [attr.aria-label]="showPassword() ? 'Ocultar contraseña' : 'Mostrar contraseña'"
+                class="flex h-7 w-7 cursor-pointer items-center justify-center rounded-sm text-gr-muted transition-colors hover:bg-gr-bg hover:text-gr-sub"
+              >
+                @if (showPassword()) {
+                  <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M3 3l18 18"/>
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M10.58 10.58a2 2 0 002.83 2.83"/>
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M9.88 4.24A9.53 9.53 0 0112 4c4.478 0 8.268 2.943 9.542 7a10.94 10.94 0 01-1.68 3.04M6.61 6.61A10.94 10.94 0 002.458 12c.66 2.1 1.99 3.93 3.75 5.24"/>
+                  </svg>
+                } @else {
+                  <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                  </svg>
+                }
+              </button>
+            </div>
+          </div>
+          @if (form.controls.adminPassword.invalid && form.controls.adminPassword.touched) {
+            <p class="mt-1.5 text-xs text-gr-danger">La contraseña debe tener al menos 8 caracteres.</p>
+          } @else {
+            <p class="mt-1.5 text-xs text-gr-muted">Compartila con el administrador — no queda guardada en ningún lado después de crear la empresa.</p>
+          }
+        </div>
+      </div>
+    }
+
+    <!-- Paso 3: Plan y periodo de prueba -->
+    @if (step() === 3) {
+      <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <div>
+          <label for="planCode" class="mb-1.5 block text-sm font-medium text-gr-sub">Plan</label>
+          @if (plansLoading()) {
+            <p class="text-sm text-gr-sub">Cargando planes...</p>
+          } @else if (plansError()) {
+            <div class="rounded-sm border border-gr-danger/20 bg-gr-danger-bg px-4 py-3 text-sm text-gr-danger">
+              {{ plansError() }}
+              <button type="button" (click)="retryLoadPlans()" class="ml-2 cursor-pointer font-semibold underline">
+                Reintentar
+              </button>
+            </div>
+          } @else if (plans().length === 0) {
+            <p class="text-sm text-gr-sub">No hay planes activos — creá uno primero desde Suscripciones → Planes.</p>
+          } @else {
+            <select
+              id="planCode" formControlName="planCode"
+              class="w-full rounded-sm border border-gr-border bg-gr-surface px-4 py-2.5 text-gr-text transition focus:border-gr-primary focus:outline-none focus:ring-2 focus:ring-gr-primary/30"
+            >
+              @for (plan of plans(); track plan.code) {
+                <option [value]="plan.code">{{ plan.name }}</option>
+              }
+            </select>
+          }
+        </div>
+
+        <div>
+          <label for="trialDays" class="mb-1.5 block text-sm font-medium text-gr-sub">Días de prueba</label>
+          <input
+            id="trialDays" type="number" min="1" formControlName="trialDays"
+            class="w-full rounded-sm border border-gr-border bg-gr-surface px-4 py-2.5 text-gr-text transition focus:border-gr-primary focus:outline-none focus:ring-2 focus:ring-gr-primary/30"
+          >
+        </div>
+      </div>
+    }
+
+    <div class="mt-8 flex items-center justify-between border-t border-gr-border-lite pt-5">
+      @if (step() > 1) {
+        <button type="button" (click)="back()" class="rounded-sm px-4 py-2.5 font-medium text-gr-sub transition hover:text-gr-text">
+          Atrás
+        </button>
+      } @else {
+        <button type="button" (click)="close.emit()" class="rounded-sm px-4 py-2.5 font-medium text-gr-sub transition hover:text-gr-text">
+          Cancelar
+        </button>
+      }
+
+      @if (step() < 3) {
+        <button
+          type="button" (click)="next()"
+          class="rounded-sm bg-gr-primary-dark px-5 py-2.5 font-semibold text-gr-primary-lite transition hover:brightness-95"
+        >
+          Siguiente
+        </button>
+      } @else {
+        <button
+          type="submit"
+          [disabled]="submitting()"
+          class="flex items-center gap-2 rounded-sm bg-gr-primary-dark px-5 py-2.5 font-semibold text-gr-primary-lite transition hover:brightness-95 disabled:cursor-not-allowed disabled:opacity-60"
+        >
+          @if (submitting()) {
+            <svg class="h-4 w-4 animate-spin" fill="none" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+            </svg>
+            Creando…
+          } @else {
+            Crear empresa
+          }
+        </button>
+      }
+    </div>
+  </form>
+</app-modal>

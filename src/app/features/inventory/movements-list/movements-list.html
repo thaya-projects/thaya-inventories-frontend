@@ -1,0 +1,84 @@
+<div class="mb-6 flex flex-col items-start gap-4 sm:flex-row sm:items-center sm:justify-between">
+  <div>
+    <h1 class="text-2xl font-bold text-gr-text">Movimientos de inventario</h1>
+    <p class="mt-1 text-gr-sub">Historial de entradas, salidas y ajustes.</p>
+  </div>
+  @if (!blockedByMultiWarehouse()) {
+    <div class="flex flex-wrap gap-3">
+      <button
+        type="button"
+        (click)="openAdjustmentModal()"
+        class="cursor-pointer rounded-sm bg-gr-bg px-4 py-2.5 font-semibold text-gr-sub transition hover:bg-gr-border-lite hover:text-gr-text"
+      >
+        Ajustar stock
+      </button>
+      <button
+        type="button"
+        (click)="openMovementModal()"
+        class="cursor-pointer rounded-sm bg-gr-primary-dark px-4 py-2.5 font-semibold text-gr-primary-lite transition hover:brightness-95"
+      >
+        + Entrada / Salida
+      </button>
+    </div>
+  }
+</div>
+
+<app-inventory-tabs active="movements" />
+
+@if (showMovementModal()) {
+  <app-movement-form-modal (close)="closeMovementModal()" (saved)="onMovementSaved($event)" />
+}
+
+@if (showAdjustmentModal()) {
+  <app-movement-adjustment-modal (close)="closeAdjustmentModal()" (saved)="onAdjustmentSaved()" />
+}
+
+@if (blockedByMultiWarehouse()) {
+  <div class="mb-6 rounded-sm border border-gr-info/20 bg-gr-info-bg px-4 py-3 text-sm text-gr-info">
+    El registro manual de movimientos todavía no está disponible para empresas con multi-almacén activado.
+  </div>
+}
+
+@if (errorMessage()) {
+  <div class="mb-6 rounded-sm border border-gr-danger/20 bg-gr-danger-bg px-4 py-3 text-sm text-gr-danger">
+    {{ errorMessage() }}
+  </div>
+}
+
+@if (loading()) {
+  <p class="text-gr-sub">Cargando movimientos...</p>
+} @else {
+  <app-data-table
+    [columns]="columns()"
+    [rows]="movements()"
+    [serverSide]="true"
+    [currentPage]="page()"
+    [totalItems]="totalCount()"
+    [pageSize]="pageSize()"
+    (pageChange)="onPageChange($event)"
+    (pageSizeChange)="onPageSizeChange($event)"
+    emptyMessage="No hay movimientos registrados todavía."
+  />
+}
+
+<ng-template #dateTpl let-m>
+  {{ m.date | date: 'dd/MM/yyyy' }}
+</ng-template>
+
+<ng-template #productTpl let-m>
+  <span class="font-medium text-gr-text">{{ m.productCode }}</span> — {{ m.productName }}
+</ng-template>
+
+<ng-template #typeTpl let-m>
+  @if (m.movementType === 'In') {
+    <span class="rounded-full bg-gr-success-bg px-2.5 py-0.5 text-xs font-medium text-gr-success">{{ typeLabel(m.movementType) }}</span>
+  } @else if (m.movementType === 'Out') {
+    <span class="rounded-full bg-gr-warning-bg px-2.5 py-0.5 text-xs font-medium text-gr-warning">{{ typeLabel(m.movementType) }}</span>
+  } @else {
+    <span class="rounded-full bg-gr-info-bg px-2.5 py-0.5 text-xs font-medium text-gr-info">{{ typeLabel(m.movementType) }}</span>
+  }
+</ng-template>
+
+<ng-template #costTpl let-m>
+  {{ m.unitCost != null ? ('Bs ' + m.unitCost.toFixed(2)) : '—' }}
+</ng-template>
