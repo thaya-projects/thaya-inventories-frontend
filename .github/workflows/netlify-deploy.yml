@@ -1,0 +1,29 @@
+name: Deploy to Netlify
+
+# thaya-projects tiene restringido el acceso OAuth de apps de terceros, por
+# eso Netlify no puede conectarse directo al repo (netlify init falla). Acá
+# GitHub Actions hace el build y sube el resultado con netlify-cli usando un
+# token propio — no depende de que la org apruebe la app de Netlify.
+on:
+  push:
+    branches: [main, develop, feature/admin]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - run: npm ci
+      - run: npm run build
+
+      - name: Deploy to Netlify
+        env:
+          NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
+          NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
+        run: npx netlify-cli deploy --prod --dir=dist/thaya-inventories-frontend/browser
