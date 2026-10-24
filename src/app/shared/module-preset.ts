@@ -24,7 +24,7 @@ interface ModulePresetDef {
 
 export const MODULE_PRESETS: Record<ModulePresetValue, ModulePresetDef> = {
   inventory: {
-    label: 'Solo compran y venden',
+    label: 'Compran y venden',
     hint: 'Inventario, compras, ventas, caja y gastos.',
     settings: {
       usesProduction: false,

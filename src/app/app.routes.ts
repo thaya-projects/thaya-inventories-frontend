@@ -64,13 +64,21 @@ export const routes: Routes = [
         path: 'reportes',
         canActivate: [roleGuard('SuperAdmin')],
         loadComponent: () => import('./shared/coming-soon/coming-soon').then(m => m.ComingSoon),
-        data: { title: 'Reportes', description: 'Reportes de la plataforma — todavía sin API confirmada.' },
+        data: {
+          title: 'Reportes',
+          description: 'Métricas y reportes de toda la plataforma.',
+          message: 'Pronto vas a poder ver aquí reportes y métricas de todas las empresas que usan Thaya.',
+        },
       },
       {
         path: 'configuracion',
         canActivate: [roleGuard('SuperAdmin')],
         loadComponent: () => import('./shared/coming-soon/coming-soon').then(m => m.ComingSoon),
-        data: { title: 'Configuración', description: 'Configuración de la plataforma — todavía sin API confirmada.' },
+        data: {
+          title: 'Configuración',
+          description: 'Ajustes generales de la plataforma.',
+          message: 'Pronto vas a poder ajustar la configuración general de la plataforma desde aquí.',
+        },
       },
 
       // --- Empresa (Fase 2) ---
@@ -244,6 +252,13 @@ export const routes: Routes = [
           import('./features/expenses/expense-detail/expense-detail').then(m => m.ExpenseDetail),
       },
 
+      // --- Reportes (empresa): rentabilidad combinando ventas/compras/gastos ---
+      {
+        path: 'reports/profit',
+        canActivate: [roleGuard('Admin', 'Warehouse', 'Assistant')],
+        loadComponent: () =>
+          import('./features/reports/profit-report/profit-report').then(m => m.ProfitReportPage),
+      },
       {
         path: 'notifications',
         canActivate: [roleGuard('Admin', 'Warehouse', 'Assistant')],

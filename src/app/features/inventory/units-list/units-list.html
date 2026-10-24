@@ -1,4 +1,4 @@
-<div class="mb-8 flex flex-wrap items-center justify-between gap-4">
+<div class="mb-6 flex flex-col items-start gap-4 sm:flex-row sm:items-center sm:justify-between">
   <div>
     <h1 class="text-2xl font-bold text-gr-text">Unidades de medida</h1>
     <p class="mt-1 text-gr-sub">Unidades usadas por tus productos.</p>
@@ -11,6 +11,8 @@
     + Nueva unidad
   </button>
 </div>
+
+<app-inventory-tabs active="units" />
 
 @if (showFormModal()) {
   <app-unit-form-modal [unitId]="editingUnitId()" (close)="closeFormModal()" (saved)="onUnitSaved()" />

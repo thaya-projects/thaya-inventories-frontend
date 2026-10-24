@@ -10,6 +10,7 @@ import {
   CreateCompanyResponse,
   ResetAdminPasswordRequest,
   ResetAdminPasswordResponse,
+  SetCompanyStorefrontRequest,
 } from '../models/company.model';
 import { PagedResult } from '../models/paged-result.model';
 
@@ -45,6 +46,19 @@ export class CompaniesService {
   // OpenAPI real. Devuelve la empresa completa actualizada.
   changeModulePreset(id: string, payload: ChangeCompanyModulePresetRequest): Observable<Company> {
     return this.http.patch<Company>(`${BASE_URL}/${id}/module-preset`, payload);
+  }
+
+  // PATCH /platform/companies/{id}/storefront — activa/desactiva la landing pública.
+  setStorefront(id: string, enabled: boolean): Observable<Company> {
+    const body: SetCompanyStorefrontRequest = { enabled };
+    return this.http.patch<Company>(`${BASE_URL}/${id}/storefront`, body);
+  }
+
+  // POST /platform/companies/{id}/logo — multipart, campo "file".
+  uploadLogo(id: string, file: File): Observable<{ logoUrl: string | null }> {
+    const form = new FormData();
+    form.append('file', file);
+    return this.http.post<{ logoUrl: string | null }>(`${BASE_URL}/${id}/logo`, form);
   }
 
   resetAdminPassword(

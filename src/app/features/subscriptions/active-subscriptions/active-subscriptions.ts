@@ -6,6 +6,7 @@ import { Modal } from '../../../shared/modal/modal';
 import { ConfirmDialog } from '../../../shared/confirm-dialog/confirm-dialog';
 import { ToastService } from '../../../shared/toast/toast.service';
 import { subscriptionStatusBadgeClass, subscriptionStatusLabel } from '../../../shared/subscription-status';
+import { billingCycleLabel } from '../../../shared/billing-cycle';
 import { CompanySubscriptionsService } from '../../../core/services/company-subscriptions';
 import { SubscriptionPaymentsService } from '../../../core/services/subscription-payments';
 import { SubscriptionPlansService } from '../../../core/services/subscription-plans';
@@ -31,6 +32,7 @@ export class ActiveSubscriptions {
   paymentMethods = PAYMENT_METHODS;
   statusBadgeClass = subscriptionStatusBadgeClass;
   statusLabel = subscriptionStatusLabel;
+  billingCycleLabel = billingCycleLabel;
 
   subscriptions = signal<CompanySubscription[]>([]);
   totalCount = signal(0);

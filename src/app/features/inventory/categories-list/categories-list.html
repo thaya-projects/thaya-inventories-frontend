@@ -1,4 +1,4 @@
-<div class="mb-8 flex flex-wrap items-center justify-between gap-4">
+<div class="mb-6 flex flex-col items-start gap-4 sm:flex-row sm:items-center sm:justify-between">
   <div>
     <h1 class="text-2xl font-bold text-gr-text">Categorías</h1>
     <p class="mt-1 text-gr-sub">Categorías y subcategorías de tus productos.</p>
@@ -11,6 +11,8 @@
     + Nueva categoría
   </button>
 </div>
+
+<app-inventory-tabs active="categories" />
 
 @if (showFormModal()) {
   <app-category-form-modal [categoryId]="editingCategoryId()" (close)="closeFormModal()" (saved)="onCategorySaved()" />

@@ -6,12 +6,13 @@ import { WarehousesService } from '../../../core/services/warehouses';
 import { Warehouse } from '../../../core/models/warehouse.model';
 import { AuthService } from '../../../core/services/auth';
 import { ToastService } from '../../../shared/toast/toast.service';
+import { InventoryTabs } from '../inventory-tabs/inventory-tabs';
 
 type StatusFilter = 'all' | 'active' | 'inactive';
 
 @Component({
   selector: 'app-warehouses-list',
-  imports: [DataTable, RouterLink],
+  imports: [DataTable, RouterLink, InventoryTabs],
   templateUrl: './warehouses-list.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })

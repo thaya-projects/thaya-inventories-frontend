@@ -13,6 +13,29 @@
     <form [formGroup]="form" (ngSubmit)="saveProfile()" class="rounded-lg border border-gr-border bg-gr-surface p-6 lg:col-span-2">
       <h2 class="mb-5 text-lg font-semibold text-gr-text">Datos de la empresa</h2>
 
+      <div class="mb-6 flex items-center gap-4">
+        @if (company()?.logoUrl) {
+          <img [src]="company()!.logoUrl" alt="Logo" class="h-14 w-14 rounded-sm border border-gr-border object-contain" />
+        } @else {
+          <div class="flex h-14 w-14 shrink-0 items-center justify-center rounded-sm border border-dashed border-gr-border text-xs text-gr-muted">
+            Logo
+          </div>
+        }
+        <div>
+          <label class="inline-block cursor-pointer rounded-sm bg-gr-bg px-3.5 py-2 text-sm font-medium text-gr-sub transition hover:bg-gr-border-lite hover:text-gr-text">
+            {{ uploadingLogo() ? 'Subiendo...' : 'Cambiar logo' }}
+            <input
+              type="file" accept="image/jpeg,image/png,image/webp" class="hidden"
+              [disabled]="uploadingLogo()" (change)="onLogoSelected($event)"
+            >
+          </label>
+          <p class="mt-1 text-xs text-gr-muted">JPG, PNG o WEBP, máx. 5MB.</p>
+          @if (logoError()) {
+            <p class="mt-1 text-xs text-gr-danger">{{ logoError() }}</p>
+          }
+        </div>
+      </div>
+
       <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <div class="sm:col-span-2">
           <label class="mb-1.5 block text-sm font-medium text-gr-sub">Nombre</label>
@@ -49,10 +72,6 @@
           <label class="mb-1.5 block text-sm font-medium text-gr-sub">Dirección</label>
           <input type="text" formControlName="address" class="w-full rounded-sm border border-gr-border bg-gr-bg px-3.5 py-2.5 text-gr-text outline-none focus:border-gr-primary-mid" />
         </div>
-        <div class="sm:col-span-2">
-          <label class="mb-1.5 block text-sm font-medium text-gr-sub">URL del logo</label>
-          <input type="text" formControlName="logoUrl" class="w-full rounded-sm border border-gr-border bg-gr-bg px-3.5 py-2.5 text-gr-text outline-none focus:border-gr-primary-mid" />
-        </div>
       </div>
 
       <div class="mt-6 border-t border-gr-border-lite pt-5">
@@ -81,11 +100,11 @@
         <dl class="space-y-2.5 text-sm">
           <div class="flex justify-between">
             <dt class="text-gr-muted">Ciclo</dt>
-            <dd class="text-gr-text">{{ sub.billingCycle }}</dd>
+            <dd class="text-gr-text">{{ billingCycleLabel(sub.billingCycle) }}</dd>
           </div>
           @if (sub.trialEndsAt) {
             <div class="flex justify-between">
-              <dt class="text-gr-muted">Fin del trial</dt>
+              <dt class="text-gr-muted">Fin de la prueba</dt>
               <dd class="text-gr-text">{{ sub.trialEndsAt | date: 'dd/MM/yyyy' }}</dd>
             </div>
           }
@@ -103,7 +122,7 @@
             <div class="flex flex-wrap gap-1.5">
               @for (mod of activeModules(); track mod) {
                 <span class="rounded-full bg-gr-primary-lite/60 px-2.5 py-0.5 text-xs font-medium text-gr-primary-dark">
-                  {{ mod }}
+                  {{ moduleLabel(mod) }}
                 </span>
               }
             </div>
@@ -125,42 +144,63 @@
     <p class="mt-3 text-sm text-gr-sub">Para cambiar módulos, contactá a Thaya.</p>
   </div>
 
-  <!-- Códigos de lote -->
+  <!-- Códigos de lote — solo si la empresa usa lotes (no aplica para "Compran y venden") -->
+  <!-- @if (showLotCodes()) { -->
   <form [formGroup]="lotSettingsForm" (ngSubmit)="saveLotSettings()" class="mt-6 rounded-lg border border-gr-border bg-gr-surface p-6">
     <h2 class="mb-1 text-lg font-semibold text-gr-text">Códigos de lote</h2>
-    <p class="mb-5 text-sm text-gr-sub">Cómo se arman los códigos sugeridos para producción y compras.</p>
+    <p class="mb-5 text-sm text-gr-sub">
+      El código que el sistema sugiere al registrar un lote de materia prima o de producto terminado. Siempre se puede editar a mano al momento de cargarlo.
+    </p>
 
-    <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
-      <div>
-        <label class="mb-1.5 block text-sm font-medium text-gr-sub">Modo de lote</label>
-        <select
-          formControlName="lotCodeMode"
-          class="w-full rounded-sm border border-gr-border bg-gr-surface px-3.5 py-2.5 text-gr-text transition focus:border-gr-primary focus:outline-none focus:ring-2 focus:ring-gr-primary/30"
+    <div>
+      <label class="mb-1.5 block text-sm font-medium text-gr-sub">¿Quién arma el código?</label>
+      <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+        <button
+          type="button" (click)="setLotCodeMode('auto')"
+          class="cursor-pointer rounded-sm border-2 px-4 py-3 text-left transition"
+          [class]="lotSettingsForm.controls.lotCodeMode.value === 'auto' ? 'border-gr-primary-dark bg-gr-primary-lite/30' : 'border-gr-border-lite hover:bg-gr-bg'"
         >
-          <option value="auto">Automático</option>
-          <option value="manual">Manual</option>
-        </select>
-        <p class="mt-1.5 text-xs text-gr-muted">Automático autoasigna el lote si se deja vacío.</p>
-      </div>
-      <div>
-        <label class="mb-1.5 block text-sm font-medium text-gr-sub">Prefijo MP</label>
-        <input
-          type="text" formControlName="lotCodePrefixMp" placeholder="MP"
-          class="w-full rounded-sm border border-gr-border bg-gr-surface px-3.5 py-2.5 text-gr-text placeholder-gr-muted transition focus:border-gr-primary focus:outline-none focus:ring-2 focus:ring-gr-primary/30"
+          <span class="block font-medium text-gr-text">Automático</span>
+          <span class="block text-xs text-gr-muted">El sistema sugiere el siguiente código disponible. Se puede cambiar a mano si hace falta.</span>
+        </button>
+        <button
+          type="button" (click)="setLotCodeMode('manual')"
+          class="cursor-pointer rounded-sm border-2 px-4 py-3 text-left transition"
+          [class]="lotSettingsForm.controls.lotCodeMode.value === 'manual' ? 'border-gr-primary-dark bg-gr-primary-lite/30' : 'border-gr-border-lite hover:bg-gr-bg'"
         >
+          <span class="block font-medium text-gr-text">Manual</span>
+          <span class="block text-xs text-gr-muted">No se sugiere nada — cada vez se escribe el código a mano.</span>
+        </button>
       </div>
+    </div>
+
+    <div class="mt-5 grid grid-cols-1 gap-4" [class.sm:grid-cols-2]="showMpPrefix()">
+      @if (showMpPrefix()) {
+        <div>
+          <label class="mb-1.5 block text-sm font-medium text-gr-sub">Prefijo para materia prima (MP)</label>
+          <input
+            type="text" formControlName="lotCodePrefixMp" placeholder="MP"
+            class="w-full rounded-sm border border-gr-border bg-gr-surface px-3.5 py-2.5 text-gr-text placeholder-gr-muted transition focus:border-gr-primary focus:outline-none focus:ring-2 focus:ring-gr-primary/30"
+          >
+          <p class="mt-1.5 text-xs text-gr-muted">Se usa al registrar compras de insumos. Ejemplo: <span class="font-mono text-gr-sub">{{ mpCodeExample() }}</span></p>
+        </div>
+      }
       <div>
-        <label class="mb-1.5 block text-sm font-medium text-gr-sub">Prefijo PT</label>
+        <label class="mb-1.5 block text-sm font-medium text-gr-sub">Prefijo para producto terminado (PT)</label>
         <input
           type="text" formControlName="lotCodePrefixPt" placeholder="PT"
           class="w-full rounded-sm border border-gr-border bg-gr-surface px-3.5 py-2.5 text-gr-text placeholder-gr-muted transition focus:border-gr-primary focus:outline-none focus:ring-2 focus:ring-gr-primary/30"
         >
+        <p class="mt-1.5 text-xs text-gr-muted">Se usa al registrar producción. Ejemplo: <span class="font-mono text-gr-sub">{{ ptCodeExample() }}</span></p>
       </div>
     </div>
 
-    <label class="mt-4 flex w-fit cursor-pointer items-center gap-2.5">
-      <input type="checkbox" formControlName="includeProductCode" class="h-4 w-4 cursor-pointer accent-gr-primary-dark">
-      <span class="text-sm text-gr-sub">Incluir el código del producto en el lote</span>
+    <label class="mt-4 flex w-fit cursor-pointer items-start gap-2.5">
+      <input type="checkbox" formControlName="includeProductCode" class="mt-0.5 h-4 w-4 cursor-pointer accent-gr-primary-dark">
+      <span class="text-sm text-gr-sub">
+        Incluir el código del producto en el lote
+        <span class="block text-xs text-gr-muted">Suma el código del producto en el medio, para distinguir lotes de distintos productos a simple vista.</span>
+      </span>
     </label>
 
     <div class="mt-5 border-t border-gr-border-lite pt-5">
@@ -173,4 +213,5 @@
       </button>
     </div>
   </form>
+  <!-- } -->
 }

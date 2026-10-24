@@ -14,6 +14,8 @@ export interface CompanySettings {
   lotCodePrefixMp: string; // default "MP" si no se configura.
   lotCodePrefixPt: string; // default "PT" si no se configura.
   includeProductCode: boolean; // default false.
+  // Landing pública de la empresa (PATCH /platform/companies/{id}/storefront).
+  hasPublicStorefront: boolean;
 }
 
 export interface CompanyProfile {

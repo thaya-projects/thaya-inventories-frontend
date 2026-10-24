@@ -46,10 +46,10 @@ const SUPER_ADMIN_NAV: NavItem[] = [
 // almacenes, movimientos, métodos de pago) se navegan desde dentro de
 // Ventas/Compras/Inventario/Caja, no como ítems hermanos acá. Por rol:
 //   Admin: Inicio, Ventas, Compras, Inventario, Caja, Producción (si aplica),
-//          + grupo "Empresa" (Gastos, Equipo, Mi empresa).
-//   Warehouse: Inicio, Inventario, Compras, Ventas, Producción (si aplica).
+//          Reportes, + grupo "Empresa" (Gastos, Equipo, Mi empresa).
+//   Warehouse: Inicio, Inventario, Compras, Ventas, Producción (si aplica), Reportes.
 //          Sin Caja, sin grupo Empresa.
-//   Assistant: Inicio, Ventas, Caja. Sin Compras/Inventario/Producción/Empresa.
+//   Assistant: Inicio, Ventas, Caja, Reportes. Sin Compras/Inventario/Producción/Empresa.
 
 @Component({
   selector: 'app-sidebar',
@@ -100,17 +100,24 @@ export class Sidebar {
     // 400 — ver production-orders-list).
     const showProduction = on(features.production) && on(settings.usesProduction) && (isAdmin || isWarehouse);
 
+    // Caja sí desglosa Pagos/Métodos de pago como grupo — a diferencia de los
+    // demás catálogos, son dos pantallas igual de importantes, no una
+    // secundaria dentro de otra.
+    const cashChildren: NavChild[] = [{ label: 'Pagos', route: '/cash/payments' }];
+    if (isAdmin) cashChildren.push({ label: 'Métodos de pago', route: '/cash/methods' });
+
     // Orden: lo que genera plata primero (Ventas, Compras, Inventario, Caja),
-    // Producción después. Catálogos (clientes, proveedores, categorías,
-    // unidades, almacenes, movimientos, métodos de pago) ya no son ítems acá
-    // — se navegan desde dentro de cada pantalla (ver toolbars de
-    // sales-orders-list/purchases-list/products-list/payments-list).
+    // Producción después. El resto de catálogos (clientes, proveedores,
+    // categorías, unidades, almacenes, movimientos) se navegan desde dentro
+    // de cada pantalla (ver toolbars de sales-orders-list/purchases-list/products-list).
     const items: NavItem[] = [{ label: 'Inicio', route: '/dashboard', icon: 'grid' }];
     if (showSales) items.push({ label: 'Ventas', route: '/sales', icon: 'cart' });
     if (showPurchases) items.push({ label: 'Compras', route: '/purchases', icon: 'inbox' });
     if (showInventory) items.push({ label: 'Inventario', route: '/inventory/products', icon: 'box' });
-    if (showCash) items.push({ label: 'Caja', route: '/cash/payments', icon: 'wallet' });
+    if (showCash) items.push({ label: 'Caja', icon: 'wallet', children: cashChildren });
     if (showProduction) items.push({ label: 'Producción', route: '/production', icon: 'factory' });
+    // Rentabilidad combina ventas/compras/gastos — mismos roles que ven esos módulos.
+    items.push({ label: 'Reportes', route: '/reports/profit', icon: 'chart' });
 
     if (isAdmin) {
       items.push({ label: 'Gastos', route: '/expenses', icon: 'card', dividerBefore: 'Empresa' });

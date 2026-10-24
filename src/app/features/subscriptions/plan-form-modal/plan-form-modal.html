@@ -17,23 +17,35 @@
         <div class="space-y-4">
           <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div>
-              <label for="code" class="mb-1.5 block text-sm font-medium text-gr-sub">Código</label>
-              <input
-                id="code" type="text" formControlName="code" placeholder="Ej. basic"
-                class="w-full rounded-sm border border-gr-border bg-gr-surface px-4 py-2.5 text-gr-text placeholder-gr-muted transition focus:border-gr-primary focus:outline-none focus:ring-2 focus:ring-gr-primary/30"
-              >
-              @if (form.controls.code.invalid && form.controls.code.touched) {
-                <p class="mt-1.5 text-xs text-gr-danger">El código es obligatorio.</p>
-              }
-            </div>
-            <div>
               <label for="name" class="mb-1.5 block text-sm font-medium text-gr-sub">Nombre</label>
               <input
                 id="name" type="text" formControlName="name" placeholder="Ej. Plan Básico"
+                (input)="onNameInput()"
                 class="w-full rounded-sm border border-gr-border bg-gr-surface px-4 py-2.5 text-gr-text placeholder-gr-muted transition focus:border-gr-primary focus:outline-none focus:ring-2 focus:ring-gr-primary/30"
               >
               @if (form.controls.name.invalid && form.controls.name.touched) {
                 <p class="mt-1.5 text-xs text-gr-danger">El nombre es obligatorio.</p>
+              }
+            </div>
+            <div>
+              <label for="code" class="mb-1.5 block text-sm font-medium text-gr-sub">
+                Código{{ isEditMode() ? '' : ' (opcional)' }}
+              </label>
+              <input
+                id="code" type="text" formControlName="code" placeholder="Ej. basic"
+                (input)="onCodeInput()"
+                class="w-full rounded-sm border border-gr-border bg-gr-surface px-4 py-2.5 font-mono text-gr-text placeholder-gr-muted transition focus:border-gr-primary focus:outline-none focus:ring-2 focus:ring-gr-primary/30"
+              >
+              @if (form.controls.code.invalid && form.controls.code.touched) {
+                <p class="mt-1.5 text-xs text-gr-danger">El código es obligatorio.</p>
+              } @else if (!isEditMode()) {
+                <p class="mt-1.5 text-xs text-gr-muted">
+                  @if (codeAutoSynced()) {
+                    Se genera solo a partir del nombre — podés editarlo si querés uno propio.
+                  } @else {
+                    Código personalizado.
+                  }
+                </p>
               }
             </div>
           </div>
@@ -112,14 +124,15 @@
             @for (preset of presetOptions; track preset) {
               <button
                 type="button" (click)="applyPreset(preset)"
-                class="cursor-pointer rounded-sm border-2 border-gr-border-lite px-4 py-3 text-left transition hover:bg-gr-bg"
+                class="cursor-pointer rounded-sm border-2 px-4 py-3 text-left transition"
+                [class]="selectedPreset() === preset ? 'border-gr-primary-dark bg-gr-primary-lite/30' : 'border-gr-border-lite hover:bg-gr-bg'"
               >
                 <span class="block font-medium text-gr-text">{{ presets[preset].label }}</span>
                 <span class="block text-xs text-gr-muted">{{ presets[preset].hint }}</span>
               </button>
             }
           </div>
-          <p class="mt-2 text-xs text-gr-muted">Rellena las features del preset sin borrar las que el plan ya tuviera.</p>
+          <p class="mt-2 text-xs text-gr-muted">Elegir un preset reemplaza al anterior y rellena sus features sin borrar las demás que el plan ya tuviera.</p>
 
           <button
             type="button" (click)="toggleAdvancedFeatures()"

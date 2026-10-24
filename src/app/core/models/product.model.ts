@@ -18,11 +18,20 @@ export interface Product {
   minimumStock: number;
   averageCost: number;
   salePrice: number | null;
+  // Descuento opcional: sin fechas queda activo indefinidamente; con ambas,
+  // se prende y apaga solo. isDiscountActive lo calcula el backend (ya
+  // resuelto contra la fecha actual, no hay que comparar fechas a mano).
+  discountPrice: number | null;
+  discountStartsAt: string | null;
+  discountEndsAt: string | null;
+  isDiscountActive: boolean;
   shelfLifeMonths: number | null;
   attributes: Record<string, unknown>;
   isActive: boolean;
   // Resuelto por el backend desde la imagen con isPrimary:true — null si no tiene ninguna.
   primaryImageUrl: string | null;
+  // Solo un producto destacado por empresa — marcar uno desmarca al anterior (lo hace el backend).
+  isFeatured: boolean;
   createdAt: string;
   updatedAt: string | null;
 }
@@ -49,6 +58,9 @@ export interface CreateProductRequest {
   hasVariants: boolean;
   minimumStock: number;
   salePrice?: number | null;
+  discountPrice?: number | null;
+  discountStartsAt?: string | null;
+  discountEndsAt?: string | null;
   shelfLifeMonths?: number | null;
   attributes?: Record<string, unknown>;
 }
@@ -66,6 +78,9 @@ export interface UpdateProductRequest {
   hasVariants: boolean;
   minimumStock: number;
   salePrice?: number | null;
+  discountPrice?: number | null;
+  discountStartsAt?: string | null;
+  discountEndsAt?: string | null;
   shelfLifeMonths?: number | null;
   attributes?: Record<string, unknown>;
 }

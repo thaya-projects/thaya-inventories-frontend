@@ -46,4 +46,13 @@ export class CompanyContextService {
   setCompany(company: CompanyProfile): void {
     this.companySig.set(company);
   }
+
+  // Logout/cambio de cuenta en la misma pestaña — sin esto, load() no vuelve
+  // a pedir nada y queda la empresa de la sesión anterior.
+  reset(): void {
+    this.companySig.set(null);
+    this.subscriptionSig.set(null);
+    this.loaded = false;
+    this.errorMessage.set(null);
+  }
 }

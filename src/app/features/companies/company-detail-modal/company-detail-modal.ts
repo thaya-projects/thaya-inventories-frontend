@@ -8,6 +8,7 @@ import { CompaniesService } from '../../../core/services/companies';
 import { Company } from '../../../core/models/company.model';
 import { subscriptionStatusBadgeClass, subscriptionStatusLabel } from '../../../shared/subscription-status';
 import { MODULE_PRESET_OPTIONS, MODULE_PRESETS, ModulePresetValue, inferPreset } from '../../../shared/module-preset';
+import { logoFileError } from '../../../shared/logo-upload';
 import { ToastService } from '../../../shared/toast/toast.service';
 
 // Recibe la empresa directo del row de companies-list (GET /platform/companies
@@ -35,6 +36,9 @@ export class CompanyDetailModal implements OnInit {
 
   statusBadgeClass = subscriptionStatusBadgeClass;
   statusLabel = subscriptionStatusLabel;
+
+  uploadingLogo = signal(false);
+  logoError = signal<string | null>(null);
 
   // Cambiar paquete de módulos (PATCH .../module-preset) — mismos radios que
   // el alta de empresa, hidratados con el paquete inferido de settings.
@@ -100,11 +104,62 @@ export class CompanyDetailModal implements OnInit {
       });
   }
 
+  savingStorefront = signal(false);
+
+  toggleStorefront() {
+    const current = this.current();
+    if (!current) return;
+
+    const enable = current.settings.hasPublicStorefront !== true;
+    this.savingStorefront.set(true);
+    this.companiesService.setStorefront(current.id, enable).subscribe({
+      next: updated => {
+        this.current.set(updated);
+        this.savingStorefront.set(false);
+        this.toast.success(enable ? 'Landing pública activada.' : 'Landing pública desactivada.');
+        this.updated.emit(updated);
+      },
+      error: (err: HttpErrorResponse) => {
+        this.savingStorefront.set(false);
+        this.toast.error(typeof err.error?.error === 'string' ? err.error.error : 'No se pudo actualizar la landing pública.');
+      },
+    });
+  }
+
   private mapPresetError(err: HttpErrorResponse): string {
     if (typeof err.error?.error === 'string') {
       return err.error.error;
     }
     return 'No se pudo actualizar el paquete de módulos.';
+  }
+
+  onLogoSelected(event: Event) {
+    const file = (event.target as HTMLInputElement).files?.[0];
+    const current = this.current();
+    if (!file || !current) return;
+
+    const error = logoFileError(file);
+    if (error) {
+      this.logoError.set(error);
+      return;
+    }
+
+    this.logoError.set(null);
+    this.uploadingLogo.set(true);
+
+    this.companiesService.uploadLogo(current.id, file).subscribe({
+      next: res => {
+        const updated = { ...current, logoUrl: res.logoUrl };
+        this.current.set(updated);
+        this.uploadingLogo.set(false);
+        this.toast.success('Logo actualizado.');
+        this.updated.emit(updated);
+      },
+      error: (err: HttpErrorResponse) => {
+        this.uploadingLogo.set(false);
+        this.logoError.set(typeof err.error?.error === 'string' ? err.error.error : 'No se pudo subir el logo.');
+      },
+    });
   }
 
   openResetModal() {

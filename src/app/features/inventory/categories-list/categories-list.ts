@@ -6,12 +6,13 @@ import { CategoryTreeNode } from '../category-tree-node/category-tree-node';
 import { CategoryFormModal } from '../category-form-modal/category-form-modal';
 import { ConfirmDialog } from '../../../shared/confirm-dialog/confirm-dialog';
 import { ToastService } from '../../../shared/toast/toast.service';
+import { InventoryTabs } from '../inventory-tabs/inventory-tabs';
 
 type StatusFilter = 'all' | 'active' | 'inactive';
 
 @Component({
   selector: 'app-categories-list',
-  imports: [CategoryTreeNode, CategoryFormModal, ConfirmDialog],
+  imports: [CategoryTreeNode, CategoryFormModal, ConfirmDialog, InventoryTabs],
   templateUrl: './categories-list.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })

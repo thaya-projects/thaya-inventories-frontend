@@ -22,6 +22,9 @@ export interface Company {
   currentPeriodEnd: string | null;
   createdAt: string;
   settings: Partial<CompanySettings>;
+  logoUrl: string | null;
+  // Arma la URL pública de la landing junto al dominio donde se aloje el sitio.
+  slug: string;
 }
 
 export interface CompanyListFilters {
@@ -52,6 +55,12 @@ export interface CreateCompanyRequest {
 export interface ChangeCompanyModulePresetRequest {
   modulePreset: ModulePresetValue;
   usesLots: boolean;
+}
+
+// PATCH /platform/companies/{id}/storefront. Devuelve el Company completo
+// actualizado (mismo shape que GET), con settings.hasPublicStorefront y slug.
+export interface SetCompanyStorefrontRequest {
+  enabled: boolean;
 }
 
 export interface CreateCompanyResponse {

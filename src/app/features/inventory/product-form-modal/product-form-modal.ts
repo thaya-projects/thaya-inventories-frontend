@@ -28,6 +28,21 @@ const PRODUCT_TYPES: { value: ProductType; label: string }[] = [
   { value: 'Consumable', label: 'Consumible' },
 ];
 
+// <input type="datetime-local"> trabaja en hora local sin offset — Date lo
+// interpreta/emite igual (local), así que el round-trip con toISOString() da
+// la hora correcta sin manipular el offset a mano.
+function toDatetimeLocalInput(iso: string | null): string {
+  if (!iso) return '';
+  const d = new Date(iso);
+  const pad = (n: number) => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+
+function fromDatetimeLocalInput(value: string | null): string | null {
+  if (!value) return null;
+  return new Date(value).toISOString();
+}
+
 // Aplana el árbol de categorías con indentación por profundidad, igual que en category-form.
 function flattenCategories(categories: Category[], depth = 0): SelectOption[] {
   return categories.flatMap(c => [
@@ -96,6 +111,11 @@ export class ProductFormModal implements OnInit {
   // Nombre — solo en alta; en edición no tocamos el código de un producto ya creado.
   codeManuallyEdited = signal(false);
 
+  // Producto destacado: no hay "desmarcar", solo "marcar" — al hacerlo, el
+  // backend desmarca solo al anterior.
+  isFeatured = signal(false);
+  featuring = signal(false);
+
   form = this.fb.group({
     code: ['', Validators.required],
     name: ['', Validators.required],
@@ -107,6 +127,9 @@ export class ProductFormModal implements OnInit {
     hasVariants: [false],
     minimumStock: [0, [Validators.required, Validators.min(0)]],
     salePrice: [null as number | null],
+    discountPrice: [null as number | null],
+    discountStartsAt: [''],
+    discountEndsAt: [''],
     shelfLifeMonths: [12 as number | null],
     attributesJson: ['{}'],
   });
@@ -155,9 +178,13 @@ export class ProductFormModal implements OnInit {
           hasVariants: product.hasVariants,
           minimumStock: product.minimumStock,
           salePrice: product.salePrice,
+          discountPrice: product.discountPrice,
+          discountStartsAt: toDatetimeLocalInput(product.discountStartsAt),
+          discountEndsAt: toDatetimeLocalInput(product.discountEndsAt),
           shelfLifeMonths: product.shelfLifeMonths,
           attributesJson: JSON.stringify(product.attributes ?? {}, null, 2),
         });
+        this.isFeatured.set(product.isFeatured);
         this.loading.set(false);
         this.loadImages(id);
       },
@@ -319,6 +346,14 @@ export class ProductFormModal implements OnInit {
       }
     }
 
+    const discountStartsAt = fromDatetimeLocalInput(value.discountStartsAt ?? '');
+    const discountEndsAt = fromDatetimeLocalInput(value.discountEndsAt ?? '');
+    if (discountStartsAt && discountEndsAt && discountEndsAt <= discountStartsAt) {
+      this.errorMessage.set('La fecha "Hasta" del descuento debe ser posterior a "Desde".');
+      this.step.set(2);
+      return;
+    }
+
     this.errorMessage.set(null);
     this.submitting.set(true);
 
@@ -333,6 +368,9 @@ export class ProductFormModal implements OnInit {
       hasVariants: value.hasVariants!,
       minimumStock: value.minimumStock!,
       salePrice: value.salePrice,
+      discountPrice: value.discountPrice,
+      discountStartsAt,
+      discountEndsAt,
       shelfLifeMonths: value.shelfLifeMonths,
       attributes,
     };
@@ -350,6 +388,24 @@ export class ProductFormModal implements OnInit {
       error: (err: HttpErrorResponse) => {
         this.submitting.set(false);
         this.errorMessage.set(this.mapError(err));
+      },
+    });
+  }
+
+  markAsFeatured() {
+    const id = this.currentProductId();
+    if (!id || this.isFeatured()) return;
+
+    this.featuring.set(true);
+    this.productsService.feature(id).subscribe({
+      next: () => {
+        this.featuring.set(false);
+        this.isFeatured.set(true);
+        this.toast.success('Producto marcado como destacado.');
+      },
+      error: (err: HttpErrorResponse) => {
+        this.featuring.set(false);
+        this.toast.error(this.mapError(err));
       },
     });
   }

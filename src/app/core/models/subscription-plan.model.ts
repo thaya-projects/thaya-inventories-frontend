@@ -20,8 +20,8 @@ export interface SubscriptionPlanListResponse {
   items: SubscriptionPlan[];
 }
 
-// Mismo body para crear (POST) y actualizar (PUT, reemplaza todo el registro).
-// Requeridos: code, name. El resto es opcional.
+// PUT /api/subscription-plans/{id} — reemplaza todo el registro. `code`
+// sigue siendo obligatorio acá (edición explícita, sin autogeneración).
 export interface SavePlanRequest {
   code: string;
   name: string;
@@ -33,4 +33,13 @@ export interface SavePlanRequest {
   maxProducts?: number;
   maxStorageMb?: number;
   features?: Record<string, unknown>;
+}
+
+// POST /api/subscription-plans — `code` ahora es opcional (confirmado por
+// backend). Si se omite (o va vacío/null), el backend lo genera a partir de
+// `name` (slug) y resuelve duplicados solo con un sufijo numérico (-2, -3...)
+// — el front no valida eso. Si se manda un code explícito y ya existe, sigue
+// rechazando con 400 igual que antes.
+export interface CreatePlanRequest extends Omit<SavePlanRequest, 'code'> {
+  code: string | null;
 }

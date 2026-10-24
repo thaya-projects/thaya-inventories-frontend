@@ -5,6 +5,7 @@ import { DataTable, DataTableColumn } from '../../../shared/data-table/data-tabl
 import { SalesOrdersService } from '../../../core/services/sales-orders';
 import { SalesOrder, SalesOrderStatus } from '../../../core/models/sales-order.model';
 import { SalesOrderDetailModal } from '../sales-order-detail-modal/sales-order-detail-modal';
+import { SalesTabs } from '../sales-tabs/sales-tabs';
 
 type StatusFilter = 'all' | SalesOrderStatus;
 
@@ -26,7 +27,7 @@ const STATUS_VALUES: SalesOrderStatus[] = ['Pending', 'Dispatched', 'Delivered',
 
 @Component({
   selector: 'app-sales-orders-list',
-  imports: [DataTable, RouterLink, DatePipe, SalesOrderDetailModal],
+  imports: [DataTable, RouterLink, DatePipe, SalesOrderDetailModal, SalesTabs],
   templateUrl: './sales-orders-list.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })

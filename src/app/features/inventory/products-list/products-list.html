@@ -1,53 +1,20 @@
-<div class="mb-8 flex flex-wrap items-center justify-between gap-4">
+<div class="mb-6 flex flex-col items-start gap-4 sm:flex-row sm:items-center sm:justify-between">
   <div>
     <h1 class="text-2xl font-bold text-gr-text">Productos</h1>
     <p class="mt-1 text-gr-sub">Catálogo de productos de tu empresa.</p>
   </div>
-  <div class="flex items-center gap-3">
-    <div class="relative">
-      <button
-        type="button" (click)="toggleCatalogMenu()"
-        [attr.aria-label]="'Más opciones de inventario'"
-        class="flex h-10 w-10 cursor-pointer items-center justify-center rounded-sm bg-gr-bg text-gr-sub transition hover:bg-gr-border-lite hover:text-gr-text"
-      >
-        <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M12 15a3 3 0 100-6 3 3 0 000 6z"/>
-          <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 11-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 11-4 0v-.09a1.65 1.65 0 00-1-1.51 1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 11-2.83-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 110-4h.09a1.65 1.65 0 001.51-1 1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 112.83-2.83l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 114 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 112.83 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 110 4h-.09a1.65 1.65 0 00-1.51 1z"/>
-        </svg>
-      </button>
-
-      @if (catalogMenuOpen()) {
-        <div class="fixed inset-0 z-10" (click)="closeCatalogMenu()"></div>
-        <div class="absolute right-0 z-20 mt-2 w-52 overflow-hidden rounded-sm border border-gr-border bg-gr-surface py-1.5 shadow-lg">
-          <a routerLink="/inventory/movements" (click)="closeCatalogMenu()" class="block px-4 py-2 text-sm text-gr-text transition hover:bg-gr-bg">
-            Movimientos
-          </a>
-          <a routerLink="/inventory/categories" (click)="closeCatalogMenu()" class="block px-4 py-2 text-sm text-gr-text transition hover:bg-gr-bg">
-            Categorías
-          </a>
-          <a routerLink="/inventory/units" (click)="closeCatalogMenu()" class="block px-4 py-2 text-sm text-gr-text transition hover:bg-gr-bg">
-            Unidades
-          </a>
-          @if (showWarehousesLink()) {
-            <a routerLink="/inventory/warehouses" (click)="closeCatalogMenu()" class="block px-4 py-2 text-sm text-gr-text transition hover:bg-gr-bg">
-              Almacenes
-            </a>
-          }
-        </div>
-      }
-    </div>
-
-    @if (canWrite()) {
-      <button
-        type="button"
-        (click)="openCreateModal()"
-        class="cursor-pointer rounded-sm bg-gr-primary-dark px-4 py-2.5 font-semibold text-gr-primary-lite transition hover:brightness-95"
-      >
-        + Nuevo producto
-      </button>
-    }
-  </div>
+  @if (canWrite()) {
+    <button
+      type="button"
+      (click)="openCreateModal()"
+      class="cursor-pointer rounded-sm bg-gr-primary-dark px-4 py-2.5 font-semibold text-gr-primary-lite transition hover:brightness-95"
+    >
+      + Nuevo producto
+    </button>
+  }
 </div>
+
+<app-inventory-tabs active="products" />
 
 @if (showFormModal()) {
   <app-product-form-modal [productId]="editingProductId()" (close)="closeFormModal()" (saved)="onProductSaved($event)" />
@@ -107,8 +74,26 @@
   />
 }
 
+<ng-template #nameTpl let-product>
+  <span class="flex items-center gap-1.5">
+    @if (product.isFeatured) {
+      <svg class="h-4 w-4 shrink-0 text-gr-gold" fill="currentColor" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <polygon points="12 2 15 8.5 22 9.5 17 14.5 18.5 21.5 12 18 5.5 21.5 7 14.5 2 9.5 9 8.5"/>
+      </svg>
+    }
+    {{ product.name }}
+  </span>
+</ng-template>
+
 <ng-template #priceTpl let-product>
-  {{ product.salePrice != null ? 'Bs ' + product.salePrice.toFixed(2) : '—' }}
+  @if (product.isDiscountActive && product.discountPrice != null) {
+    <span class="flex flex-col items-end">
+      <span class="text-xs text-gr-muted line-through">Bs {{ product.salePrice?.toFixed(2) }}</span>
+      <span class="font-medium text-gr-success">Bs {{ product.discountPrice.toFixed(2) }}</span>
+    </span>
+  } @else {
+    {{ product.salePrice != null ? 'Bs ' + product.salePrice.toFixed(2) : '—' }}
+  }
 </ng-template>
 
 <ng-template #activeTpl let-product>

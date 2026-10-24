@@ -8,6 +8,7 @@ import { AuthService } from '../../../core/services/auth';
 import { CustomerFormModal } from '../customer-form-modal/customer-form-modal';
 import { ConfirmDialog } from '../../../shared/confirm-dialog/confirm-dialog';
 import { ToastService } from '../../../shared/toast/toast.service';
+import { SalesTabs } from '../sales-tabs/sales-tabs';
 
 type StatusFilter = 'all' | 'active' | 'inactive';
 
@@ -15,7 +16,7 @@ const SEARCH_DEBOUNCE_MS = 400;
 
 @Component({
   selector: 'app-customers-list',
-  imports: [DataTable, SearchInput, CustomerFormModal, ConfirmDialog],
+  imports: [DataTable, SearchInput, CustomerFormModal, ConfirmDialog, SalesTabs],
   templateUrl: './customers-list.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
