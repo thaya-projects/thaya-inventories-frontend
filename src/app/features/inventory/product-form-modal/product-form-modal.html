@@ -18,7 +18,7 @@
             <div>
               <label for="name" class="mb-1.5 block text-sm font-medium text-gr-sub">Nombre</label>
               <input
-                id="name" type="text" formControlName="name" placeholder="Ej. Saco de arroz"
+                id="name" type="text" formControlName="name" placeholder="Nombre del producto"
                 class="w-full rounded-sm border border-gr-border bg-gr-surface px-4 py-2.5 text-gr-text placeholder-gr-muted transition focus:border-gr-primary focus:outline-none focus:ring-2 focus:ring-gr-primary/30"
               >
               @if (form.controls.name.invalid && form.controls.name.touched) {
@@ -55,7 +55,7 @@
                 id="productType" formControlName="productType"
                 class="w-full rounded-sm border border-gr-border bg-gr-surface px-4 py-2.5 text-gr-text transition focus:border-gr-primary focus:outline-none focus:ring-2 focus:ring-gr-primary/30"
               >
-                @for (t of productTypes; track t.value) {
+                @for (t of productTypes(); track t.value) {
                   <option [value]="t.value">{{ t.label }}</option>
                 }
               </select>
@@ -160,19 +160,7 @@
         </div>
       }
 
-      <!-- Paso 3: Atributos -->
-      @if (step() === 3) {
-        <div>
-          <label for="attributesJson" class="mb-1 block text-sm font-medium text-gr-sub">Atributos (opcional)</label>
-          <p class="mb-3 text-sm text-gr-muted">Objeto libre en formato JSON.</p>
-          <textarea
-            id="attributesJson" rows="6" formControlName="attributesJson"
-            class="w-full rounded-sm border border-gr-border bg-gr-surface px-4 py-2.5 font-mono text-sm text-gr-text transition focus:border-gr-primary focus:outline-none focus:ring-2 focus:ring-gr-primary/30"
-          ></textarea>
-        </div>
-      }
-
-      @if (step() < 4) {
+      @if (step() < 3) {
         <div class="mt-8 flex items-center justify-between border-t border-gr-border-lite pt-5">
           @if (step() > 1) {
             <button type="button" (click)="back()" class="rounded-sm px-4 py-2.5 font-medium text-gr-sub transition hover:text-gr-text">
@@ -184,7 +172,7 @@
             </button>
           }
 
-          @if (step() < 3) {
+          @if (step() < 2) {
             <button
               type="button" (click)="next()"
               class="rounded-sm bg-gr-primary-dark px-5 py-2.5 font-semibold text-gr-primary-lite transition hover:brightness-95"
@@ -212,8 +200,8 @@
       }
     </form>
 
-    <!-- Paso 4: Imágenes -->
-    @if (step() === 4) {
+    <!-- Paso 3: Imágenes -->
+    @if (step() === 3) {
       <div>
         <div class="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-sm border border-gr-gold/30 bg-gr-gold-lite px-4 py-3">
           <span class="flex items-center gap-2 text-sm font-medium text-gr-gold-dark">
