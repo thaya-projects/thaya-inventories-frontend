@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="16 16 80 80">
+  <style>
+    .g { fill: #344537; }
+    .gs { stroke: #344537; }
+    @media (prefers-color-scheme: dark) {
+      .g { fill: #DDE5DA; }
+      .gs { stroke: #DDE5DA; }
+    }
+  </style>
+  <path class="g" d="M56 22 L88 38 L56 54 L24 38 Z"/>
+  <path d="M24 56 L56 72 L88 56" fill="none" stroke="#C9A63F" stroke-width="8" stroke-linejoin="round" stroke-linecap="round"/>
+  <path class="gs" d="M24 74 L56 90 L88 74" fill="none" stroke-width="8" stroke-linejoin="round" stroke-linecap="round"/>
+</svg>
