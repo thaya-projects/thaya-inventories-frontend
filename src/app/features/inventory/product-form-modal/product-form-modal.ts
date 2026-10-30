@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, OnInit, inject, input, output, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit, computed, inject, input, output, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { HttpErrorResponse } from '@angular/common/http';
 import { forkJoin } from 'rxjs';
@@ -9,6 +9,7 @@ import { ProductsService } from '../../../core/services/products';
 import { CategoriesService } from '../../../core/services/categories';
 import { UnitsOfMeasureService } from '../../../core/services/units-of-measure';
 import { ProductImagesService } from '../../../core/services/product-images';
+import { CompanyContextService } from '../../../core/services/company-context';
 import { Product, ProductType } from '../../../core/models/product.model';
 import { Category } from '../../../core/models/category.model';
 import { ALLOWED_IMAGE_TYPES, MAX_IMAGE_SIZE_BYTES, ProductImage } from '../../../core/models/product-image.model';
@@ -53,15 +54,14 @@ function flattenCategories(categories: Category[], depth = 0): SelectOption[] {
 
 const UNITS_PAGE_SIZE = 200;
 
-type WizardStep = 1 | 2 | 3 | 4;
+type WizardStep = 1 | 2 | 3;
 
-const STEP_LABELS = ['Datos básicos', 'Inventario y precio', 'Atributos', 'Imágenes'];
+const STEP_LABELS = ['Datos básicos', 'Inventario y precio', 'Imágenes'];
 
-// El paso 4 (Imágenes) no tiene campos de formulario — se gestiona aparte, contra un id real.
-const STEP_FIELDS: Record<Exclude<WizardStep, 4>, string[]> = {
+// El paso 3 (Imágenes) no tiene campos de formulario — se gestiona aparte, contra un id real.
+const STEP_FIELDS: Record<Exclude<WizardStep, 3>, string[]> = {
   1: ['code', 'name', 'productType', 'categoryId', 'unitOfMeasureId'],
   2: ['minimumStock', 'salePrice', 'shelfLifeMonths'],
-  3: ['attributesJson'],
 };
 
 @Component({
@@ -76,6 +76,7 @@ export class ProductFormModal implements OnInit {
   private categoriesService = inject(CategoriesService);
   private unitsService = inject(UnitsOfMeasureService);
   private productImagesService = inject(ProductImagesService);
+  private companyContext = inject(CompanyContextService);
   private toast = inject(ToastService);
 
   // null/omitido = alta. Con id = edición de ese producto.
@@ -84,11 +85,20 @@ export class ProductFormModal implements OnInit {
   saved = output<Product>();
 
   stepLabels = STEP_LABELS;
-  productTypes = PRODUCT_TYPES;
 
   // Id "vivo": arranca en productId() si es edición, y se completa al crear
   // (recién ahí existe un id real contra el cual subir imágenes).
   currentProductId = signal<string | null>(null);
+
+  // Empresas que solo compran y venden (sin producción) no manejan materia
+  // prima/servicios/consumibles como productos propios — en alta se les
+  // oculta todo salvo Terminado/Kit. En edición se muestran todos por si el
+  // producto ya tenía otro tipo (ej. la empresa cambió de paquete después).
+  productTypes = computed<{ value: ProductType; label: string }[]>(() => {
+    if (this.currentProductId()) return PRODUCT_TYPES;
+    const usesProduction = this.companyContext.company()?.settings.usesProduction === true;
+    return usesProduction ? PRODUCT_TYPES : PRODUCT_TYPES.filter(t => t.value === 'Finished' || t.value === 'Kit');
+  });
 
   step = signal<WizardStep>(1);
   loading = signal(true);
@@ -116,11 +126,18 @@ export class ProductFormModal implements OnInit {
   isFeatured = signal(false);
   featuring = signal(false);
 
+  // Si la empresa no produce, lo normal al dar de alta es un producto
+  // terminado que se compra y vende tal cual; si produce, lo normal es
+  // materia prima que luego se transforma.
+  private defaultProductType(): ProductType {
+    return this.companyContext.company()?.settings.usesProduction === true ? 'RawMaterial' : 'Finished';
+  }
+
   form = this.fb.group({
     code: ['', Validators.required],
     name: ['', Validators.required],
     description: [''],
-    productType: ['Finished' as ProductType, Validators.required],
+    productType: [this.defaultProductType(), Validators.required],
     categoryId: [''],
     unitOfMeasureId: [''],
     tracksStock: [true],
@@ -131,7 +148,6 @@ export class ProductFormModal implements OnInit {
     discountStartsAt: [''],
     discountEndsAt: [''],
     shelfLifeMonths: [12 as number | null],
-    attributesJson: ['{}'],
   });
 
   ngOnInit(): void {
@@ -182,7 +198,6 @@ export class ProductFormModal implements OnInit {
           discountStartsAt: toDatetimeLocalInput(product.discountStartsAt),
           discountEndsAt: toDatetimeLocalInput(product.discountEndsAt),
           shelfLifeMonths: product.shelfLifeMonths,
-          attributesJson: JSON.stringify(product.attributes ?? {}, null, 2),
         });
         this.isFeatured.set(product.isFeatured);
         this.loading.set(false);
@@ -211,7 +226,7 @@ export class ProductFormModal implements OnInit {
 
   next() {
     const step = this.step();
-    if (step === 4) return;
+    if (step === 3) return;
 
     const fields = STEP_FIELDS[step];
     const hasInvalid = fields.some(name => this.form.get(name)!.invalid);
@@ -221,7 +236,7 @@ export class ProductFormModal implements OnInit {
       return;
     }
 
-    this.step.update(s => (s < 3 ? ((s + 1) as WizardStep) : s));
+    this.step.update(s => (s < 2 ? ((s + 1) as WizardStep) : s));
   }
 
   back() {
@@ -323,28 +338,17 @@ export class ProductFormModal implements OnInit {
     });
   }
 
-  // Guarda los datos (paso 1-3) y avanza al paso de imágenes — alta o
+  // Guarda los datos (paso 1-2) y avanza al paso de imágenes — alta o
   // edición, según si ya existe un id real.
   submit() {
     if (this.form.invalid) {
       this.form.markAllAsTouched();
-      const brokenStep = ([1, 2, 3] as const).find(s => STEP_FIELDS[s].some(name => this.form.get(name)!.invalid));
+      const brokenStep = ([1, 2] as const).find(s => STEP_FIELDS[s].some(name => this.form.get(name)!.invalid));
       if (brokenStep) this.step.set(brokenStep);
       return;
     }
 
     const value = this.form.getRawValue();
-
-    let attributes: Record<string, unknown> = {};
-    if (value.attributesJson?.trim()) {
-      try {
-        attributes = JSON.parse(value.attributesJson);
-      } catch {
-        this.errorMessage.set('El campo "Atributos" debe ser un JSON válido.');
-        this.step.set(3);
-        return;
-      }
-    }
 
     const discountStartsAt = fromDatetimeLocalInput(value.discountStartsAt ?? '');
     const discountEndsAt = fromDatetimeLocalInput(value.discountEndsAt ?? '');
@@ -372,7 +376,6 @@ export class ProductFormModal implements OnInit {
       discountStartsAt,
       discountEndsAt,
       shelfLifeMonths: value.shelfLifeMonths,
-      attributes,
     };
 
     const id = this.currentProductId();
@@ -383,7 +386,7 @@ export class ProductFormModal implements OnInit {
         this.submitting.set(false);
         this.currentProductId.set(product.id);
         this.saved.emit(product);
-        this.step.set(4);
+        this.step.set(3);
       },
       error: (err: HttpErrorResponse) => {
         this.submitting.set(false);
