@@ -9,6 +9,8 @@ import { AuthService } from '../../../core/services/auth';
 import { ToastService } from '../../../shared/toast/toast.service';
 import { ProductFormModal } from '../product-form-modal/product-form-modal';
 import { InventoryTabs } from '../inventory-tabs/inventory-tabs';
+import { StockBadge } from '../../../shared/stock-badge/stock-badge';
+import { InfoHint } from '../../../shared/info-hint/info-hint';
 
 type StatusFilter = 'all' | 'active' | 'inactive';
 
@@ -16,7 +18,7 @@ const SEARCH_DEBOUNCE_MS = 400;
 
 @Component({
   selector: 'app-products-list',
-  imports: [DataTable, RouterLink, SearchInput, ProductFormModal, InventoryTabs],
+  imports: [DataTable, RouterLink, SearchInput, ProductFormModal, InventoryTabs, StockBadge, InfoHint],
   templateUrl: './products-list.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
@@ -40,26 +42,31 @@ export class ProductsList {
   errorMessage = signal<string | null>(null);
   search = signal('');
   statusFilter = signal<StatusFilter>('all');
+  // Solo productos en o bajo su stock mínimo (agotados incluidos). Se puede
+  // llegar ya filtrado desde el Inicio con ?stock=low.
+  lowStockOnly = signal(false);
   updatingId = signal<string | null>(null);
 
   private searchTimeout?: ReturnType<typeof setTimeout>;
 
   private nameTpl = viewChild.required<TemplateRef<{ $implicit: Product }>>('nameTpl');
+  private stockTpl = viewChild.required<TemplateRef<{ $implicit: Product }>>('stockTpl');
   private priceTpl = viewChild.required<TemplateRef<{ $implicit: Product }>>('priceTpl');
-  private activeTpl = viewChild.required<TemplateRef<{ $implicit: Product }>>('activeTpl');
   private actionsTpl = viewChild.required<TemplateRef<{ $implicit: Product }>>('actionsTpl');
 
   columns = computed<DataTableColumn<Product>[]>(() => [
-    { key: 'code', label: 'Código' },
-    { key: 'name', label: 'Nombre', cellTemplate: this.nameTpl() },
-    { key: 'currentStock', label: 'Stock' },
-    { key: 'salePrice', label: 'Precio', cellTemplate: this.priceTpl() },
-    { key: 'isActive', label: 'Estado', cellTemplate: this.activeTpl() },
+    { key: 'name', label: 'Producto', cellTemplate: this.nameTpl() },
+    { key: 'currentStock', label: 'Stock', cellTemplate: this.stockTpl() },
+    { key: 'salePrice', label: 'Precio de venta', cellTemplate: this.priceTpl() },
     { key: 'id', label: '', cellTemplate: this.actionsTpl() },
   ]);
 
   constructor() {
     // Permite llegar con un producto precargado para editar (ej. desde el Dashboard: ?edit=<id>).
+    if (this.route.snapshot.queryParamMap.get('stock') === 'low') {
+      this.lowStockOnly.set(true);
+    }
+
     const editParam = this.route.snapshot.queryParamMap.get('edit');
     if (editParam) {
       this.openEditModal(editParam);
@@ -76,7 +83,7 @@ export class ProductsList {
     const filter = this.statusFilter();
     const isActive = filter === 'all' ? undefined : filter === 'active';
 
-    this.productsService.list(this.page(), this.pageSize(), { search: search || undefined, isActive }).subscribe({
+    this.productsService.list(this.page(), this.pageSize(), { search: search || undefined, isActive, lowStock: this.lowStockOnly() || undefined }).subscribe({
       next: result => {
         this.products.set(result.items);
         this.totalCount.set(result.totalCount);
@@ -98,6 +105,12 @@ export class ProductsList {
 
   setFilter(filter: StatusFilter) {
     this.statusFilter.set(filter);
+    this.page.set(1);
+    this.load();
+  }
+
+  toggleLowStock() {
+    this.lowStockOnly.set(!this.lowStockOnly());
     this.page.set(1);
     this.load();
   }

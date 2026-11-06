@@ -86,8 +86,8 @@ export class CompaniesList {
   // El backend solo puede fallar acá por auth (401/403) y ninguno trae body
   // propio — el 401/403 "pelado" ya lo documentaron así.
   private mapError(err: HttpErrorResponse): string {
-    if (err.status === 403) return 'No tenés permisos para ver el listado de empresas.';
-    if (err.status === 401) return 'Tu sesión expiró. Volvé a iniciar sesión.';
+    if (err.status === 403) return 'No tienes permisos para ver el listado de empresas.';
+    if (err.status === 401) return 'Tu sesión expiró. Vuelve a iniciar sesión.';
     return 'No se pudo cargar el listado de empresas.';
   }
 

@@ -12,17 +12,17 @@
       <div class="space-y-4">
         <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div>
-            <label for="date" class="mb-1.5 block text-sm font-medium text-gr-sub">Fecha</label>
+            <label for="date" class="mb-1.5 block text-sm font-medium text-gr-text">Fecha</label>
             <input
               id="date" type="date" formControlName="date"
-              class="w-full rounded-sm border border-gr-border bg-gr-surface px-4 py-2.5 text-gr-text transition focus:border-gr-primary focus:outline-none focus:ring-2 focus:ring-gr-primary/30"
+              class="w-full rounded-md border border-gr-border bg-gr-surface px-4 py-2.5 text-gr-text transition focus:border-gr-primary focus:outline-none focus:ring-2 focus:ring-gr-primary/30"
             >
           </div>
           <div>
-            <label for="category" class="mb-1.5 block text-sm font-medium text-gr-sub">Categoría</label>
+            <label for="category" class="mb-1.5 block text-sm font-medium text-gr-text">Categoría</label>
             <select
               id="category" formControlName="category"
-              class="w-full rounded-sm border border-gr-border bg-gr-surface px-4 py-2.5 text-gr-text transition focus:border-gr-primary focus:outline-none focus:ring-2 focus:ring-gr-primary/30"
+              class="w-full rounded-md border border-gr-border bg-gr-surface px-4 py-2.5 text-gr-text transition focus:border-gr-primary focus:outline-none focus:ring-2 focus:ring-gr-primary/30"
             >
               @for (c of categories; track c.value) {
                 <option [value]="c.value">{{ c.label }}</option>
@@ -32,10 +32,10 @@
         </div>
 
         <div>
-          <label for="description" class="mb-1.5 block text-sm font-medium text-gr-sub">Descripción</label>
+          <label for="description" class="mb-1.5 block text-sm font-medium text-gr-text">Descripción</label>
           <input
             id="description" type="text" formControlName="description" placeholder="Ej. Luz oficina"
-            class="w-full rounded-sm border border-gr-border bg-gr-surface px-4 py-2.5 text-gr-text placeholder-gr-muted transition focus:border-gr-primary focus:outline-none focus:ring-2 focus:ring-gr-primary/30"
+            class="w-full rounded-md border border-gr-border bg-gr-surface px-4 py-2.5 text-gr-text placeholder-gr-muted transition focus:border-gr-primary focus:outline-none focus:ring-2 focus:ring-gr-primary/30"
           >
           @if (form.controls.description.invalid && form.controls.description.touched) {
             <p class="mt-1.5 text-xs text-gr-danger">La descripción es obligatoria.</p>
@@ -44,20 +44,20 @@
 
         <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div>
-            <label for="amount" class="mb-1.5 block text-sm font-medium text-gr-sub">Monto</label>
+            <label for="amount" class="mb-1.5 block text-sm font-medium text-gr-text">Monto</label>
             <input
               id="amount" type="number" step="any" formControlName="amount"
-              class="w-full rounded-sm border border-gr-border bg-gr-surface px-4 py-2.5 text-gr-text transition focus:border-gr-primary focus:outline-none focus:ring-2 focus:ring-gr-primary/30"
+              class="w-full rounded-md border border-gr-border bg-gr-surface px-4 py-2.5 text-gr-text transition focus:border-gr-primary focus:outline-none focus:ring-2 focus:ring-gr-primary/30"
             >
             @if (form.controls.amount.invalid && form.controls.amount.touched) {
               <p class="mt-1.5 text-xs text-gr-danger">Ingresa un monto válido.</p>
             }
           </div>
           <div>
-            <label for="voucher" class="mb-1.5 block text-sm font-medium text-gr-sub">Comprobante (opcional)</label>
+            <label for="voucher" class="mb-1.5 block text-sm font-medium text-gr-text">Comprobante <span class="font-normal text-gr-sub">(opcional)</span></label>
             <input
               id="voucher" type="text" formControlName="voucher" placeholder="Ej. N° de factura"
-              class="w-full rounded-sm border border-gr-border bg-gr-surface px-4 py-2.5 text-gr-text placeholder-gr-muted transition focus:border-gr-primary focus:outline-none focus:ring-2 focus:ring-gr-primary/30"
+              class="w-full rounded-md border border-gr-border bg-gr-surface px-4 py-2.5 text-gr-text placeholder-gr-muted transition focus:border-gr-primary focus:outline-none focus:ring-2 focus:ring-gr-primary/30"
             >
           </div>
         </div>

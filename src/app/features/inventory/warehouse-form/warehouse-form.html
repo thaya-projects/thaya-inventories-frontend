@@ -24,17 +24,17 @@
         <div class="space-y-4">
           <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div>
-              <label for="code" class="mb-1.5 block text-sm font-medium text-gr-sub">Código (opcional)</label>
+              <label for="code" class="mb-1.5 block text-sm font-medium text-gr-text">Código <span class="font-normal text-gr-sub">(opcional)</span></label>
               <input
                 id="code" type="text" formControlName="code" placeholder="Ej. ALM-01"
-                class="w-full rounded-sm border border-gr-border bg-gr-surface px-4 py-2.5 text-gr-text placeholder-gr-muted transition focus:border-gr-primary focus:outline-none focus:ring-2 focus:ring-gr-primary/30"
+                class="w-full rounded-md border border-gr-border bg-gr-surface px-4 py-2.5 text-gr-text placeholder-gr-muted transition focus:border-gr-primary focus:outline-none focus:ring-2 focus:ring-gr-primary/30"
               >
             </div>
             <div>
-              <label for="name" class="mb-1.5 block text-sm font-medium text-gr-sub">Nombre</label>
+              <label for="name" class="mb-1.5 block text-sm font-medium text-gr-text">Nombre</label>
               <input
                 id="name" type="text" formControlName="name" placeholder="Ej. Almacén principal"
-                class="w-full rounded-sm border border-gr-border bg-gr-surface px-4 py-2.5 text-gr-text placeholder-gr-muted transition focus:border-gr-primary focus:outline-none focus:ring-2 focus:ring-gr-primary/30"
+                class="w-full rounded-md border border-gr-border bg-gr-surface px-4 py-2.5 text-gr-text placeholder-gr-muted transition focus:border-gr-primary focus:outline-none focus:ring-2 focus:ring-gr-primary/30"
               >
               @if (form.controls.name.invalid && form.controls.name.touched) {
                 <p class="mt-1.5 text-xs text-gr-danger">El nombre es obligatorio.</p>
@@ -43,10 +43,10 @@
           </div>
 
           <div>
-            <label for="address" class="mb-1.5 block text-sm font-medium text-gr-sub">Dirección (opcional)</label>
+            <label for="address" class="mb-1.5 block text-sm font-medium text-gr-text">Dirección <span class="font-normal text-gr-sub">(opcional)</span></label>
             <input
               id="address" type="text" formControlName="address" placeholder="Ej. Av. Siempre Viva 123"
-              class="w-full rounded-sm border border-gr-border bg-gr-surface px-4 py-2.5 text-gr-text placeholder-gr-muted transition focus:border-gr-primary focus:outline-none focus:ring-2 focus:ring-gr-primary/30"
+              class="w-full rounded-md border border-gr-border bg-gr-surface px-4 py-2.5 text-gr-text placeholder-gr-muted transition focus:border-gr-primary focus:outline-none focus:ring-2 focus:ring-gr-primary/30"
             >
           </div>
 

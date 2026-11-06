@@ -17,31 +17,31 @@
         <div class="space-y-4">
           <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div>
-              <label for="name" class="mb-1.5 block text-sm font-medium text-gr-sub">Nombre</label>
+              <label for="name" class="mb-1.5 block text-sm font-medium text-gr-text">Nombre</label>
               <input
                 id="name" type="text" formControlName="name" placeholder="Ej. Plan Básico"
                 (input)="onNameInput()"
-                class="w-full rounded-sm border border-gr-border bg-gr-surface px-4 py-2.5 text-gr-text placeholder-gr-muted transition focus:border-gr-primary focus:outline-none focus:ring-2 focus:ring-gr-primary/30"
+                class="w-full rounded-md border border-gr-border bg-gr-surface px-4 py-2.5 text-gr-text placeholder-gr-muted transition focus:border-gr-primary focus:outline-none focus:ring-2 focus:ring-gr-primary/30"
               >
               @if (form.controls.name.invalid && form.controls.name.touched) {
                 <p class="mt-1.5 text-xs text-gr-danger">El nombre es obligatorio.</p>
               }
             </div>
             <div>
-              <label for="code" class="mb-1.5 block text-sm font-medium text-gr-sub">
+              <label for="code" class="mb-1.5 block text-sm font-medium text-gr-text">
                 Código{{ isEditMode() ? '' : ' (opcional)' }}
               </label>
               <input
                 id="code" type="text" formControlName="code" placeholder="Ej. basic"
                 (input)="onCodeInput()"
-                class="w-full rounded-sm border border-gr-border bg-gr-surface px-4 py-2.5 font-mono text-gr-text placeholder-gr-muted transition focus:border-gr-primary focus:outline-none focus:ring-2 focus:ring-gr-primary/30"
+                class="w-full rounded-md border border-gr-border bg-gr-surface px-4 py-2.5 font-mono text-gr-text placeholder-gr-muted transition focus:border-gr-primary focus:outline-none focus:ring-2 focus:ring-gr-primary/30"
               >
               @if (form.controls.code.invalid && form.controls.code.touched) {
                 <p class="mt-1.5 text-xs text-gr-danger">El código es obligatorio.</p>
               } @else if (!isEditMode()) {
                 <p class="mt-1.5 text-xs text-gr-muted">
                   @if (codeAutoSynced()) {
-                    Se genera solo a partir del nombre — podés editarlo si querés uno propio.
+                    Se genera solo a partir del nombre — puedes editarlo si quieres uno propio.
                   } @else {
                     Código personalizado.
                   }
@@ -51,10 +51,10 @@
           </div>
 
           <div>
-            <label for="description" class="mb-1.5 block text-sm font-medium text-gr-sub">Descripción (opcional)</label>
+            <label for="description" class="mb-1.5 block text-sm font-medium text-gr-text">Descripción <span class="font-normal text-gr-sub">(opcional)</span></label>
             <textarea
               id="description" formControlName="description" rows="3" placeholder="Descripción breve del plan"
-              class="w-full rounded-sm border border-gr-border bg-gr-surface px-4 py-2.5 text-gr-text placeholder-gr-muted transition focus:border-gr-primary focus:outline-none focus:ring-2 focus:ring-gr-primary/30"
+              class="w-full rounded-md border border-gr-border bg-gr-surface px-4 py-2.5 text-gr-text placeholder-gr-muted transition focus:border-gr-primary focus:outline-none focus:ring-2 focus:ring-gr-primary/30"
             ></textarea>
           </div>
         </div>
@@ -64,24 +64,24 @@
       @if (step() === 2) {
         <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
           <div>
-            <label for="priceMonthly" class="mb-1.5 block text-sm font-medium text-gr-sub">Mensual (Bs)</label>
+            <label for="priceMonthly" class="mb-1.5 block text-sm font-medium text-gr-text">Mensual (Bs)</label>
             <input
               id="priceMonthly" type="number" step="0.01" min="0" formControlName="priceMonthly"
-              class="w-full rounded-sm border border-gr-border bg-gr-surface px-4 py-2.5 text-gr-text transition focus:border-gr-primary focus:outline-none focus:ring-2 focus:ring-gr-primary/30"
+              class="w-full rounded-md border border-gr-border bg-gr-surface px-4 py-2.5 text-gr-text transition focus:border-gr-primary focus:outline-none focus:ring-2 focus:ring-gr-primary/30"
             >
           </div>
           <div>
-            <label for="priceQuarterly" class="mb-1.5 block text-sm font-medium text-gr-sub">Trimestral (Bs)</label>
+            <label for="priceQuarterly" class="mb-1.5 block text-sm font-medium text-gr-text">Trimestral (Bs)</label>
             <input
               id="priceQuarterly" type="number" step="0.01" min="0" formControlName="priceQuarterly"
-              class="w-full rounded-sm border border-gr-border bg-gr-surface px-4 py-2.5 text-gr-text transition focus:border-gr-primary focus:outline-none focus:ring-2 focus:ring-gr-primary/30"
+              class="w-full rounded-md border border-gr-border bg-gr-surface px-4 py-2.5 text-gr-text transition focus:border-gr-primary focus:outline-none focus:ring-2 focus:ring-gr-primary/30"
             >
           </div>
           <div>
-            <label for="priceYearly" class="mb-1.5 block text-sm font-medium text-gr-sub">Anual (Bs)</label>
+            <label for="priceYearly" class="mb-1.5 block text-sm font-medium text-gr-text">Anual (Bs)</label>
             <input
               id="priceYearly" type="number" step="0.01" min="0" formControlName="priceYearly"
-              class="w-full rounded-sm border border-gr-border bg-gr-surface px-4 py-2.5 text-gr-text transition focus:border-gr-primary focus:outline-none focus:ring-2 focus:ring-gr-primary/30"
+              class="w-full rounded-md border border-gr-border bg-gr-surface px-4 py-2.5 text-gr-text transition focus:border-gr-primary focus:outline-none focus:ring-2 focus:ring-gr-primary/30"
             >
           </div>
           <p class="text-sm text-gr-muted sm:col-span-3">Todos los precios son opcionales.</p>
@@ -92,24 +92,24 @@
       @if (step() === 3) {
         <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
           <div>
-            <label for="maxUsers" class="mb-1.5 block text-sm font-medium text-gr-sub">Máx. usuarios</label>
+            <label for="maxUsers" class="mb-1.5 block text-sm font-medium text-gr-text">Máx. usuarios</label>
             <input
               id="maxUsers" type="number" min="0" formControlName="maxUsers"
-              class="w-full rounded-sm border border-gr-border bg-gr-surface px-4 py-2.5 text-gr-text transition focus:border-gr-primary focus:outline-none focus:ring-2 focus:ring-gr-primary/30"
+              class="w-full rounded-md border border-gr-border bg-gr-surface px-4 py-2.5 text-gr-text transition focus:border-gr-primary focus:outline-none focus:ring-2 focus:ring-gr-primary/30"
             >
           </div>
           <div>
-            <label for="maxProducts" class="mb-1.5 block text-sm font-medium text-gr-sub">Máx. productos</label>
+            <label for="maxProducts" class="mb-1.5 block text-sm font-medium text-gr-text">Máx. productos</label>
             <input
               id="maxProducts" type="number" min="0" formControlName="maxProducts"
-              class="w-full rounded-sm border border-gr-border bg-gr-surface px-4 py-2.5 text-gr-text transition focus:border-gr-primary focus:outline-none focus:ring-2 focus:ring-gr-primary/30"
+              class="w-full rounded-md border border-gr-border bg-gr-surface px-4 py-2.5 text-gr-text transition focus:border-gr-primary focus:outline-none focus:ring-2 focus:ring-gr-primary/30"
             >
           </div>
           <div>
-            <label for="maxStorageMb" class="mb-1.5 block text-sm font-medium text-gr-sub">Almacenamiento (MB)</label>
+            <label for="maxStorageMb" class="mb-1.5 block text-sm font-medium text-gr-text">Almacenamiento (MB)</label>
             <input
               id="maxStorageMb" type="number" min="0" formControlName="maxStorageMb"
-              class="w-full rounded-sm border border-gr-border bg-gr-surface px-4 py-2.5 text-gr-text transition focus:border-gr-primary focus:outline-none focus:ring-2 focus:ring-gr-primary/30"
+              class="w-full rounded-md border border-gr-border bg-gr-surface px-4 py-2.5 text-gr-text transition focus:border-gr-primary focus:outline-none focus:ring-2 focus:ring-gr-primary/30"
             >
           </div>
           <p class="text-sm text-gr-muted sm:col-span-3">Todos los límites son opcionales — vacío significa sin límite.</p>
@@ -119,7 +119,7 @@
       <!-- Paso 4: Features -->
       @if (step() === 4) {
         <div>
-          <label class="mb-1.5 block text-sm font-medium text-gr-sub">Preset</label>
+          <label class="mb-1.5 block text-sm font-medium text-gr-text">Preset</label>
           <div class="grid grid-cols-1 gap-3">
             @for (preset of presetOptions; track preset) {
               <button
@@ -146,7 +146,7 @@
               <p class="mb-3 text-sm text-gr-muted">Objeto libre, sin estructura fija — se envía tal cual como JSON. Ej. {{ '{ "multiWarehouse": true }' }}</p>
               <textarea
                 formControlName="featuresJson" rows="8" spellcheck="false"
-                class="w-full rounded-sm border border-gr-border bg-gr-surface px-4 py-2.5 font-mono text-sm text-gr-text transition focus:border-gr-primary focus:outline-none focus:ring-2 focus:ring-gr-primary/30"
+                class="w-full rounded-md border border-gr-border bg-gr-surface px-4 py-2.5 font-mono text-sm text-gr-text transition focus:border-gr-primary focus:outline-none focus:ring-2 focus:ring-gr-primary/30"
               ></textarea>
             </div>
           }

@@ -24,7 +24,7 @@
       (click)="showClose ? closeSidebar.emit() : toggleCollapsed()"
       [attr.aria-label]="showClose ? 'Cerrar menú' : (collapsed() ? 'Expandir menú' : 'Colapsar menú')"
       class="absolute top-1/2 z-20 flex h-8 w-8 shrink-0 -translate-y-1/2 cursor-pointer items-center justify-center rounded-full bg-gr-primary-mid text-gr-primary-lite shadow-md transition-all hover:brightness-95"
-      [class]="collapsed() ? 'left-1/2 -translate-x-1/2' : '-right-4 translate-x-1/2'"
+      [class]="showClose ? 'right-4' : collapsed() ? 'left-1/2 -translate-x-1/2' : '-right-4 translate-x-1/2'"
     >
       <svg
         class="h-4 w-4 transition-transform duration-200"

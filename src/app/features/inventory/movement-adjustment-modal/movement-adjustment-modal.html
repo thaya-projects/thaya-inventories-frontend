@@ -1,83 +1,99 @@
-<app-modal title="Ajustar stock" size="md" (close)="close.emit()">
-  <p class="mb-4 -mt-2 text-sm text-gr-sub">Indica el stock nuevo — el sistema calcula la diferencia.</p>
+<app-modal title="Contar stock" size="md" (close)="close.emit()">
+  <p class="mb-5 -mt-2 text-sm text-gr-sub">
+    ¿Contaste lo que hay en el estante y no coincide con el sistema? Pon cuántos hay de verdad y el stock se corrige solo.
+  </p>
 
   @if (errorMessage()) {
-    <div class="mb-6 rounded-sm border border-gr-danger/20 bg-gr-danger-bg px-4 py-3 text-sm text-gr-danger">
+    <div role="alert" class="mb-5 rounded-md border border-gr-danger/20 bg-gr-danger-bg px-4 py-3 text-sm text-gr-danger">
       {{ errorMessage() }}
     </div>
   }
 
   @if (blockedByMultiWarehouse()) {
-    <p class="text-gr-sub">El ajuste manual de stock todavía no está disponible para empresas con multi-almacén activado.</p>
+    <p class="text-gr-sub">El conteo de stock todavía no está disponible para empresas con varios almacenes.</p>
   } @else if (loading()) {
-    <p class="text-gr-sub">Cargando...</p>
+    <div class="space-y-3" aria-hidden="true">
+      @for (i of [1, 2]; track i) {
+        <div class="h-12 animate-pulse rounded-md bg-gr-border-lite"></div>
+      }
+    </div>
+    <p class="sr-only" role="status">Cargando…</p>
   } @else {
-    <form [formGroup]="form" (ngSubmit)="submit()">
-      <div class="space-y-4">
+    <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
+      <div class="space-y-5">
         <div>
-          <label for="date" class="mb-1.5 block text-sm font-medium text-gr-sub">Fecha</label>
-          <input
-            id="date" type="date" formControlName="date"
-            class="w-full rounded-sm border border-gr-border bg-gr-surface px-4 py-2.5 text-gr-text transition focus:border-gr-primary focus:outline-none focus:ring-2 focus:ring-gr-primary/30"
-          >
+          <label for="adj-product" class="mb-1.5 block text-sm font-medium text-gr-text">¿Qué producto contaste?</label>
+          <app-product-picker
+            inputId="adj-product"
+            [selected]="selectedProduct()"
+            [preloaded]="products()"
+            [invalid]="form.controls.productId.invalid && form.controls.productId.touched"
+            (picked)="onProductPicked($event)"
+          />
         </div>
 
-        <div>
-          <label for="productId" class="mb-1.5 block text-sm font-medium text-gr-sub">Producto</label>
-          <select
-            id="productId" formControlName="productId"
-            class="w-full rounded-sm border border-gr-border bg-gr-surface px-4 py-2.5 text-gr-text transition focus:border-gr-primary focus:outline-none focus:ring-2 focus:ring-gr-primary/30"
-          >
-            <option value="" disabled>— Selecciona un producto —</option>
-            @for (p of products(); track p.id) {
-              <option [value]="p.id">{{ p.code }} — {{ p.name }}</option>
-            }
-          </select>
-          @if (form.controls.productId.invalid && form.controls.productId.touched) {
-            <p class="mt-1.5 text-xs text-gr-danger">Selecciona un producto.</p>
-          }
-          @if (selectedProduct(); as p) {
-            <p class="mt-1.5 text-xs text-gr-muted">Stock actual: {{ p.currentStock }}</p>
-          }
-        </div>
+        @if (selectedProduct(); as p) {
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <p class="block text-xs text-gr-sub">El sistema dice</p>
+              <p class="mt-1 rounded-md border border-transparent bg-gr-bg px-4 py-2 text-2xl font-semibold text-gr-sub tabular-nums">{{ p.currentStock }}</p>
+            </div>
+            <div>
+              <label for="newStock" class="block text-xs text-gr-sub">Contaste</label>
+              <input
+                id="newStock" type="number" min="0" step="any" inputmode="decimal" formControlName="newStock"
+                class="mt-1 w-full rounded-md border bg-gr-surface px-4 py-2 text-2xl font-semibold text-gr-text tabular-nums transition focus:border-gr-primary focus:outline-none focus:ring-2 focus:ring-gr-primary/30 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none"
+                [class]="form.controls.newStock.invalid && form.controls.newStock.touched ? 'border-gr-danger' : 'border-gr-border'"
+              >
+            </div>
+          </div>
 
-        <div>
-          <label for="newStock" class="mb-1.5 block text-sm font-medium text-gr-sub">Stock nuevo</label>
-          <input
-            id="newStock" type="number" step="any" formControlName="newStock"
-            class="w-full rounded-sm border border-gr-border bg-gr-surface px-4 py-2.5 text-gr-text transition focus:border-gr-primary focus:outline-none focus:ring-2 focus:ring-gr-primary/30"
-          >
           @if (form.controls.newStock.invalid && form.controls.newStock.touched) {
-            <p class="mt-1.5 text-xs text-gr-danger">Ingresa un stock válido (mínimo 0).</p>
+            <p class="-mt-3 text-xs text-gr-danger">Pon cuántos contaste (0 o más).</p>
+          } @else if (difference(); as d) {
+            <p class="-mt-2 text-sm" [class]="d < 0 ? 'text-gr-danger' : 'text-gr-success'">
+              {{ d < 0 ? 'Faltan' : 'Sobran' }} <span class="font-semibold tabular-nums">{{ d < 0 ? -d : d }}</span>: el stock pasa a {{ form.controls.newStock.value }}.
+            </p>
+          } @else if (difference() === 0) {
+            <p class="-mt-2 text-sm text-gr-sub">Coincide con el sistema: no hay nada que corregir.</p>
           }
-        </div>
+        }
 
-        <div>
-          <label for="notes" class="mb-1.5 block text-sm font-medium text-gr-sub">Notas</label>
-          <textarea
-            id="notes" rows="2" formControlName="notes" placeholder="Ej. Inventario físico"
-            class="w-full rounded-sm border border-gr-border bg-gr-surface px-4 py-2.5 text-gr-text placeholder-gr-muted transition focus:border-gr-primary focus:outline-none focus:ring-2 focus:ring-gr-primary/30"
-          ></textarea>
+        <div class="grid grid-cols-1 gap-4 sm:grid-cols-[10rem_minmax(0,1fr)]">
+          <div>
+            <label for="date" class="mb-1.5 block text-sm font-medium text-gr-text">Fecha</label>
+            <input
+              id="date" type="date" formControlName="date"
+              class="w-full rounded-md border border-gr-border bg-gr-surface px-3 py-2.5 text-gr-text transition focus:border-gr-primary focus:outline-none focus:ring-2 focus:ring-gr-primary/30"
+            >
+          </div>
+          <div>
+            <label for="notes" class="mb-1.5 block text-sm font-medium text-gr-text">Detalle <span class="font-normal text-gr-sub">(opcional)</span></label>
+            <input
+              id="notes" type="text" formControlName="notes" placeholder="Ej. conteo de fin de mes"
+              class="w-full rounded-md border border-gr-border bg-gr-surface px-4 py-2.5 text-gr-text placeholder-gr-muted transition focus:border-gr-primary focus:outline-none focus:ring-2 focus:ring-gr-primary/30"
+            >
+          </div>
         </div>
       </div>
 
       <div class="mt-8 flex items-center justify-end gap-3 border-t border-gr-border-lite pt-5">
-        <button type="button" (click)="close.emit()" class="rounded-sm px-4 py-2.5 font-medium text-gr-sub transition hover:text-gr-text">
+        <button type="button" (click)="close.emit()" class="cursor-pointer rounded-md px-4 py-2.5 font-medium text-gr-sub transition hover:bg-gr-bg hover:text-gr-text">
           Cancelar
         </button>
         <button
           type="submit"
           [disabled]="submitting()"
-          class="flex items-center gap-2 rounded-sm bg-gr-primary-dark px-5 py-2.5 font-semibold text-gr-primary-lite transition hover:brightness-95 disabled:cursor-not-allowed disabled:opacity-60"
+          class="flex cursor-pointer items-center gap-2 rounded-md bg-gr-primary-dark px-5 py-2.5 font-semibold text-gr-primary-lite transition hover:bg-gr-primary disabled:cursor-not-allowed disabled:opacity-60"
         >
           @if (submitting()) {
-            <svg class="h-4 w-4 animate-spin" fill="none" viewBox="0 0 24 24">
+            <svg class="h-4 w-4 animate-spin" fill="none" viewBox="0 0 24 24" aria-hidden="true">
               <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
               <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
             </svg>
             Guardando…
           } @else {
-            Aplicar ajuste
+            Corregir stock
           }
         </button>
       </div>

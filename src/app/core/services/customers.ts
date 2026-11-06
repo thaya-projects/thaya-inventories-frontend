@@ -1,7 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable, map } from 'rxjs';
-import { Customer, CustomerListFilters, ListCustomersResponse, SaveCustomerRequest } from '../models/customer.model';
+import { Customer, CustomerListFilters, ListCustomersResponse, SaveCustomerRequest, CustomerDuplicatesResponse } from '../models/customer.model';
 import { environment } from '../../../environments/environment';
 
 const BASE_URL = `${environment.apiUrl}/customers`;
@@ -16,6 +16,15 @@ export class CustomersService {
     if (filters?.isActive !== undefined) params = params.set('isActive', filters.isActive);
 
     return this.http.get<ListCustomersResponse>(BASE_URL, { params }).pipe(map(res => res.items));
+  }
+
+  duplicates(query: { name?: string; phone?: string; taxId?: string; excludeId?: string | null }): Observable<CustomerDuplicatesResponse> {
+    let params = new HttpParams();
+    if (query.name) params = params.set('name', query.name);
+    if (query.phone) params = params.set('phone', query.phone);
+    if (query.taxId) params = params.set('taxId', query.taxId);
+    if (query.excludeId) params = params.set('excludeId', query.excludeId);
+    return this.http.get<CustomerDuplicatesResponse>(`${BASE_URL}/duplicates`, { params });
   }
 
   get(id: string): Observable<Customer> {

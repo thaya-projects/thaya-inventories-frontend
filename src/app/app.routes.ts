@@ -231,6 +231,18 @@ export const routes: Routes = [
         canActivate: [roleGuard('Admin', 'Warehouse', 'Assistant')],
         loadComponent: () => import('./features/cash/payment-detail/payment-detail').then(m => m.PaymentDetail),
       },
+      {
+        path: 'cash/receivables',
+        canActivate: [roleGuard('Admin', 'Assistant')],
+        data: { mode: 'receivables' },
+        loadComponent: () => import('./features/cash/balances-page/balances-page').then(m => m.BalancesPage),
+      },
+      {
+        path: 'cash/payables',
+        canActivate: [roleGuard('Admin')],
+        data: { mode: 'payables' },
+        loadComponent: () => import('./features/cash/balances-page/balances-page').then(m => m.BalancesPage),
+      },
       // 'cash/methods/new' e 'cash/methods/:id' ya no son páginas — alta y edición por modal desde payment-methods-list.
       {
         path: 'cash/methods',

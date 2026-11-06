@@ -42,6 +42,21 @@
 
 @keyframes fadeUp { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
 
+/* "Pagada": un solo momento. La franja entra, el check se dibuja y el monto aparece.
+   Ease-out exponencial, menos de medio segundo. */
+@keyframes paidIn { from { opacity: 0; transform: translateY(6px) scale(0.985); } to { opacity: 1; transform: none; } }
+@keyframes checkDraw { from { stroke-dashoffset: 1; } to { stroke-dashoffset: 0; } }
+@keyframes amountIn { from { opacity: 0; transform: translateX(-6px); } to { opacity: 1; transform: none; } }
+
+.paid-in { animation: paidIn 320ms cubic-bezier(0.16, 1, 0.3, 1) both; }
+.paid-in .paid-check path { stroke-dasharray: 1; stroke-dashoffset: 1; animation: checkDraw 360ms cubic-bezier(0.16, 1, 0.3, 1) 140ms forwards; }
+.paid-in .paid-amount { animation: amountIn 300ms cubic-bezier(0.16, 1, 0.3, 1) 220ms both; }
+
+@media (prefers-reduced-motion: reduce) {
+  .paid-in, .paid-in .paid-amount { animation: none; }
+  .paid-in .paid-check path { animation: none; stroke-dashoffset: 0; }
+}
+
 @layer base {
   *, *::before, *::after { box-sizing: border-box; }
   html, body { height: 100%; }
@@ -51,6 +66,10 @@
     font-family: var(--font-sans);
     font-size: 15px;
     -webkit-font-smoothing: antialiased;
+  }
+  ::selection {
+    background: var(--color-gr-primary-lite);
+    color: var(--color-gr-primary-dark);
   }
   :focus-visible {
     outline: 2px solid var(--color-gr-primary);

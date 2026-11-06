@@ -12,10 +12,10 @@
     @if (step() === 1) {
       <div class="space-y-4">
         <div>
-          <label for="companyName" class="mb-1.5 block text-sm font-medium text-gr-sub">Nombre de la empresa</label>
+          <label for="companyName" class="mb-1.5 block text-sm font-medium text-gr-text">Nombre de la empresa</label>
           <input
             id="companyName" type="text" formControlName="companyName" placeholder="Ej. Mi Empresa S.A."
-            class="w-full rounded-sm border border-gr-border bg-gr-surface px-4 py-2.5 text-gr-text placeholder-gr-muted transition focus:border-gr-primary focus:outline-none focus:ring-2 focus:ring-gr-primary/30"
+            class="w-full rounded-md border border-gr-border bg-gr-surface px-4 py-2.5 text-gr-text placeholder-gr-muted transition focus:border-gr-primary focus:outline-none focus:ring-2 focus:ring-gr-primary/30"
           >
           @if (form.controls.companyName.invalid && form.controls.companyName.touched) {
             <p class="mt-1.5 text-xs text-gr-danger">El nombre de la empresa es obligatorio.</p>
@@ -24,23 +24,23 @@
 
         <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div>
-            <label for="industry" class="mb-1.5 block text-sm font-medium text-gr-sub">Industria (opcional)</label>
+            <label for="industry" class="mb-1.5 block text-sm font-medium text-gr-text">Industria <span class="font-normal text-gr-sub">(opcional)</span></label>
             <input
               id="industry" type="text" formControlName="industry" placeholder="Ej. Alimentos, Ropa, Tecnología..."
-              class="w-full rounded-sm border border-gr-border bg-gr-surface px-4 py-2.5 text-gr-text placeholder-gr-muted transition focus:border-gr-primary focus:outline-none focus:ring-2 focus:ring-gr-primary/30"
+              class="w-full rounded-md border border-gr-border bg-gr-surface px-4 py-2.5 text-gr-text placeholder-gr-muted transition focus:border-gr-primary focus:outline-none focus:ring-2 focus:ring-gr-primary/30"
             >
           </div>
           <div>
-            <label for="taxId" class="mb-1.5 block text-sm font-medium text-gr-sub">NIT (opcional)</label>
+            <label for="taxId" class="mb-1.5 block text-sm font-medium text-gr-text">NIT <span class="font-normal text-gr-sub">(opcional)</span></label>
             <input
               id="taxId" type="text" formControlName="taxId" placeholder="Ej. 123456789"
-              class="w-full rounded-sm border border-gr-border bg-gr-surface px-4 py-2.5 text-gr-text placeholder-gr-muted transition focus:border-gr-primary focus:outline-none focus:ring-2 focus:ring-gr-primary/30"
+              class="w-full rounded-md border border-gr-border bg-gr-surface px-4 py-2.5 text-gr-text placeholder-gr-muted transition focus:border-gr-primary focus:outline-none focus:ring-2 focus:ring-gr-primary/30"
             >
           </div>
         </div>
 
         <div>
-          <label class="mb-1.5 block text-sm font-medium text-gr-sub">Tipo de operación</label>
+          <label class="mb-1.5 block text-sm font-medium text-gr-text">Tipo de operación</label>
           <div class="grid grid-cols-1 gap-3">
             @for (preset of presetOptions; track preset) {
               <button
@@ -68,10 +68,10 @@
     @if (step() === 2) {
       <div class="space-y-4">
         <div>
-          <label for="adminFullName" class="mb-1.5 block text-sm font-medium text-gr-sub">Nombre completo</label>
+          <label for="adminFullName" class="mb-1.5 block text-sm font-medium text-gr-text">Nombre completo</label>
           <input
             id="adminFullName" type="text" formControlName="adminFullName" placeholder="Nombre y apellido"
-            class="w-full rounded-sm border border-gr-border bg-gr-surface px-4 py-2.5 text-gr-text placeholder-gr-muted transition focus:border-gr-primary focus:outline-none focus:ring-2 focus:ring-gr-primary/30"
+            class="w-full rounded-md border border-gr-border bg-gr-surface px-4 py-2.5 text-gr-text placeholder-gr-muted transition focus:border-gr-primary focus:outline-none focus:ring-2 focus:ring-gr-primary/30"
           >
           @if (form.controls.adminFullName.invalid && form.controls.adminFullName.touched) {
             <p class="mt-1.5 text-xs text-gr-danger">El nombre del administrador es obligatorio.</p>
@@ -79,10 +79,10 @@
         </div>
 
         <div>
-          <label for="adminEmail" class="mb-1.5 block text-sm font-medium text-gr-sub">Correo electrónico</label>
+          <label for="adminEmail" class="mb-1.5 block text-sm font-medium text-gr-text">Correo electrónico</label>
           <input
             id="adminEmail" type="email" formControlName="adminEmail" placeholder="admin@empresa.com"
-            class="w-full rounded-sm border border-gr-border bg-gr-surface px-4 py-2.5 text-gr-text placeholder-gr-muted transition focus:border-gr-primary focus:outline-none focus:ring-2 focus:ring-gr-primary/30"
+            class="w-full rounded-md border border-gr-border bg-gr-surface px-4 py-2.5 text-gr-text placeholder-gr-muted transition focus:border-gr-primary focus:outline-none focus:ring-2 focus:ring-gr-primary/30"
           >
           @if (form.controls.adminEmail.invalid && form.controls.adminEmail.touched) {
             <p class="mt-1.5 text-xs text-gr-danger">Ingresa un correo válido.</p>
@@ -99,7 +99,7 @@
           <div class="relative">
             <input
               id="adminPassword" [type]="showPassword() ? 'text' : 'password'" formControlName="adminPassword" placeholder="Mínimo 8 caracteres"
-              class="w-full rounded-sm border border-gr-border bg-gr-surface py-2.5 pr-20 pl-4 text-gr-text placeholder-gr-muted transition focus:border-gr-primary focus:outline-none focus:ring-2 focus:ring-gr-primary/30"
+              class="w-full rounded-md border border-gr-border bg-gr-surface py-2.5 pr-20 pl-4 text-gr-text placeholder-gr-muted transition focus:border-gr-primary focus:outline-none focus:ring-2 focus:ring-gr-primary/30"
             >
             <div class="absolute inset-y-0 right-0 flex items-center gap-1 pr-2.5">
               <button
@@ -151,7 +151,7 @@
     @if (step() === 3) {
       <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <div>
-          <label for="planCode" class="mb-1.5 block text-sm font-medium text-gr-sub">Plan</label>
+          <label for="planCode" class="mb-1.5 block text-sm font-medium text-gr-text">Plan</label>
           @if (plansLoading()) {
             <p class="text-sm text-gr-sub">Cargando planes...</p>
           } @else if (plansError()) {
@@ -162,11 +162,11 @@
               </button>
             </div>
           } @else if (plans().length === 0) {
-            <p class="text-sm text-gr-sub">No hay planes activos — creá uno primero desde Suscripciones → Planes.</p>
+            <p class="text-sm text-gr-sub">No hay planes activos — crea uno primero desde Suscripciones → Planes.</p>
           } @else {
             <select
               id="planCode" formControlName="planCode"
-              class="w-full rounded-sm border border-gr-border bg-gr-surface px-4 py-2.5 text-gr-text transition focus:border-gr-primary focus:outline-none focus:ring-2 focus:ring-gr-primary/30"
+              class="w-full rounded-md border border-gr-border bg-gr-surface px-4 py-2.5 text-gr-text transition focus:border-gr-primary focus:outline-none focus:ring-2 focus:ring-gr-primary/30"
             >
               @for (plan of plans(); track plan.code) {
                 <option [value]="plan.code">{{ plan.name }}</option>
@@ -176,10 +176,10 @@
         </div>
 
         <div>
-          <label for="trialDays" class="mb-1.5 block text-sm font-medium text-gr-sub">Días de prueba</label>
+          <label for="trialDays" class="mb-1.5 block text-sm font-medium text-gr-text">Días de prueba</label>
           <input
             id="trialDays" type="number" min="1" formControlName="trialDays"
-            class="w-full rounded-sm border border-gr-border bg-gr-surface px-4 py-2.5 text-gr-text transition focus:border-gr-primary focus:outline-none focus:ring-2 focus:ring-gr-primary/30"
+            class="w-full rounded-md border border-gr-border bg-gr-surface px-4 py-2.5 text-gr-text transition focus:border-gr-primary focus:outline-none focus:ring-2 focus:ring-gr-primary/30"
           >
         </div>
       </div>

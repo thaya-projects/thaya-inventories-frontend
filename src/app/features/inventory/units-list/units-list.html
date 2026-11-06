@@ -94,7 +94,7 @@
       (click)="askToggleActive(unit)"
       [disabled]="updatingId() === unit.id"
       class="cursor-pointer text-sm font-medium transition disabled:cursor-not-allowed disabled:opacity-50"
-      [class]="unit.isActive ? 'text-gr-danger hover:brightness-90' : 'text-gr-success hover:brightness-90'"
+      [class]="unit.isActive ? 'text-gr-sub hover:text-gr-danger' : 'text-gr-success hover:brightness-90'"
     >
       {{ unit.isActive ? 'Desactivar' : 'Activar' }}
     </button>

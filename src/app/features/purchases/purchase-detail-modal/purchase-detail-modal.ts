@@ -7,7 +7,7 @@ import { Purchase, PurchaseStatus } from '../../../core/models/purchase.model';
 import { PurchasePaymentsService } from '../../../core/services/purchase-payments';
 import { PurchasePayment } from '../../../core/models/purchase-payment.model';
 import { PaymentMethodsService } from '../../../core/services/payment-methods';
-import { PaymentMethod } from '../../../core/models/payment-method.model';
+import { PaymentMethod, paymentMethodLabel } from '../../../core/models/payment-method.model';
 import { ToastService } from '../../../shared/toast/toast.service';
 import { Modal } from '../../../shared/modal/modal';
 import { ConfirmDialog } from '../../../shared/confirm-dialog/confirm-dialog';
@@ -16,7 +16,7 @@ import { PurchaseFormModal } from '../purchase-form-modal/purchase-form-modal';
 type PurchaseConfirmAction = 'receive' | 'cancel';
 
 const STATUS_LABELS: Record<PurchaseStatus, string> = {
-  Pending: 'Pendiente',
+  Pending: 'Por recibir',
   Received: 'Recibida',
   Cancelled: 'Cancelada',
 };
@@ -58,6 +58,20 @@ export class PurchaseDetailModal implements OnInit {
   paymentErrorMessage = signal<string | null>(null);
 
   totalPaid = computed(() => this.payments().reduce((sum, p) => sum + p.amount, 0));
+  // "QR", "Efectivo"… en vez del nombre interno de la cuenta ("QR Banco Unión").
+  methodLabel = (m: PaymentMethod) => paymentMethodLabel(m, this.paymentMethods());
+  payMethodLabel = (methodId: string | null, fallback: string | null) => {
+    const m = this.paymentMethods().find(x => x.id === methodId);
+    return m ? this.methodLabel(m) : (fallback ?? 'Pago');
+  };
+  paymentMethodsSummary = computed(() =>
+    [...new Set(this.payments().map(p => this.payMethodLabel(p.paymentMethodId, p.paymentMethodName)))].join(' + '),
+  );
+  paidPercent = computed(() => {
+    const total = this.purchase()?.total ?? 0;
+    return total > 0 ? Math.min(100, Math.round((this.totalPaid() / total) * 100)) : 0;
+  });
+
   balanceDue = computed(() => {
     const total = this.purchase()?.total;
     return total != null ? Math.max(0, total - this.totalPaid()) : null;

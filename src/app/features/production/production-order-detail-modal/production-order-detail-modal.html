@@ -22,7 +22,7 @@
         <svg class="mt-0.5 h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
           <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z"/>
         </svg>
-        <span>No hay MP suficiente. Podés guardar; no se podrá completar hasta reponer.</span>
+        <span>No hay MP suficiente. Puedes guardar; no se podrá completar hasta reponer.</span>
       </div>
     }
 
@@ -148,10 +148,10 @@
       }
 
       <div>
-        <label for="completeQuantityProduced" class="mb-1.5 block text-sm font-medium text-gr-sub">Cantidad real producida</label>
+        <label for="completeQuantityProduced" class="mb-1.5 block text-sm font-medium text-gr-text">Cantidad real producida</label>
         <input
           id="completeQuantityProduced" type="number" step="any" formControlName="quantityProduced"
-          class="w-full rounded-sm border border-gr-border bg-gr-surface px-3.5 py-2.5 text-gr-text transition focus:border-gr-primary focus:outline-none focus:ring-2 focus:ring-gr-primary/30"
+          class="w-full rounded-md border border-gr-border bg-gr-surface px-3.5 py-2.5 text-gr-text transition focus:border-gr-primary focus:outline-none focus:ring-2 focus:ring-gr-primary/30"
         >
         @if (completeForm.controls.quantityProduced.invalid && completeForm.controls.quantityProduced.touched) {
           <p class="mt-1.5 text-xs text-gr-danger">Ingresa una cantidad válida.</p>
@@ -159,18 +159,18 @@
       </div>
 
       <div>
-        <label for="completeWasteQuantity" class="mb-1.5 block text-sm font-medium text-gr-sub">Merma de PT</label>
+        <label for="completeWasteQuantity" class="mb-1.5 block text-sm font-medium text-gr-text">Merma de PT</label>
         <input
           id="completeWasteQuantity" type="number" step="any" formControlName="wasteQuantity"
-          class="w-full rounded-sm border border-gr-border bg-gr-surface px-3.5 py-2.5 text-gr-text transition focus:border-gr-primary focus:outline-none focus:ring-2 focus:ring-gr-primary/30"
+          class="w-full rounded-md border border-gr-border bg-gr-surface px-3.5 py-2.5 text-gr-text transition focus:border-gr-primary focus:outline-none focus:ring-2 focus:ring-gr-primary/30"
         >
       </div>
 
       <div>
-        <label for="completeWasteNotes" class="mb-1.5 block text-sm font-medium text-gr-sub">Nota de merma (opcional)</label>
+        <label for="completeWasteNotes" class="mb-1.5 block text-sm font-medium text-gr-text">Nota de merma <span class="font-normal text-gr-sub">(opcional)</span></label>
         <textarea
           id="completeWasteNotes" rows="2" formControlName="wasteNotes"
-          class="w-full rounded-sm border border-gr-border bg-gr-surface px-3.5 py-2.5 text-gr-text transition focus:border-gr-primary focus:outline-none focus:ring-2 focus:ring-gr-primary/30"
+          class="w-full rounded-md border border-gr-border bg-gr-surface px-3.5 py-2.5 text-gr-text transition focus:border-gr-primary focus:outline-none focus:ring-2 focus:ring-gr-primary/30"
         ></textarea>
       </div>
 

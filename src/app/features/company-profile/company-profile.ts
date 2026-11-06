@@ -27,9 +27,11 @@ const MODULE_LABELS: Record<string, string> = {
   aiAgents: 'Agentes IA',
 };
 
+import { PhoneField, phoneFieldValidator } from '../../shared/phone-field/phone-field';
+
 @Component({
   selector: 'app-company-profile',
-  imports: [ReactiveFormsModule, DatePipe],
+  imports: [ReactiveFormsModule, DatePipe, PhoneField],
   templateUrl: './company-profile.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
@@ -63,7 +65,7 @@ export class CompanyProfilePage {
     name: ['', Validators.required],
     industry: [''],
     taxId: [''],
-    phone: [''],
+    phone: [null as string | null, phoneFieldValidator],
     email: [''],
     city: [''],
     address: [''],
@@ -115,7 +117,7 @@ export class CompanyProfilePage {
         name: c.name,
         industry: c.industry ?? '',
         taxId: c.taxId ?? '',
-        phone: c.phone ?? '',
+        phone: c.phone ?? null,
         email: c.email ?? '',
         city: c.city ?? '',
         address: c.address ?? '',

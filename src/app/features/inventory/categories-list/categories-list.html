@@ -53,7 +53,7 @@
 } @else if (roots().length === 0) {
   <p class="text-gr-sub">No hay categorías registradas todavía.</p>
 } @else {
-  <div class="rounded-lg border border-gr-border bg-gr-surface px-6">
+  <div class="rounded-lg border border-gr-border bg-gr-surface px-4 sm:px-6">
     @for (root of roots(); track root.id) {
       <app-category-tree-node [category]="root" [updatingId]="updatingId()" (edit)="openEditModal($event)" (toggleActive)="askToggleActive($event)" />
     }

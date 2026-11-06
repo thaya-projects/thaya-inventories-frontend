@@ -9,6 +9,9 @@ export interface TeamUser {
   email: string;
   userName: string;
   phone: string | null;
+  // true solo si el usuario confirmó el código enviado por WhatsApp. Cambiar
+  // el teléfono lo vuelve a false.
+  phoneVerified: boolean;
   role: string; // 'SuperAdmin' | 'Admin' | 'Warehouse' | 'Assistant' — este endpoint nunca devuelve SuperAdmin
   isActive: boolean;
   lastLoginAt: string | null;

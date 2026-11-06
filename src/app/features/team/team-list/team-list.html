@@ -47,7 +47,7 @@
       (click)="toggleActive(user)"
       [disabled]="updatingId() === user.id"
       class="cursor-pointer text-sm font-medium transition disabled:cursor-not-allowed disabled:opacity-50"
-      [class]="user.isActive ? 'text-gr-danger hover:brightness-90' : 'text-gr-success hover:brightness-90'"
+      [class]="user.isActive ? 'text-gr-sub hover:text-gr-danger' : 'text-gr-success hover:brightness-90'"
     >
       {{ user.isActive ? 'Desactivar' : 'Activar' }}
     </button>

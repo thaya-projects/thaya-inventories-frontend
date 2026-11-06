@@ -46,6 +46,7 @@ export class CustomersList {
 
   columns = computed<DataTableColumn<Customer>[]>(() => [
     { key: 'name', label: 'Nombre' },
+    { key: 'taxId', label: 'NIT / CI' },
     { key: 'phone', label: 'Teléfono' },
     { key: 'email', label: 'Correo' },
     { key: 'city', label: 'Ciudad' },

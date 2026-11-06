@@ -1,80 +1,94 @@
 <div class="mx-auto max-w-4xl">
-  <a routerLink="/inventory/products" class="mb-6 inline-flex items-center gap-1.5 text-sm font-medium text-gr-sub transition hover:text-gr-text">
-    <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+  <a routerLink="/inventory/products" class="mb-5 inline-flex items-center gap-1.5 text-sm font-medium text-gr-sub transition hover:text-gr-text">
+    <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
       <polyline points="15 18 9 12 15 6"/>
     </svg>
     Volver a productos
   </a>
 
   @if (errorMessage()) {
-    <div class="mb-6 rounded-sm border border-gr-danger/20 bg-gr-danger-bg px-4 py-3 text-sm text-gr-danger">
+    <div role="alert" class="mb-6 rounded-md border border-gr-danger/20 bg-gr-danger-bg px-4 py-3 text-sm text-gr-danger">
       {{ errorMessage() }}
     </div>
   }
 
   @if (loading()) {
-    <p class="text-gr-sub">Cargando kardex...</p>
+    <div class="space-y-3" aria-hidden="true">
+      <div class="h-16 animate-pulse rounded-md bg-gr-border-lite"></div>
+      <div class="h-64 animate-pulse rounded-md bg-gr-border-lite"></div>
+    </div>
+    <p class="sr-only" role="status">Cargando historial…</p>
   } @else if (kardex(); as k) {
-    <div class="mb-6 flex flex-wrap items-center justify-between gap-4">
-      <div>
-        <h1 class="text-2xl font-bold text-gr-text">Kardex — {{ k.productName }}</h1>
-        <p class="mt-1 text-gr-sub">Stock actual: <span class="font-semibold text-gr-text">{{ k.currentStock }}</span></p>
+    <!-- Producto y stock actual: la respuesta a "¿cuánto tengo?" antes que el detalle. -->
+    <div class="mb-6 flex flex-wrap items-end justify-between gap-4">
+      <div class="min-w-0">
+        <h1 class="truncate text-2xl font-bold text-gr-text">{{ k.productName }}</h1>
+        <p class="mt-1 text-gr-sub">Historial de stock: cada entrada y salida, con el saldo que fue quedando.</p>
+      </div>
+      <div class="text-right">
+        <p class="text-sm text-gr-sub">En stock hoy</p>
+        <p class="text-3xl font-bold text-gr-text tabular-nums">{{ k.currentStock }}</p>
       </div>
     </div>
 
-    <div class="mb-6 flex flex-wrap items-end gap-3 rounded-lg border border-gr-border bg-gr-surface p-4">
-      <div>
-        <label for="dateFrom" class="mb-1.5 block text-xs font-medium text-gr-sub">Desde</label>
-        <input
-          id="dateFrom" type="date" [(ngModel)]="dateFrom" name="dateFrom"
-          class="rounded-sm border border-gr-border bg-gr-surface px-3 py-2 text-sm text-gr-text focus:border-gr-primary focus:outline-none focus:ring-2 focus:ring-gr-primary/30"
-        >
-      </div>
-      <div>
-        <label for="dateTo" class="mb-1.5 block text-xs font-medium text-gr-sub">Hasta</label>
-        <input
-          id="dateTo" type="date" [(ngModel)]="dateTo" name="dateTo"
-          class="rounded-sm border border-gr-border bg-gr-surface px-3 py-2 text-sm text-gr-text focus:border-gr-primary focus:outline-none focus:ring-2 focus:ring-gr-primary/30"
-        >
-      </div>
-      <button
-        type="button" (click)="applyFilters()"
-        class="rounded-sm bg-gr-primary-dark px-4 py-2 text-sm font-semibold text-gr-primary-lite transition hover:brightness-95"
+    <div class="mb-4 flex flex-wrap items-center gap-3 text-sm">
+      <label for="dateFrom" class="text-gr-sub">Desde</label>
+      <input
+        id="dateFrom" type="date" [(ngModel)]="dateFrom" (ngModelChange)="onDateChange()" name="dateFrom"
+        class="h-9 rounded-md border border-gr-border bg-gr-surface px-2.5 text-sm text-gr-text focus:border-gr-primary focus:outline-none focus:ring-2 focus:ring-gr-primary/30"
       >
-        Filtrar
-      </button>
-      <button
-        type="button" (click)="clearFilters()"
-        class="rounded-sm px-4 py-2 text-sm font-medium text-gr-sub transition hover:text-gr-text"
+      <label for="dateTo" class="text-gr-sub">hasta</label>
+      <input
+        id="dateTo" type="date" [(ngModel)]="dateTo" (ngModelChange)="onDateChange()" name="dateTo"
+        class="h-9 rounded-md border border-gr-border bg-gr-surface px-2.5 text-sm text-gr-text focus:border-gr-primary focus:outline-none focus:ring-2 focus:ring-gr-primary/30"
       >
-        Limpiar
-      </button>
+      @if (hasFilter()) {
+        <button type="button" (click)="clearFilters()" class="cursor-pointer font-medium text-gr-primary underline-offset-4 hover:underline">Ver todo</button>
+      }
     </div>
 
     @if (k.movements.length === 0) {
-      <p class="text-gr-sub">No hay movimientos registrados en este rango.</p>
+      <p class="rounded-lg border border-gr-border bg-gr-surface px-6 py-10 text-center text-gr-sub">
+        {{ hasFilter() ? 'No hubo movimientos en esas fechas.' : 'Este producto todavía no tiene movimientos.' }}
+      </p>
     } @else {
-      <div class="overflow-x-auto rounded-lg border border-gr-border bg-gr-surface">
+      <div class="overflow-x-auto rounded-lg border border-gr-border bg-gr-surface transition-opacity" [class.opacity-50]="refreshing()">
         <table class="w-full text-left text-sm">
           <thead>
-            <tr class="border-b border-gr-border-lite text-xs font-medium tracking-wide text-gr-muted uppercase">
+            <tr class="border-b border-gr-border-lite text-xs font-medium tracking-wide text-gr-sub uppercase">
               <th class="px-4 py-3">Fecha</th>
-              <th class="px-4 py-3">Tipo</th>
-              <th class="px-4 py-3 text-right">Cantidad</th>
+              <th class="px-4 py-3">Movimiento</th>
               <th class="px-4 py-3 text-right">Saldo</th>
-              <th class="px-4 py-3 text-right">Costo unit.</th>
-              <th class="px-4 py-3">Notas</th>
+              <th class="px-4 py-3 text-right">Costo c/u</th>
+              <th class="px-4 py-3">Motivo</th>
             </tr>
           </thead>
           <tbody>
             @for (m of k.movements; track $index) {
+              @let s = sign(m.movementType, m.quantity);
               <tr class="border-b border-gr-border-lite last:border-b-0">
-                <td class="px-4 py-3 text-gr-text">{{ m.date | date: 'dd/MM/yyyy' }}</td>
-                <td class="px-4 py-3 text-gr-text">{{ movementLabel(m.movementType) }}</td>
-                <td class="px-4 py-3 text-right text-gr-text">{{ m.quantity }}</td>
-                <td class="px-4 py-3 text-right font-medium text-gr-text">{{ m.balance }}</td>
-                <td class="px-4 py-3 text-right text-gr-text">{{ m.unitCost != null ? ('Bs ' + m.unitCost.toFixed(2)) : '—' }}</td>
-                <td class="px-4 py-3 text-gr-sub">{{ m.notes || '—' }}</td>
+                <td class="px-4 py-3 whitespace-nowrap text-gr-text">{{ m.date | date: 'dd/MM/yyyy' }}</td>
+                <td class="px-4 py-3 whitespace-nowrap">
+                  <span class="font-semibold tabular-nums" [class]="s === '+' ? 'text-gr-success' : 'text-gr-warning'">{{ s }}{{ qty(m.quantity) }}</span>
+                  <span class="ml-1.5 text-xs text-gr-sub">{{ movementLabel(m.movementType) }}</span>
+                </td>
+                <td class="px-4 py-3 text-right font-semibold text-gr-text tabular-nums">{{ m.balance }}</td>
+                <td class="px-4 py-3 text-right whitespace-nowrap text-gr-text tabular-nums">{{ m.unitCost ? ('Bs ' + m.unitCost.toFixed(2)) : '—' }}</td>
+                <td class="px-4 py-3 whitespace-nowrap">
+                  <div class="flex items-center">
+                  @let o = origin(m.notes);
+  <span class="inline-flex max-w-72 items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-medium" [class]="originStyle[o.kind]" [title]="o.automatic ? 'Automático: lo generó el sistema' : 'Cargado a mano'">
+    @switch (o.kind) {
+      @case ('sale') { <svg class="h-3.5 w-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="20" r="1.5"/><circle cx="18" cy="20" r="1.5"/><path d="M3 4h2l2.4 11.2a1 1 0 0 0 1 .8h9.2a1 1 0 0 0 1-.8L20 8H6"/></svg> }
+      @case ('purchase') { <svg class="h-3.5 w-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 13h5l1.5 3h5L16 13h5M5 5h14l2 8v6H3v-6z"/></svg> }
+      @case ('production') { <svg class="h-3.5 w-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 21V10l6 4V10l6 4V5h6v16z"/></svg> }
+      @default { <svg class="h-3.5 w-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg> }
+    }
+    <span class="truncate">{{ o.label }}</span>
+  </span>
+  @if (o.automatic) { <span class="ml-1.5 text-xs text-gr-sub">automático</span> }
+                  </div>
+                </td>
               </tr>
             }
           </tbody>

@@ -1,89 +1,121 @@
-<app-modal [title]="supplierId() ? 'Editar proveedor' : 'Nuevo proveedor'" size="md" (close)="close.emit()">
+<app-modal [title]="supplierId() ? 'Editar proveedor' : 'Nuevo proveedor'" size="lg" (close)="close.emit()">
   @if (errorMessage()) {
-    <div class="mb-6 rounded-sm border border-gr-danger/20 bg-gr-danger-bg px-4 py-3 text-sm text-gr-danger">
+    <div role="alert" class="mb-5 rounded-md border border-gr-danger/20 bg-gr-danger-bg px-4 py-3 text-sm text-gr-danger">
       {{ errorMessage() }}
     </div>
   }
 
   @if (loading()) {
-    <p class="text-gr-sub">Cargando...</p>
+    <div class="space-y-4" aria-hidden="true">
+      @for (i of [1, 2, 3]; track i) {
+        <div class="h-16 animate-pulse rounded-md bg-gr-border-lite"></div>
+      }
+    </div>
+    <p class="sr-only" role="status">Cargando…</p>
   } @else {
-    <form [formGroup]="form" (ngSubmit)="submit()">
-      <div class="space-y-4">
-        <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <div>
-            <label for="name" class="mb-1.5 block text-sm font-medium text-gr-sub">Nombre</label>
+    <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
+      <div class="space-y-5">
+        <!-- Quién es -->
+        <div class="grid grid-cols-1 gap-4 sm:grid-cols-5">
+          <div class="sm:col-span-3">
+            <label for="name" class="mb-1.5 flex items-center gap-1.5 text-sm font-medium text-gr-text">
+              Nombre del proveedor <app-info-hint [text]="hints.name" />
+            </label>
             <input
-              id="name" type="text" formControlName="name" placeholder="Ej. Distribuidora Tech"
-              class="w-full rounded-sm border border-gr-border bg-gr-surface px-4 py-2.5 text-gr-text placeholder-gr-muted transition focus:border-gr-primary focus:outline-none focus:ring-2 focus:ring-gr-primary/30"
+              id="name" type="text" formControlName="name" placeholder="Ej. Distribuidora Deportiva SRL" autocomplete="off"
+              class="w-full rounded-md border bg-gr-surface px-4 py-2.5 text-gr-text placeholder-gr-muted transition focus:outline-none focus:ring-2 focus:ring-gr-primary/30"
+              [class]="(form.controls.name.invalid && form.controls.name.touched) || sameName() ? 'border-gr-danger' : 'border-gr-border focus:border-gr-primary'"
             >
             @if (form.controls.name.invalid && form.controls.name.touched) {
-              <p class="mt-1.5 text-xs text-gr-danger">El nombre es obligatorio.</p>
+              <p class="mt-1.5 text-xs text-gr-danger">Escribe el nombre del proveedor.</p>
+            } @else if (sameName(); as s) {
+              <p class="mt-1.5 text-xs text-gr-danger">Ya tienes un proveedor llamado «{{ s.name }}»{{ s.isActive ? '' : ' (inactivo)' }}.</p>
+            }
+          </div>
+          <div class="sm:col-span-2">
+            <label for="taxId" class="mb-1.5 flex items-center gap-1.5 text-sm font-medium text-gr-text">
+              NIT <span class="font-normal text-gr-sub">(opcional)</span> <app-info-hint [text]="hints.taxId" />
+            </label>
+            <input
+              id="taxId" type="text" formControlName="taxId" placeholder="Ej. 1023456027" autocomplete="off"
+              class="w-full rounded-md border border-gr-border bg-gr-surface px-4 py-2.5 text-gr-text placeholder-gr-muted transition focus:border-gr-primary focus:outline-none focus:ring-2 focus:ring-gr-primary/30"
+            >
+          </div>
+        </div>
+
+        <!-- Cómo contactarlo -->
+        <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <div>
+            <label for="contactName" class="mb-1.5 flex items-center gap-1.5 text-sm font-medium text-gr-text">
+              Persona de contacto <span class="font-normal text-gr-sub">(opcional)</span> <app-info-hint [text]="hints.contactName" />
+            </label>
+            <input
+              id="contactName" type="text" formControlName="contactName" placeholder="Ej. Eliana Rojas" autocomplete="off"
+              class="w-full rounded-md border border-gr-border bg-gr-surface px-4 py-2.5 text-gr-text placeholder-gr-muted transition focus:border-gr-primary focus:outline-none focus:ring-2 focus:ring-gr-primary/30"
+            >
+          </div>
+          <div>
+            <label for="phone" class="mb-1.5 flex items-center gap-1.5 text-sm font-medium text-gr-text">
+              Teléfono <span class="font-normal text-gr-sub">(opcional)</span> <app-info-hint [text]="hints.phone" />
+            </label>
+            <app-phone-field inputId="phone" formControlName="phone" [invalid]="form.controls.phone.invalid && form.controls.phone.touched" />
+            @if (form.controls.phone.errors?.['phone'] && form.controls.phone.touched) {
+              <p class="mt-1.5 text-xs text-gr-danger">{{ form.controls.phone.errors?.['phone'] }}</p>
+            }
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <div>
+            <label for="email" class="mb-1.5 flex items-center gap-1.5 text-sm font-medium text-gr-text">
+              Correo <span class="font-normal text-gr-sub">(opcional)</span> <app-info-hint [text]="hints.email" />
+            </label>
+            <input
+              id="email" type="email" formControlName="email" placeholder="ventas@proveedor.com" autocomplete="off"
+              class="w-full rounded-md border bg-gr-surface px-4 py-2.5 text-gr-text placeholder-gr-muted transition focus:outline-none focus:ring-2 focus:ring-gr-primary/30"
+              [class]="form.controls.email.invalid && form.controls.email.touched ? 'border-gr-danger' : 'border-gr-border focus:border-gr-primary'"
+            >
+            @if (form.controls.email.invalid && form.controls.email.touched) {
+              <p class="mt-1.5 text-xs text-gr-danger">Revisa el correo (ej. ventas&#64;proveedor.com).</p>
             }
           </div>
           <div>
-            <label for="contactName" class="mb-1.5 block text-sm font-medium text-gr-sub">Nombre de contacto (opcional)</label>
+            <label for="city" class="mb-1.5 flex items-center gap-1.5 text-sm font-medium text-gr-text">
+              Ciudad <span class="font-normal text-gr-sub">(opcional)</span> <app-info-hint [text]="hints.city" />
+            </label>
             <input
-              id="contactName" type="text" formControlName="contactName"
-              class="w-full rounded-sm border border-gr-border bg-gr-surface px-4 py-2.5 text-gr-text transition focus:border-gr-primary focus:outline-none focus:ring-2 focus:ring-gr-primary/30"
+              id="city" type="text" formControlName="city" placeholder="Santa Cruz" list="supplier-cities" autocomplete="off"
+              class="w-full rounded-md border border-gr-border bg-gr-surface px-4 py-2.5 text-gr-text placeholder-gr-muted transition focus:border-gr-primary focus:outline-none focus:ring-2 focus:ring-gr-primary/30"
             >
-          </div>
-        </div>
-
-        <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <div>
-            <label for="phone" class="mb-1.5 block text-sm font-medium text-gr-sub">Teléfono (opcional)</label>
-            <input
-              id="phone" type="text" formControlName="phone"
-              class="w-full rounded-sm border border-gr-border bg-gr-surface px-4 py-2.5 text-gr-text transition focus:border-gr-primary focus:outline-none focus:ring-2 focus:ring-gr-primary/30"
-            >
-          </div>
-          <div>
-            <label for="email" class="mb-1.5 block text-sm font-medium text-gr-sub">Correo (opcional)</label>
-            <input
-              id="email" type="email" formControlName="email"
-              class="w-full rounded-sm border border-gr-border bg-gr-surface px-4 py-2.5 text-gr-text transition focus:border-gr-primary focus:outline-none focus:ring-2 focus:ring-gr-primary/30"
-            >
-          </div>
-        </div>
-
-        <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <div>
-            <label for="city" class="mb-1.5 block text-sm font-medium text-gr-sub">Ciudad (opcional)</label>
-            <input
-              id="city" type="text" formControlName="city"
-              class="w-full rounded-sm border border-gr-border bg-gr-surface px-4 py-2.5 text-gr-text transition focus:border-gr-primary focus:outline-none focus:ring-2 focus:ring-gr-primary/30"
-            >
-          </div>
-          <div>
-            <label for="taxId" class="mb-1.5 block text-sm font-medium text-gr-sub">NIT (opcional)</label>
-            <input
-              id="taxId" type="text" formControlName="taxId"
-              class="w-full rounded-sm border border-gr-border bg-gr-surface px-4 py-2.5 text-gr-text transition focus:border-gr-primary focus:outline-none focus:ring-2 focus:ring-gr-primary/30"
-            >
+            <datalist id="supplier-cities">
+              @for (c of ['Santa Cruz', 'La Paz', 'El Alto', 'Cochabamba', 'Sucre', 'Oruro', 'Potosí', 'Tarija', 'Trinidad', 'Cobija']; track c) {
+                <option [value]="c"></option>
+              }
+            </datalist>
           </div>
         </div>
 
         <div>
-          <label for="address" class="mb-1.5 block text-sm font-medium text-gr-sub">Dirección (opcional)</label>
+          <label for="address" class="mb-1.5 flex items-center gap-1.5 text-sm font-medium text-gr-text">
+            Dirección <span class="font-normal text-gr-sub">(opcional)</span> <app-info-hint [text]="hints.address" />
+          </label>
           <input
-            id="address" type="text" formControlName="address"
-            class="w-full rounded-sm border border-gr-border bg-gr-surface px-4 py-2.5 text-gr-text transition focus:border-gr-primary focus:outline-none focus:ring-2 focus:ring-gr-primary/30"
+            id="address" type="text" formControlName="address" placeholder="Calle, número y una referencia" autocomplete="off"
+            class="w-full rounded-md border border-gr-border bg-gr-surface px-4 py-2.5 text-gr-text placeholder-gr-muted transition focus:border-gr-primary focus:outline-none focus:ring-2 focus:ring-gr-primary/30"
           >
         </div>
       </div>
 
       <div class="mt-8 flex items-center justify-end gap-3 border-t border-gr-border-lite pt-5">
-        <button type="button" (click)="close.emit()" class="rounded-sm px-4 py-2.5 font-medium text-gr-sub transition hover:text-gr-text">
+        <button type="button" (click)="close.emit()" class="cursor-pointer rounded-md px-4 py-2.5 font-medium text-gr-sub transition hover:bg-gr-bg hover:text-gr-text">
           Cancelar
         </button>
         <button
-          type="submit"
-          [disabled]="submitting()"
-          class="flex items-center gap-2 rounded-sm bg-gr-primary-dark px-5 py-2.5 font-semibold text-gr-primary-lite transition hover:brightness-95 disabled:cursor-not-allowed disabled:opacity-60"
+          type="submit" [disabled]="submitting() || !!sameName()"
+          class="flex cursor-pointer items-center gap-2 rounded-md bg-gr-primary-dark px-5 py-2.5 font-semibold text-gr-primary-lite transition hover:bg-gr-primary disabled:cursor-not-allowed disabled:opacity-50"
         >
           @if (submitting()) {
-            <svg class="h-4 w-4 animate-spin" fill="none" viewBox="0 0 24 24">
+            <svg class="h-4 w-4 animate-spin" fill="none" viewBox="0 0 24 24" aria-hidden="true">
               <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
               <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
             </svg>

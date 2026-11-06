@@ -4,6 +4,8 @@ export interface Category {
   id: string;
   name: string;
   description: string | null;
+  // Foto que la tienda online muestra para la categoría (null = sin foto).
+  imageUrl?: string | null;
   parentId: string | null;
   isActive: boolean;
   createdAt: string;

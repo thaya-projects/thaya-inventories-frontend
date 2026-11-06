@@ -1,195 +1,307 @@
 <app-modal [title]="purchaseId() ? 'Editar compra' : 'Nueva compra'" size="xl" (close)="close.emit()">
   @if (errorMessage()) {
-    <div class="mb-6 rounded-sm border border-gr-danger/20 bg-gr-danger-bg px-4 py-3 text-sm text-gr-danger">
+    <div role="alert" class="mb-5 rounded-md border border-gr-danger/20 bg-gr-danger-bg px-4 py-3 text-sm text-gr-danger">
       {{ errorMessage() }}
     </div>
   }
 
   @if (loading()) {
-    <p class="text-gr-sub">Cargando...</p>
+    <div class="space-y-3" aria-hidden="true">
+      @for (i of [1, 2, 3]; track i) {
+        <div class="h-14 animate-pulse rounded-md bg-gr-border-lite"></div>
+      }
+    </div>
+    <p class="sr-only" role="status">Cargando…</p>
   } @else {
     <form [formGroup]="form" (ngSubmit)="submit()">
-      <div class="mb-6">
-        <h2 class="mb-4 text-lg font-semibold text-gr-text">Cabecera</h2>
-
-        <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+      <!-- A quién y cuándo -->
+      <div class="grid grid-cols-1 gap-4" [class]="usesMultiWarehouse() ? 'sm:grid-cols-[minmax(0,2fr)_minmax(0,1fr)_minmax(0,1fr)]' : 'sm:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]'">
+        <div>
+          <label for="supplierId" class="mb-1.5 block text-sm font-medium text-gr-text">¿A quién le compras?</label>
+          <select
+            id="supplierId" formControlName="supplierId"
+            class="w-full rounded-md border bg-gr-surface px-4 py-2.5 text-gr-text transition focus:outline-none focus:ring-2 focus:ring-gr-primary/30"
+            [class]="form.controls.supplierId.invalid && form.controls.supplierId.touched ? 'border-gr-danger' : 'border-gr-border focus:border-gr-primary'"
+          >
+            <option value="" disabled>Elige el proveedor</option>
+            @for (s of suppliers(); track s.id) {
+              <option [value]="s.id">{{ s.name }}</option>
+            }
+          </select>
+          @if (form.controls.supplierId.invalid && form.controls.supplierId.touched) {
+            <p class="mt-1.5 text-xs text-gr-danger">Elige a quién le compras.</p>
+          }
+        </div>
+        <div>
+          <label for="date" class="mb-1.5 block text-sm font-medium text-gr-text">Fecha</label>
+          <input
+            id="date" type="date" formControlName="date"
+            class="w-full rounded-md border border-gr-border bg-gr-surface px-4 py-2.5 text-gr-text transition focus:border-gr-primary focus:outline-none focus:ring-2 focus:ring-gr-primary/30"
+          >
+        </div>
+        @if (usesMultiWarehouse()) {
           <div>
-            <label for="date" class="mb-1.5 block text-sm font-medium text-gr-sub">Fecha</label>
-            <input
-              id="date" type="date" formControlName="date"
-              class="w-full rounded-sm border border-gr-border bg-gr-surface px-4 py-2.5 text-gr-text transition focus:border-gr-primary focus:outline-none focus:ring-2 focus:ring-gr-primary/30"
-            >
-          </div>
-          <div>
-            <label for="supplierId" class="mb-1.5 block text-sm font-medium text-gr-sub">Proveedor</label>
+            <label for="warehouseId" class="mb-1.5 block text-sm font-medium text-gr-text">Almacén</label>
             <select
-              id="supplierId" formControlName="supplierId"
-              class="w-full rounded-sm border border-gr-border bg-gr-surface px-4 py-2.5 text-gr-text transition focus:border-gr-primary focus:outline-none focus:ring-2 focus:ring-gr-primary/30"
+              id="warehouseId" formControlName="warehouseId"
+              class="w-full rounded-md border border-gr-border bg-gr-surface px-4 py-2.5 text-gr-text transition focus:border-gr-primary focus:outline-none focus:ring-2 focus:ring-gr-primary/30"
             >
-              <option value="" disabled>— Selecciona un proveedor —</option>
-              @for (s of suppliers(); track s.id) {
-                <option [value]="s.id">{{ s.name }}</option>
+              <option value="" disabled>Elige el almacén</option>
+              @for (w of warehouses(); track w.id) {
+                <option [value]="w.id">{{ w.name }}</option>
               }
             </select>
-            @if (form.controls.supplierId.invalid && form.controls.supplierId.touched) {
-              <p class="mt-1.5 text-xs text-gr-danger">Selecciona un proveedor.</p>
-            }
           </div>
-
-          @if (usesMultiWarehouse()) {
-            <div>
-              <label for="warehouseId" class="mb-1.5 block text-sm font-medium text-gr-sub">Almacén</label>
-              <select
-                id="warehouseId" formControlName="warehouseId"
-                class="w-full rounded-sm border border-gr-border bg-gr-surface px-4 py-2.5 text-gr-text transition focus:border-gr-primary focus:outline-none focus:ring-2 focus:ring-gr-primary/30"
-              >
-                <option value="" disabled>— Selecciona un almacén —</option>
-                @for (w of warehouses(); track w.id) {
-                  <option [value]="w.id">{{ w.name }}</option>
-                }
-              </select>
-            </div>
-          }
-
-          <div>
-            <label for="discount" class="mb-1.5 block text-sm font-medium text-gr-sub">Descuento</label>
-            <input
-              id="discount" type="number" step="any" formControlName="discount"
-              class="w-full rounded-sm border border-gr-border bg-gr-surface px-4 py-2.5 text-gr-text transition focus:border-gr-primary focus:outline-none focus:ring-2 focus:ring-gr-primary/30"
-            >
-          </div>
-
-          <div class="sm:col-span-2">
-            <label for="notes" class="mb-1.5 block text-sm font-medium text-gr-sub">Notas (opcional)</label>
-            <textarea
-              id="notes" rows="2" formControlName="notes"
-              class="w-full rounded-sm border border-gr-border bg-gr-surface px-4 py-2.5 text-gr-text transition focus:border-gr-primary focus:outline-none focus:ring-2 focus:ring-gr-primary/30"
-            ></textarea>
-          </div>
-        </div>
+        }
       </div>
 
-      <div>
-        <div class="mb-4 flex items-center justify-between">
-          <h2 class="text-lg font-semibold text-gr-text">Ítems</h2>
+      <!-- Productos -->
+      <h3 class="mt-6 mb-3 font-semibold text-gr-text">Productos</h3>
+      <ul [formArrayName]="'items'" class="space-y-3">
+        @for (item of itemsArray.controls; track $index; let i = $index) {
+          <li [formGroupName]="i" class="rounded-lg border border-gr-border-lite p-4">
+            <div class="grid grid-cols-2 items-end gap-3 sm:grid-cols-[minmax(0,1fr)_6.5rem_8rem_7rem_2rem]">
+              <div class="col-span-2 sm:col-span-1">
+                <label [for]="'product-' + i" class="mb-1 block text-xs font-medium text-gr-sub">Producto</label>
+<app-product-picker
+                  [inputId]="'product-' + i"
+                  [selected]="productFor(i)"
+                  [preloaded]="products()"
+                  [invalid]="item.get('productId')!.invalid && item.get('productId')!.touched"
+                  (picked)="onProductPicked(i, $event)"
+                />
+              </div>
+              <div>
+                <label [for]="'qty-' + i" class="mb-1 block text-xs font-medium text-gr-sub">Cantidad</label>
+                <input
+                  [id]="'qty-' + i" type="number" min="0" step="any" inputmode="decimal" formControlName="quantity"
+                  class="w-full rounded-md border border-gr-border bg-gr-surface px-3 py-2 text-sm text-gr-text tabular-nums transition focus:border-gr-primary focus:outline-none focus:ring-2 focus:ring-gr-primary/30 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none"
+                >
+              </div>
+              <div>
+                <label [for]="'cost-' + i" class="mb-1 block text-xs font-medium text-gr-sub">Costo c/u (Bs)</label>
+                <input
+                  [id]="'cost-' + i" type="number" min="0" step="any" inputmode="decimal" formControlName="unitCost"
+                  class="w-full rounded-md border bg-gr-surface px-3 py-2 text-sm text-gr-text tabular-nums transition focus:outline-none focus:ring-2 focus:ring-gr-primary/30 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none"
+                  [class]="marginCheck(i)?.level === 'loss' ? 'border-gr-danger' : 'border-gr-border focus:border-gr-primary'"
+                >
+              </div>
+              <div class="flex items-baseline gap-2 sm:block sm:text-right">
+                <p class="text-xs font-medium text-gr-sub sm:mb-1">Total</p>
+                <p class="text-sm font-semibold text-gr-text tabular-nums sm:py-2">Bs {{ lineTotal(i).toFixed(2) }}</p>
+              </div>
+              <button
+                type="button" (click)="removeItem(i)" [disabled]="itemsArray.length === 1"
+                class="mb-1 flex h-8 w-8 cursor-pointer items-center justify-center justify-self-end rounded-md text-gr-sub transition hover:bg-gr-danger-bg hover:text-gr-danger disabled:cursor-not-allowed disabled:opacity-30"
+                aria-label="Quitar producto"
+              >
+                <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/>
+                </svg>
+              </button>
+            </div>
+
+            <!-- Control de precio: comparación con la última compra y margen contra el precio de venta. -->
+            @if (reference(i) || marginCheck(i)) {
+              <div class="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1.5 text-xs">
+                @if (reference(i); as ref) {
+                  <span class="text-gr-sub">
+                    Última compra: <span class="font-medium text-gr-text tabular-nums">Bs {{ ref.unitCost.toFixed(2) }}</span>
+                    @if (ref.supplierName) { a {{ ref.supplierName }} } · {{ ref.date | date: 'dd/MM/yyyy' }}
+                  </span>
+                  @if (costChange(i); as pct) {
+                    <span class="inline-flex items-center gap-0.5 rounded-full px-2 py-0.5 font-semibold tabular-nums"
+                          [class]="pct > 0 ? 'bg-gr-warning-bg text-gr-warning' : 'bg-gr-success-bg text-gr-success'">
+                      <svg class="h-3 w-3" [class.rotate-180]="pct < 0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
+                      {{ pct > 0 ? 'subió' : 'bajó' }} {{ (pct > 0 ? pct : -pct).toFixed(0) }}%
+                    </span>
+                  }
+                }
+                @if (marginCheck(i); as m) {
+                  @if (m.level === 'ok') {
+                    <span class="text-gr-sub">Vendes a Bs {{ m.salePrice.toFixed(2) }} · ganas <span class="font-medium text-gr-success">Bs {{ m.profit.toFixed(2) }} ({{ m.pct }}%)</span></span>
+                  }
+                }
+              </div>
+            }
+
+            @if (marginCheck(i); as m) {
+              @if (m.level !== 'ok') {
+                <div class="mt-3 rounded-md px-3.5 py-2.5 text-sm" [class]="m.level === 'loss' ? 'bg-gr-danger-bg text-gr-danger' : 'bg-gr-warning-bg text-gr-warning'">
+                  @if (editingPriceFor() === item.get('productId')!.value) {
+                    <div class="flex flex-wrap items-center gap-2">
+                      <label [for]="'newprice-' + i" class="font-medium">Nuevo precio de venta de {{ productName(i) }}:</label>
+                      <div class="relative w-28">
+                        <span class="pointer-events-none absolute inset-y-0 left-2.5 flex items-center text-xs text-gr-sub">Bs</span>
+                        <input
+                          [id]="'newprice-' + i" type="number" min="0" step="any" inputmode="decimal"
+                          [value]="newSalePrice()" (input)="onNewSalePriceInput($event)"
+                          class="h-8 w-full rounded-md border border-gr-border bg-gr-surface pr-2 pl-8 text-sm text-gr-text tabular-nums focus:border-gr-primary focus:outline-none focus:ring-2 focus:ring-gr-primary/30 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none"
+                        >
+                      </div>
+                      <button type="button" (click)="saveSalePrice()" [disabled]="savingPrice() || newSalePrice() <= 0"
+                        class="h-8 cursor-pointer rounded-md bg-gr-primary-dark px-3 text-sm font-semibold text-gr-primary-lite transition hover:bg-gr-primary disabled:opacity-50">
+                        {{ savingPrice() ? 'Guardando…' : 'Guardar precio' }}
+                      </button>
+                      <button type="button" (click)="editingPriceFor.set(null)" class="h-8 cursor-pointer px-2 text-sm text-gr-sub hover:text-gr-text">Ahora no</button>
+                    </div>
+                  } @else {
+                    <div class="flex flex-wrap items-center justify-between gap-2">
+                      <p>
+                        @if (m.level === 'loss') {
+                          Vendes a Bs {{ m.salePrice.toFixed(2) }}: con este costo <strong class="font-semibold">pierdes Bs {{ (-m.profit).toFixed(2) }}</strong> por unidad.
+                        } @else {
+                          Vendes a Bs {{ m.salePrice.toFixed(2) }}: con este costo solo ganas <strong class="font-semibold">Bs {{ m.profit.toFixed(2) }} ({{ m.pct }}%)</strong>.
+                        }
+                      </p>
+                      <button type="button" (click)="startPriceEdit(i)"
+                        class="cursor-pointer rounded-md bg-gr-surface px-3 py-1.5 text-sm font-semibold text-gr-text shadow-[0_1px_2px_rgb(29_43_31/0.1)] transition hover:bg-gr-bg">
+                        Actualizar precio de venta
+                      </button>
+                    </div>
+                  }
+                </div>
+              }
+            }
+
+            @if (usesLots()) {
+              <!-- El lote se genera solo: se muestra en una línea y se edita solo si hace falta. -->
+              @if (editingLot() === i) {
+                <div class="mt-3 max-w-xs">
+                  <label class="mb-1 block text-xs font-medium text-gr-sub">Lote / serie</label>
+                  <app-lot-code-field
+                    [value]="item.get('lotOrSerial')!.value ?? ''"
+                    [loading]="generatingLotIndex() === i"
+                    (valueChange)="item.get('lotOrSerial')!.setValue($event)"
+                  />
+                </div>
+              } @else if (item.get('productId')!.value) {
+                <p class="mt-2 text-xs text-gr-sub">
+                  Lote <span class="font-medium text-gr-text tabular-nums">{{ generatingLotIndex() === i ? 'generando…' : (item.get('lotOrSerial')!.value || 'sin lote') }}</span>
+                  · <button type="button" (click)="editingLot.set(i)" class="cursor-pointer font-medium text-gr-primary underline-offset-4 hover:underline">cambiar</button>
+                </p>
+              }
+            }
+          </li>
+        }
+      </ul>
+
+      <button
+        type="button" (click)="addItem()"
+        class="mt-3 flex w-full cursor-pointer items-center justify-center gap-1.5 rounded-lg border border-dashed border-gr-primary-mid/50 py-2.5 text-sm font-semibold text-gr-primary-dark transition hover:bg-gr-primary-lite/30"
+      >
+        <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+        Agregar otro producto
+      </button>
+
+      <!-- Tienda: se recibe y se paga en el momento. Tres preguntas en orden natural, mismo control para todas. -->
+      @if (isDirectFlow()) {
+        <div class="mt-6 space-y-4 rounded-lg bg-gr-bg p-4 sm:p-5">
+          <div class="grid items-center gap-2 sm:grid-cols-[10rem_minmax(0,1fr)]">
+            <p class="text-sm font-semibold text-gr-text">¿Ya la tienes?</p>
+            <div class="grid grid-cols-2 gap-2" role="radiogroup" aria-label="¿Ya tienes la mercadería?">
+              <button type="button" role="radio" [attr.aria-checked]="receiveMode() === 'now'" (click)="receiveMode.set('now')"
+                class="h-10 cursor-pointer rounded-md text-sm font-medium transition" [class]="segClass(receiveMode() === 'now')">Sí, ya la tengo</button>
+              <button type="button" role="radio" [attr.aria-checked]="receiveMode() === 'later'" (click)="receiveMode.set('later')"
+                class="h-10 cursor-pointer rounded-md text-sm font-medium transition" [class]="segClass(receiveMode() === 'later')">Llega después</button>
+            </div>
+          </div>
+
+          @if (showPayment()) {
+            <div class="grid items-center gap-2 sm:grid-cols-[10rem_minmax(0,1fr)]">
+              <p class="text-sm font-semibold text-gr-text">¿Pagaste?</p>
+              <div class="grid grid-cols-3 gap-2" role="radiogroup" aria-label="¿Pagaste?">
+                @for (opt of [{ v: 'full', t: 'Sí, todo' }, { v: 'partial', t: 'Una parte' }, { v: 'credit', t: 'Debo todo' }]; track opt.v) {
+                  <button type="button" role="radio" [attr.aria-checked]="payMode() === opt.v" (click)="setPayMode($any(opt.v))"
+                    class="h-10 cursor-pointer rounded-md text-sm font-medium transition" [class]="segClass(payMode() === opt.v)">{{ opt.t }}</button>
+                }
+              </div>
+            </div>
+
+            @if (payMode() !== 'credit') {
+              <div class="grid items-center gap-2 sm:grid-cols-[10rem_minmax(0,1fr)]">
+                <p class="text-sm font-semibold text-gr-text">¿Con qué?</p>
+                <div class="flex flex-wrap items-center gap-2" role="radiogroup" aria-label="Forma de pago">
+                  @for (m of paymentMethods(); track m.id) {
+                    <button type="button" role="radio" [attr.aria-checked]="payMethodId() === m.id" (click)="payMethodId.set(m.id)"
+                      class="h-10 min-w-24 cursor-pointer rounded-md px-4 text-sm font-medium transition" [class]="segClass(payMethodId() === m.id)">{{ methodLabel(m) }}</button>
+                  }
+                  @if (payMode() === 'partial') {
+                    <label for="payAmount" class="ml-2 text-sm text-gr-sub">Pagaste</label>
+                    <div class="relative w-28">
+                      <span class="pointer-events-none absolute inset-y-0 left-2.5 flex items-center text-xs text-gr-sub">Bs</span>
+                      <input id="payAmount" type="number" min="0" step="any" inputmode="decimal" [value]="payAmount()" (input)="onPayAmountInput($event)"
+                        class="h-10 w-full rounded-md border border-gr-border bg-gr-surface pr-2.5 pl-8 text-right text-sm text-gr-text tabular-nums focus:border-gr-primary focus:outline-none focus:ring-2 focus:ring-gr-primary/30 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none">
+                    </div>
+                  }
+                </div>
+              </div>
+            }
+          }
+        </div>
+      }
+
+      <!-- Extras poco frecuentes: plegados para no competir con lo importante. -->
+      @if (showDiscount() || form.controls.discount.value) {
+        <div class="mt-5 flex items-center gap-3">
+          <label for="discount" class="text-sm font-medium text-gr-text">Descuento del proveedor</label>
+          <div class="relative w-32">
+            <span class="pointer-events-none absolute inset-y-0 left-2.5 flex items-center text-xs text-gr-sub">Bs</span>
+            <input id="discount" type="number" min="0" step="any" inputmode="decimal" formControlName="discount"
+              class="h-10 w-full rounded-md border border-gr-border bg-gr-surface pr-2.5 pl-8 text-right text-sm text-gr-text tabular-nums focus:border-gr-primary focus:outline-none focus:ring-2 focus:ring-gr-primary/30 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none">
+          </div>
+        </div>
+      }
+      @if (showNotes() || form.controls.notes.value) {
+        <div class="mt-5">
+          <label for="notes" class="mb-1.5 block text-sm font-medium text-gr-text">Notas <span class="font-normal text-gr-sub">(opcional)</span></label>
+          <textarea
+            id="notes" rows="2" formControlName="notes" placeholder="Ej. factura 1234, llega el lunes"
+            class="w-full rounded-md border border-gr-border bg-gr-surface px-4 py-2.5 text-gr-text placeholder-gr-muted transition focus:border-gr-primary focus:outline-none focus:ring-2 focus:ring-gr-primary/30"
+          ></textarea>
+        </div>
+      }
+      @if (!(showDiscount() || form.controls.discount.value) || !(showNotes() || form.controls.notes.value)) {
+        <div class="mt-4 flex flex-wrap gap-x-5 gap-y-2 text-sm">
+          @if (!(showDiscount() || form.controls.discount.value)) {
+            <button type="button" (click)="showDiscount.set(true)" class="cursor-pointer font-medium text-gr-primary underline-offset-4 hover:underline">+ Descuento</button>
+          }
+          @if (!(showNotes() || form.controls.notes.value)) {
+            <button type="button" (click)="showNotes.set(true)" class="cursor-pointer font-medium text-gr-primary underline-offset-4 hover:underline">+ Nota</button>
+          }
+        </div>
+      }
+
+      <!-- Pie fijo: qué va a pasar, total y acciones siempre a la vista -->
+      <div class="sticky -bottom-6 z-10 -mx-6 mt-6 -mb-6 flex flex-wrap items-center gap-x-6 gap-y-3 border-t border-gr-border-lite bg-gr-surface/95 px-6 py-4 backdrop-blur">
+        <div class="min-w-0 leading-tight">
+          <p class="text-xs text-gr-sub">
+            Total{{ (form.controls.discount.value || 0) > 0 ? ' con descuento' : '' }}
+          </p>
+          <p class="text-xl font-bold text-gr-text tabular-nums">Bs {{ total().toFixed(2) }}</p>
+        </div>
+        @if (outcome()) {
+          <p class="hidden min-w-0 truncate text-sm text-gr-sub md:block">{{ outcome() }}</p>
+        }
+        <div class="ml-auto flex items-center gap-2">
+          <button type="button" (click)="close.emit()" class="cursor-pointer rounded-md px-4 py-2.5 font-medium text-gr-sub transition hover:bg-gr-bg hover:text-gr-text">
+            Cancelar
+          </button>
           <button
-            type="button" (click)="addItem()"
-            class="cursor-pointer rounded-sm bg-gr-bg px-3.5 py-2 text-sm font-medium text-gr-sub transition hover:bg-gr-border-lite hover:text-gr-text"
+            type="submit" [disabled]="submitting()"
+            class="flex cursor-pointer items-center gap-2 rounded-md bg-gr-primary-dark px-5 py-2.5 font-semibold text-gr-primary-lite transition hover:bg-gr-primary disabled:cursor-not-allowed disabled:opacity-60"
           >
-            + Agregar ítem
+            @if (submitting()) {
+              <svg class="h-4 w-4 animate-spin" fill="none" viewBox="0 0 24 24" aria-hidden="true">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+              </svg>
+              Guardando…
+            } @else {
+              {{ submitLabel() }}
+            }
           </button>
         </div>
-
-        <div class="overflow-x-auto">
-          <table class="w-full text-left text-sm">
-            <thead>
-              <tr class="border-b border-gr-border-lite text-xs font-medium tracking-wide text-gr-muted uppercase">
-                <th class="py-2 pr-3">Producto</th>
-                <th class="w-28 py-2 pr-3">Cantidad</th>
-                <th class="w-32 py-2 pr-3">Costo unit.</th>
-                <th class="w-32 py-2 pr-3 text-right">Total</th>
-                <th class="w-10 py-2"></th>
-              </tr>
-            </thead>
-            <tbody [formArrayName]="'items'">
-              @for (item of itemsArray.controls; track $index) {
-                <tr [formGroupName]="$index" class="border-b border-gr-border-lite last:border-b-0">
-                  <td class="py-2 pr-3">
-                    <select
-                      formControlName="productId" (change)="onProductChange($index)"
-                      class="w-full rounded-sm border border-gr-border bg-gr-surface px-2.5 py-2 text-gr-text transition focus:border-gr-primary focus:outline-none focus:ring-2 focus:ring-gr-primary/30"
-                    >
-                      <option value="" disabled>— Producto —</option>
-                      @for (p of products(); track p.id) {
-                        <option [value]="p.id">{{ p.code }} — {{ p.name }}</option>
-                      }
-                    </select>
-                  </td>
-                  <td class="py-2 pr-3">
-                    <input
-                      type="number" step="any" formControlName="quantity"
-                      class="w-full rounded-sm border border-gr-border bg-gr-surface px-2.5 py-2 text-gr-text transition focus:border-gr-primary focus:outline-none focus:ring-2 focus:ring-gr-primary/30"
-                    >
-                  </td>
-                  <td class="py-2 pr-3">
-                    <input
-                      type="number" step="any" formControlName="unitCost"
-                      class="w-full rounded-sm border border-gr-border bg-gr-surface px-2.5 py-2 text-gr-text transition focus:border-gr-primary focus:outline-none focus:ring-2 focus:ring-gr-primary/30"
-                    >
-                  </td>
-                  <td class="py-2 pr-3 text-right text-gr-text">
-                    Bs {{ lineTotal($index).toFixed(2) }}
-                  </td>
-                  <td class="py-2 text-right">
-                    <button
-                      type="button" (click)="removeItem($index)"
-                      [disabled]="itemsArray.length === 1"
-                      class="cursor-pointer text-gr-danger transition hover:brightness-90 disabled:cursor-not-allowed disabled:opacity-40"
-                      aria-label="Quitar ítem"
-                    >
-                      <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <line x1="18" y1="6" x2="6" y2="18"/>
-                        <line x1="6" y1="6" x2="18" y2="18"/>
-                      </svg>
-                    </button>
-                  </td>
-                </tr>
-                @if (usesLots()) {
-                  <tr class="border-b border-gr-border-lite last:border-b-0">
-                    <td colspan="5" class="pb-3">
-                      <label class="mb-1 block text-xs font-medium text-gr-sub">Lote / serie (opcional)</label>
-                      <div class="max-w-xs">
-                        <app-lot-code-field
-                          [value]="item.get('lotOrSerial')!.value ?? ''"
-                          [loading]="generatingLotIndex() === $index"
-                          (valueChange)="item.get('lotOrSerial')!.setValue($event)"
-                        />
-                      </div>
-                    </td>
-                  </tr>
-                }
-              }
-            </tbody>
-          </table>
-        </div>
-
-        <div class="mt-4 flex justify-end">
-          <dl class="w-56 space-y-1.5 text-sm">
-            <div class="flex justify-between">
-              <dt class="text-gr-sub">Subtotal</dt>
-              <dd class="text-gr-text">Bs {{ subtotal().toFixed(2) }}</dd>
-            </div>
-            <div class="flex justify-between">
-              <dt class="text-gr-sub">Descuento</dt>
-              <dd class="text-gr-text">Bs {{ (form.controls.discount.value || 0).toFixed(2) }}</dd>
-            </div>
-            <div class="flex justify-between border-t border-gr-border-lite pt-1.5 font-semibold">
-              <dt class="text-gr-text">Total</dt>
-              <dd class="text-gr-text">Bs {{ total().toFixed(2) }}</dd>
-            </div>
-          </dl>
-        </div>
-      </div>
-
-      <div class="mt-8 flex items-center justify-end gap-3 border-t border-gr-border-lite pt-5">
-        <button type="button" (click)="close.emit()" class="rounded-sm px-4 py-2.5 font-medium text-gr-sub transition hover:text-gr-text">
-          Cancelar
-        </button>
-        <button
-          type="submit"
-          [disabled]="submitting()"
-          class="flex items-center gap-2 rounded-sm bg-gr-primary-dark px-5 py-2.5 font-semibold text-gr-primary-lite transition hover:brightness-95 disabled:cursor-not-allowed disabled:opacity-60"
-        >
-          @if (submitting()) {
-            <svg class="h-4 w-4 animate-spin" fill="none" viewBox="0 0 24 24">
-              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
-            </svg>
-            Guardando…
-          } @else {
-            {{ purchaseId() ? 'Guardar cambios' : 'Crear compra' }}
-          }
-        </button>
       </div>
     </form>
   }

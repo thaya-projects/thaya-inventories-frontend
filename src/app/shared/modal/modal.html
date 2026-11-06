@@ -1,7 +1,7 @@
 <div class="fixed inset-0 z-50 flex items-center justify-center bg-gr-text/50 p-4" (click)="close.emit()">
-  <div [class]="panelClass()" (click)="$event.stopPropagation()">
+  <div [class]="panelClass()" role="dialog" aria-modal="true" [attr.aria-labelledby]="titleId" (click)="$event.stopPropagation()">
     <div class="mb-4 flex items-center justify-between">
-      <h2 class="text-lg font-semibold text-gr-text">{{ title() }}</h2>
+      <h2 [id]="titleId" class="text-lg font-semibold text-gr-text">{{ title() }}</h2>
       <button
         type="button"
         (click)="close.emit()"

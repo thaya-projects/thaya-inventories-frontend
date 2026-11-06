@@ -104,6 +104,8 @@ export class Sidebar {
     // demás catálogos, son dos pantallas igual de importantes, no una
     // secundaria dentro de otra.
     const cashChildren: NavChild[] = [{ label: 'Pagos', route: '/cash/payments' }];
+    if (isAdmin || role === 'Assistant') cashChildren.push({ label: 'Por cobrar', route: '/cash/receivables' });
+    if (isAdmin) cashChildren.push({ label: 'Por pagar', route: '/cash/payables' });
     if (isAdmin) cashChildren.push({ label: 'Métodos de pago', route: '/cash/methods' });
 
     // Orden: lo que genera plata primero (Ventas, Compras, Inventario, Caja),
