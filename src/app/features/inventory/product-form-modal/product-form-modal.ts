@@ -1,7 +1,8 @@
-import { ChangeDetectionStrategy, Component, OnInit, computed, inject, input, output, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, DestroyRef, OnInit, computed, inject, input, output, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { HttpErrorResponse } from '@angular/common/http';
-import { forkJoin } from 'rxjs';
+import { Subject, debounceTime, distinctUntilChanged, forkJoin, of, switchMap } from 'rxjs';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Modal } from '../../../shared/modal/modal';
 import { WizardStepper } from '../../../shared/wizard-stepper/wizard-stepper';
 import { ConfirmDialog } from '../../../shared/confirm-dialog/confirm-dialog';
@@ -15,6 +16,24 @@ import { Category } from '../../../core/models/category.model';
 import { ALLOWED_IMAGE_TYPES, MAX_IMAGE_SIZE_BYTES, ProductImage } from '../../../core/models/product-image.model';
 import { ToastService } from '../../../shared/toast/toast.service';
 import { generateProductCode } from '../../../shared/product-code-generator';
+import { InfoHint } from '../../../shared/info-hint/info-hint';
+
+// Explicación corta de para qué sirve cada atributo del producto (ícono "i").
+export const PRODUCT_FIELD_HINTS = {
+  name: 'Cómo se llama el producto en ventas, compras y reportes. No puede repetirse dentro de tu empresa.',
+  code: 'Identificador corto y único (SKU). Sirve para buscar rápido y para etiquetas o códigos de barras.',
+  description: 'Detalle opcional: presentación, sabor, tamaño, etc. Se muestra en el catálogo.',
+  productType: 'Terminado: se vende tal cual. Materia prima: insumo para producir. Kit: combo de productos. Servicio: no tiene stock físico. Consumible: se gasta en la operación.',
+  categoryId: 'Agrupa productos para filtrarlos y ver reportes por familia (ej. Bebidas, Limpieza).',
+  unitOfMeasureId: 'En qué se cuenta el stock: unidades, kg, litros, cajas… Se usa en compras, ventas y movimientos.',
+  tracksStock: 'Si está activo, cada venta, compra o ajuste mueve el stock. Desactívalo para servicios o productos que no inventarías.',
+  hasVariants: 'Actívalo si el producto viene en versiones (talla, color, sabor) que manejas por separado.',
+  minimumStock: 'Cantidad mínima que quieres tener. Cuando el stock llega a este número, el producto se marca en ámbar y recibes una alerta para reponer.',
+  salePrice: 'Precio al que vendes normalmente. Se propone automáticamente al crear una venta.',
+  shelfLifeMonths: 'Cuántos meses dura el producto desde que se fabrica o recibe. Sirve de referencia para controlar vencimientos.',
+  discountPrice: 'Precio promocional que se muestra en el catálogo en lugar del precio normal mientras el descuento esté activo.',
+  discountDates: 'Rango opcional en el que aplica el descuento. Sin fechas, queda activo hasta que lo quites.',
+} as const;
 
 interface SelectOption {
   id: string;
@@ -66,7 +85,7 @@ const STEP_FIELDS: Record<Exclude<WizardStep, 3>, string[]> = {
 
 @Component({
   selector: 'app-product-form-modal',
-  imports: [ReactiveFormsModule, Modal, WizardStepper, ConfirmDialog],
+  imports: [ReactiveFormsModule, Modal, WizardStepper, ConfirmDialog, InfoHint],
   templateUrl: './product-form-modal.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
@@ -78,6 +97,7 @@ export class ProductFormModal implements OnInit {
   private productImagesService = inject(ProductImagesService);
   private companyContext = inject(CompanyContextService);
   private toast = inject(ToastService);
+  private destroyRef = inject(DestroyRef);
 
   // null/omitido = alta. Con id = edición de ese producto.
   productId = input<string | null>(null);
@@ -85,6 +105,11 @@ export class ProductFormModal implements OnInit {
   saved = output<Product>();
 
   stepLabels = STEP_LABELS;
+  hints = PRODUCT_FIELD_HINTS;
+
+  // Aviso temprano de nombre repetido (el backend igual lo bloquea con 409).
+  duplicateName = signal<string | null>(null);
+  private nameCheck$ = new Subject<string>();
 
   // Id "vivo": arranca en productId() si es edición, y se completa al crear
   // (recién ahí existe un id real contra el cual subir imágenes).
@@ -153,7 +178,23 @@ export class ProductFormModal implements OnInit {
   ngOnInit(): void {
     this.currentProductId.set(this.productId());
 
+    this.nameCheck$
+      .pipe(
+        debounceTime(400),
+        distinctUntilChanged(),
+        switchMap(name => (name.length < 2 ? of(null) : this.productsService.list(1, 20, { search: name }))),
+        takeUntilDestroyed(this.destroyRef),
+      )
+      .subscribe(result => {
+        const typed = (this.form.controls.name.value ?? '').trim().toLowerCase();
+        const match = result?.items.find(
+          p => p.id !== this.currentProductId() && p.name.trim().toLowerCase() === typed,
+        );
+        this.duplicateName.set(match ? `${match.name} (${match.code})` : null);
+      });
+
     this.form.controls.name.valueChanges.subscribe(name => {
+      this.nameCheck$.next((name ?? '').trim());
       if (this.currentProductId() || this.codeManuallyEdited()) return;
       this.form.controls.code.setValue(generateProductCode(name ?? ''), { emitEvent: false });
     });
@@ -391,6 +432,8 @@ export class ProductFormModal implements OnInit {
       error: (err: HttpErrorResponse) => {
         this.submitting.set(false);
         this.errorMessage.set(this.mapError(err));
+        // 409 = nombre repetido: volver al paso donde está el campo.
+        if (err.status === 409) this.step.set(1);
       },
     });
   }

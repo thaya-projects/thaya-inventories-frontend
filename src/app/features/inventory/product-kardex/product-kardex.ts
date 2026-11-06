@@ -16,6 +16,8 @@ const MOVEMENT_LABELS: Record<string, string> = {
   Scrap: 'Descarte',
 };
 
+import { ORIGIN_STYLE, movementOrigin } from '../movement-origin';
+
 @Component({
   selector: 'app-product-kardex',
   imports: [RouterLink, FormsModule, DatePipe],
@@ -40,8 +42,30 @@ export class ProductKardexPage {
     this.load();
   }
 
+  // Al filtrar se mantiene la pantalla y solo se atenúa la tabla (sin parpadeo de "Cargando…").
+  refreshing = signal(false);
+  origin = movementOrigin;
+  originStyle = ORIGIN_STYLE;
+
+  sign(type: string, quantity: number): '+' | '−' {
+    if (['In', 'Production', 'Return'].includes(type)) return '+';
+    if (['Out', 'Waste', 'Scrap'].includes(type)) return '−';
+    return quantity < 0 ? '−' : '+';
+  }
+
+  qty = (n: number) => (Number.isInteger(n) ? String(Math.abs(n)) : Math.abs(n).toFixed(2));
+
+  hasFilter = () => !!this.dateFrom() || !!this.dateTo();
+
+  onDateChange() {
+    // Se aplica solo al elegir la fecha: sin botón "Filtrar".
+    if (this.dateFrom() && this.dateTo() && this.dateFrom() > this.dateTo()) return;
+    this.load();
+  }
+
   private load() {
-    this.loading.set(true);
+    if (this.kardex()) this.refreshing.set(true);
+    else this.loading.set(true);
     this.errorMessage.set(null);
 
     this.productsService
@@ -50,10 +74,12 @@ export class ProductKardexPage {
         next: kardex => {
           this.kardex.set(kardex);
           this.loading.set(false);
+          this.refreshing.set(false);
         },
         error: () => {
-          this.errorMessage.set('No se pudo cargar el kardex del producto.');
+          this.errorMessage.set('No se pudo cargar el historial del producto.');
           this.loading.set(false);
+          this.refreshing.set(false);
         },
       });
   }

@@ -19,7 +19,7 @@ export class InventoryTabs {
   // Almacenes solo aparece con multi-almacén habilitado en plan y empresa.
   showWarehouses = computed(
     () =>
-      this.companyContext.subscription()?.features.multiWarehouse === true &&
+      this.companyContext.subscription()?.features?.multiWarehouse === true &&
       this.companyContext.company()?.settings.usesMultiWarehouse === true,
   );
 }

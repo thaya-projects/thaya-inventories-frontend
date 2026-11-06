@@ -1,0 +1,89 @@
+<header class="mb-6">
+  <h1 class="text-2xl font-bold text-gr-text">{{ copy.title }}</h1>
+  <p class="mt-1 max-w-prose text-gr-sub">{{ copy.intro }}</p>
+</header>
+
+@if (errorMessage()) {
+  <div role="alert" class="mb-6 flex flex-wrap items-center justify-between gap-3 rounded-md border border-gr-danger/20 bg-gr-danger-bg px-4 py-3 text-sm text-gr-danger">
+    <span>{{ errorMessage() }} Revisa tu conexión e inténtalo de nuevo.</span>
+    <button type="button" (click)="load()" class="cursor-pointer rounded-sm px-3 py-1.5 font-semibold transition-colors hover:bg-gr-danger/10">
+      Reintentar
+    </button>
+  </div>
+}
+
+@if (loading()) {
+  <div aria-hidden="true">
+    <div class="mb-6 h-24 animate-pulse rounded-lg bg-gr-border-lite"></div>
+    <div class="h-72 animate-pulse rounded-lg bg-gr-border-lite"></div>
+  </div>
+  <p class="sr-only" role="status">Cargando…</p>
+} @else if (data(); as d) {
+  @if (d.count === 0) {
+    <section class="flex flex-col items-center rounded-lg border border-gr-border bg-gr-surface px-6 py-14 text-center">
+      <span class="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-gr-success-bg text-gr-success" aria-hidden="true">
+        <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="20 6 9 17 4 12" />
+        </svg>
+      </span>
+      <p class="text-lg font-semibold text-gr-text">{{ copy.empty }}</p>
+      <p class="mt-1 max-w-md text-sm text-gr-sub">{{ copy.emptyHint }}</p>
+      <a routerLink="/dashboard" class="mt-6 text-sm font-medium text-gr-primary underline-offset-4 hover:underline">Volver al inicio</a>
+    </section>
+  } @else {
+    <section class="mb-6 flex flex-wrap items-end justify-between gap-4 rounded-lg border border-gr-border bg-gr-surface p-5">
+      <div>
+        <p class="text-sm text-gr-sub">{{ copy.totalLabel }}</p>
+        <p class="mt-1 text-3xl font-bold whitespace-nowrap tabular-nums" [class]="mode === 'receivables' ? 'text-gr-warning' : 'text-gr-text'">
+          {{ money(d.totalBalance) }}
+        </p>
+      </div>
+      <p class="text-sm text-gr-sub">
+        {{ d.count }} {{ mode === 'receivables' ? (d.count === 1 ? 'venta' : 'ventas') : (d.count === 1 ? 'pendiente' : 'pendientes') }}
+        @if (overdueCount() > 0) {
+          · <span class="font-semibold text-gr-danger">{{ overdueCount() }} con más de {{ overdueDays }} días</span>
+        }
+      </p>
+    </section>
+
+    <section class="rounded-lg border border-gr-border bg-gr-surface" [attr.aria-label]="copy.title">
+      <ul class="divide-y divide-gr-border-lite">
+        @for (item of d.items; track item.sourceId) {
+          <li class="flex flex-col gap-3 px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
+            <div class="min-w-0 flex-1">
+              <p class="truncate font-medium text-gr-text">{{ title(item) }}</p>
+              <p class="mt-0.5 text-xs text-gr-sub">
+                {{ subtitle(item) }}
+                @if (item.daysOutstanding >= overdueDays) {
+                  <span class="ml-1 rounded-full bg-gr-danger-bg px-2 py-0.5 font-semibold text-gr-danger">Atrasada</span>
+                }
+              </p>
+              @if (item.paid > 0) {
+                <div class="mt-2 flex max-w-xs items-center gap-2">
+                  <div class="h-1 flex-1 overflow-hidden rounded-full bg-gr-border-lite" role="presentation">
+                    <div class="h-full rounded-full bg-gr-success" [style.width.%]="paidPercent(item)"></div>
+                  </div>
+                  <span class="shrink-0 text-xs text-gr-sub tabular-nums">{{ paidPercent(item) }}% pagado</span>
+                </div>
+              }
+            </div>
+
+            <div class="flex items-center justify-between gap-4 sm:justify-end">
+              <div class="text-left sm:text-right">
+                <p class="font-bold whitespace-nowrap text-gr-text tabular-nums">{{ money(item.balance) }}</p>
+                <p class="text-xs whitespace-nowrap text-gr-sub tabular-nums">de {{ money(item.total) }}</p>
+              </div>
+              <a
+                [routerLink]="link(item).route"
+                [queryParams]="link(item).queryParams"
+                class="shrink-0 rounded-md border border-gr-border px-3 py-2 text-sm font-semibold text-gr-primary-dark transition-colors duration-150 hover:border-gr-primary-mid hover:bg-gr-primary-lite/40"
+              >
+                {{ copy.action }}
+              </a>
+            </div>
+          </li>
+        }
+      </ul>
+    </section>
+  }
+}

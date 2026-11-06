@@ -26,6 +26,7 @@ export class ProductsService {
     if (filters?.isActive !== undefined) params = params.set('isActive', filters.isActive);
     if (filters?.tracksStock !== undefined) params = params.set('tracksStock', filters.tracksStock);
     if (filters?.hasVariants !== undefined) params = params.set('hasVariants', filters.hasVariants);
+    if (filters?.lowStock) params = params.set('lowStock', true);
 
     return this.http.get<PagedResult<Product>>(BASE_URL, { params });
   }
@@ -40,6 +41,11 @@ export class ProductsService {
 
   update(id: string, body: UpdateProductRequest): Observable<Product> {
     return this.http.put<Product>(`${BASE_URL}/${id}`, body);
+  }
+
+  // Solo el precio de venta (ej. desde una compra cuando subió el costo).
+  updateSalePrice(id: string, salePrice: number): Observable<void> {
+    return this.http.patch<void>(`${BASE_URL}/${id}/sale-price`, { salePrice });
   }
 
   activate(id: string): Observable<void> {

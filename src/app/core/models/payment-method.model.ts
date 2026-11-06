@@ -2,6 +2,23 @@
 // Warehouse, Assistant (para el combo de cobro). CRUD/set-default → solo Admin.
 export type PaymentMethodType = 'Qr' | 'Transfer' | 'Cash' | 'Card' | 'Gateway';
 
+// Al vender se muestra el tipo de pago, no el nombre interno de la cuenta:
+// el cajero elige "QR", no "QR Banco Unión". Así se sabe cuánto entró por cada forma de pago.
+export const PAYMENT_TYPE_LABELS: Record<PaymentMethodType, string> = {
+  Cash: 'Efectivo',
+  Qr: 'QR',
+  Transfer: 'Transferencia',
+  Card: 'Tarjeta',
+  Gateway: 'Pago en línea',
+};
+
+// Nombre corto para elegir al cobrar. Si hay dos métodos del mismo tipo (ej. dos QR de bancos
+// distintos), se usa el nombre configurado para poder distinguirlos.
+export function paymentMethodLabel(method: PaymentMethod, all: PaymentMethod[]): string {
+  const sameType = all.filter(m => m.type === method.type).length;
+  return sameType > 1 ? method.name : PAYMENT_TYPE_LABELS[method.type] ?? method.name;
+}
+
 export interface PaymentMethod {
   id: string;
   name: string;

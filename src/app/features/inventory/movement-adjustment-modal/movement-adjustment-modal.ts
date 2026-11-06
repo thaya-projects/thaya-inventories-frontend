@@ -1,7 +1,9 @@
 import { ChangeDetectionStrategy, Component, OnInit, computed, inject, output, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { HttpErrorResponse } from '@angular/common/http';
+import { toSignal } from '@angular/core/rxjs-interop';
 import { Modal } from '../../../shared/modal/modal';
+import { ProductPicker } from '../../../shared/product-picker/product-picker';
 import { InventoryMovementsService } from '../../../core/services/inventory-movements';
 import { ProductsService } from '../../../core/services/products';
 import { CompanyContextService } from '../../../core/services/company-context';
@@ -11,7 +13,7 @@ const PRODUCTS_PAGE_SIZE = 200;
 
 @Component({
   selector: 'app-movement-adjustment-modal',
-  imports: [ReactiveFormsModule, Modal],
+  imports: [ReactiveFormsModule, Modal, ProductPicker],
   templateUrl: './movement-adjustment-modal.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
@@ -45,7 +47,27 @@ export class MovementAdjustmentModal implements OnInit {
     notes: [''],
   });
 
-  selectedProduct = computed(() => this.products().find(p => p.id === this.form.controls.productId.value));
+  // El producto elegido en el buscador (puede no estar entre los precargados).
+  selectedProduct = signal<Product | null>(null);
+  private counted = toSignal(this.form.controls.newStock.valueChanges, { initialValue: this.form.controls.newStock.value });
+
+  // Contado − sistema: lo que el conteo corrige.
+  difference = computed(() => {
+    const p = this.selectedProduct();
+    const counted = Number(this.counted());
+    if (!p || this.counted() === null || Number.isNaN(counted)) return null;
+    return Math.round((counted - p.currentStock) * 1000) / 1000;
+  });
+
+  onProductPicked(product: Product) {
+    this.selectedProduct.set(product);
+    this.form.patchValue({
+      productId: product.id,
+      unitOfMeasureId: product.unitOfMeasureId ?? '',
+      newStock: product.currentStock,
+    });
+    this.errorMessage.set(null);
+  }
 
   ngOnInit(): void {
     if (this.blockedByMultiWarehouse()) {
@@ -64,18 +86,16 @@ export class MovementAdjustmentModal implements OnInit {
       },
     });
 
-    this.form.controls.productId.valueChanges.subscribe(productId => {
-      const product = this.products().find(p => p.id === productId);
-      this.form.controls.unitOfMeasureId.setValue(product?.unitOfMeasureId ?? '');
-      if (product) {
-        this.form.controls.newStock.setValue(product.currentStock);
-      }
-    });
   }
 
   submit() {
     if (this.form.invalid) {
       this.form.markAllAsTouched();
+      if (this.form.controls.productId.invalid) this.errorMessage.set('Elige el producto que contaste.');
+      return;
+    }
+    if (this.difference() === 0) {
+      this.errorMessage.set('El conteo coincide con el sistema: no hay nada que corregir.');
       return;
     }
 
@@ -91,7 +111,7 @@ export class MovementAdjustmentModal implements OnInit {
         variantId: null,
         unitOfMeasureId: value.unitOfMeasureId || null,
         newStock: value.newStock!,
-        notes: value.notes || null,
+        notes: value.notes?.trim() ? `Conteo físico: ${value.notes.trim()}` : 'Conteo físico',
       })
       .subscribe({
         next: () => this.saved.emit(),
@@ -106,6 +126,6 @@ export class MovementAdjustmentModal implements OnInit {
     if (typeof err.error?.error === 'string') {
       return err.error.error;
     }
-    return 'Ocurrió un error al registrar el ajuste.';
+    return 'No se pudo guardar el conteo. Intenta nuevamente.';
   }
 }

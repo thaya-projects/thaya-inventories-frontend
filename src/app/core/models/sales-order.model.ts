@@ -49,6 +49,9 @@ export interface SalesOrder {
   items: SaleItemResponse[];
   createdAt: string;
   updatedAt: string | null;
+  // Solo en el listado: lo cobrado y con qué tipos de pago ('Cash', 'Qr', ...).
+  paidAmount?: number | null;
+  paymentMethodTypes?: string[] | null;
 }
 
 export interface SalesOrderListFilters {
@@ -79,4 +82,6 @@ export interface SaveSalesOrderRequest {
   transporterId: string | null;
   notes: string | null;
   items: SaleItemRequest[];
+  // Solo en alta. Venta directa: el backend la guarda y la despacha en el mismo paso (stock baja al instante).
+  dispatchNow?: boolean;
 }

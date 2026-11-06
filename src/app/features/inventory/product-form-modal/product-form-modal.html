@@ -16,44 +16,46 @@
         <div class="space-y-4">
           <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div>
-              <label for="name" class="mb-1.5 block text-sm font-medium text-gr-sub">Nombre</label>
+              <label for="name" class="mb-1.5 flex items-center gap-1.5 text-sm font-medium text-gr-sub">Nombre <app-info-hint [text]="hints.name" /></label>
               <input
                 id="name" type="text" formControlName="name" placeholder="Nombre del producto"
-                class="w-full rounded-sm border border-gr-border bg-gr-surface px-4 py-2.5 text-gr-text placeholder-gr-muted transition focus:border-gr-primary focus:outline-none focus:ring-2 focus:ring-gr-primary/30"
+                class="w-full rounded-md border border-gr-border bg-gr-surface px-4 py-2.5 text-gr-text placeholder-gr-muted transition focus:border-gr-primary focus:outline-none focus:ring-2 focus:ring-gr-primary/30"
               >
               @if (form.controls.name.invalid && form.controls.name.touched) {
                 <p class="mt-1.5 text-xs text-gr-danger">El nombre es obligatorio.</p>
+              } @else if (duplicateName()) {
+                <p class="mt-1.5 text-xs text-gr-warning">Ya existe un producto con este nombre: {{ duplicateName() }}. Usa un nombre distinto.</p>
               }
             </div>
             <div>
-              <label for="code" class="mb-1.5 block text-sm font-medium text-gr-sub">Código</label>
+              <label for="code" class="mb-1.5 flex items-center gap-1.5 text-sm font-medium text-gr-sub">Código <app-info-hint [text]="hints.code" /></label>
               <input
                 id="code" type="text" formControlName="code" placeholder="Se sugiere a partir del nombre"
                 (input)="codeManuallyEdited.set(true)"
-                class="w-full rounded-sm border border-gr-border bg-gr-surface px-4 py-2.5 text-gr-text placeholder-gr-muted transition focus:border-gr-primary focus:outline-none focus:ring-2 focus:ring-gr-primary/30"
+                class="w-full rounded-md border border-gr-border bg-gr-surface px-4 py-2.5 text-gr-text placeholder-gr-muted transition focus:border-gr-primary focus:outline-none focus:ring-2 focus:ring-gr-primary/30"
               >
               @if (form.controls.code.invalid && form.controls.code.touched) {
                 <p class="mt-1.5 text-xs text-gr-danger">El código es obligatorio.</p>
               } @else if (!currentProductId()) {
-                <p class="mt-1.5 text-xs text-gr-muted">Se sugiere solo a partir del nombre — podés editarlo.</p>
+                <p class="mt-1.5 text-xs text-gr-muted">Se sugiere solo a partir del nombre — puedes editarlo.</p>
               }
             </div>
           </div>
 
           <div>
-            <label for="description" class="mb-1.5 block text-sm font-medium text-gr-sub">Descripción (opcional)</label>
+            <label for="description" class="mb-1.5 flex items-center gap-1.5 text-sm font-medium text-gr-sub">Descripción (opcional) <app-info-hint [text]="hints.description" /></label>
             <textarea
               id="description" rows="2" formControlName="description" placeholder="Descripción del producto"
-              class="w-full rounded-sm border border-gr-border bg-gr-surface px-4 py-2.5 text-gr-text placeholder-gr-muted transition focus:border-gr-primary focus:outline-none focus:ring-2 focus:ring-gr-primary/30"
+              class="w-full rounded-md border border-gr-border bg-gr-surface px-4 py-2.5 text-gr-text placeholder-gr-muted transition focus:border-gr-primary focus:outline-none focus:ring-2 focus:ring-gr-primary/30"
             ></textarea>
           </div>
 
           <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div>
-              <label for="productType" class="mb-1.5 block text-sm font-medium text-gr-sub">Tipo de producto</label>
+              <label for="productType" class="mb-1.5 flex items-center gap-1.5 text-sm font-medium text-gr-sub">Tipo de producto <app-info-hint [text]="hints.productType" /></label>
               <select
                 id="productType" formControlName="productType"
-                class="w-full rounded-sm border border-gr-border bg-gr-surface px-4 py-2.5 text-gr-text transition focus:border-gr-primary focus:outline-none focus:ring-2 focus:ring-gr-primary/30"
+                class="w-full rounded-md border border-gr-border bg-gr-surface px-4 py-2.5 text-gr-text transition focus:border-gr-primary focus:outline-none focus:ring-2 focus:ring-gr-primary/30"
               >
                 @for (t of productTypes(); track t.value) {
                   <option [value]="t.value">{{ t.label }}</option>
@@ -61,10 +63,10 @@
               </select>
             </div>
             <div>
-              <label for="categoryId" class="mb-1.5 block text-sm font-medium text-gr-sub">Categoría (opcional)</label>
+              <label for="categoryId" class="mb-1.5 flex items-center gap-1.5 text-sm font-medium text-gr-sub">Categoría (opcional) <app-info-hint [text]="hints.categoryId" /></label>
               <select
                 id="categoryId" formControlName="categoryId"
-                class="w-full rounded-sm border border-gr-border bg-gr-surface px-4 py-2.5 text-gr-text transition focus:border-gr-primary focus:outline-none focus:ring-2 focus:ring-gr-primary/30"
+                class="w-full rounded-md border border-gr-border bg-gr-surface px-4 py-2.5 text-gr-text transition focus:border-gr-primary focus:outline-none focus:ring-2 focus:ring-gr-primary/30"
               >
                 <option value="">— Sin categoría —</option>
                 @for (opt of categoryOptions(); track opt.id) {
@@ -75,10 +77,10 @@
           </div>
 
           <div>
-            <label for="unitOfMeasureId" class="mb-1.5 block text-sm font-medium text-gr-sub">Unidad de medida (opcional)</label>
+            <label for="unitOfMeasureId" class="mb-1.5 flex items-center gap-1.5 text-sm font-medium text-gr-sub">Unidad de medida (opcional) <app-info-hint [text]="hints.unitOfMeasureId" /></label>
             <select
               id="unitOfMeasureId" formControlName="unitOfMeasureId"
-              class="w-full rounded-sm border border-gr-border bg-gr-surface px-4 py-2.5 text-gr-text transition focus:border-gr-primary focus:outline-none focus:ring-2 focus:ring-gr-primary/30"
+              class="w-full rounded-md border border-gr-border bg-gr-surface px-4 py-2.5 text-gr-text transition focus:border-gr-primary focus:outline-none focus:ring-2 focus:ring-gr-primary/30"
             >
               <option value="">— Sin unidad —</option>
               @for (opt of unitOptions(); track opt.id) {
@@ -96,36 +98,38 @@
             <label class="flex cursor-pointer items-center gap-2.5">
               <input type="checkbox" formControlName="tracksStock" class="h-4 w-4 cursor-pointer accent-gr-primary-dark">
               <span class="text-sm text-gr-sub">Controla stock</span>
+              <app-info-hint [text]="hints.tracksStock" />
             </label>
             <label class="flex cursor-pointer items-center gap-2.5">
               <input type="checkbox" formControlName="hasVariants" class="h-4 w-4 cursor-pointer accent-gr-primary-dark">
               <span class="text-sm text-gr-sub">Tiene variantes</span>
+              <app-info-hint [text]="hints.hasVariants" />
             </label>
           </div>
 
           <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
             <div>
-              <label for="minimumStock" class="mb-1.5 block text-sm font-medium text-gr-sub">Stock mínimo</label>
+              <label for="minimumStock" class="mb-1.5 flex items-center gap-1.5 text-sm font-medium text-gr-sub">Stock mínimo <app-info-hint [text]="hints.minimumStock" /></label>
               <input
                 id="minimumStock" type="number" step="any" formControlName="minimumStock"
-                class="w-full rounded-sm border border-gr-border bg-gr-surface px-4 py-2.5 text-gr-text transition focus:border-gr-primary focus:outline-none focus:ring-2 focus:ring-gr-primary/30"
+                class="w-full rounded-md border border-gr-border bg-gr-surface px-4 py-2.5 text-gr-text transition focus:border-gr-primary focus:outline-none focus:ring-2 focus:ring-gr-primary/30"
               >
               @if (form.controls.minimumStock.invalid && form.controls.minimumStock.touched) {
                 <p class="mt-1.5 text-xs text-gr-danger">Ingresa un stock mínimo válido.</p>
               }
             </div>
             <div>
-              <label for="salePrice" class="mb-1.5 block text-sm font-medium text-gr-sub">Precio de venta (opcional)</label>
+              <label for="salePrice" class="mb-1.5 flex items-center gap-1.5 text-sm font-medium text-gr-sub">Precio de venta (opcional) <app-info-hint [text]="hints.salePrice" /></label>
               <input
                 id="salePrice" type="number" step="any" formControlName="salePrice"
-                class="w-full rounded-sm border border-gr-border bg-gr-surface px-4 py-2.5 text-gr-text transition focus:border-gr-primary focus:outline-none focus:ring-2 focus:ring-gr-primary/30"
+                class="w-full rounded-md border border-gr-border bg-gr-surface px-4 py-2.5 text-gr-text transition focus:border-gr-primary focus:outline-none focus:ring-2 focus:ring-gr-primary/30"
               >
             </div>
             <div>
-              <label for="shelfLifeMonths" class="mb-1.5 block text-sm font-medium text-gr-sub">Vida útil (meses, opcional)</label>
+              <label for="shelfLifeMonths" class="mb-1.5 flex items-center gap-1.5 text-sm font-medium text-gr-sub">Vida útil (meses, opcional) <app-info-hint [text]="hints.shelfLifeMonths" /></label>
               <input
                 id="shelfLifeMonths" type="number" step="1" formControlName="shelfLifeMonths"
-                class="w-full rounded-sm border border-gr-border bg-gr-surface px-4 py-2.5 text-gr-text transition focus:border-gr-primary focus:outline-none focus:ring-2 focus:ring-gr-primary/30"
+                class="w-full rounded-md border border-gr-border bg-gr-surface px-4 py-2.5 text-gr-text transition focus:border-gr-primary focus:outline-none focus:ring-2 focus:ring-gr-primary/30"
               >
             </div>
           </div>
@@ -134,24 +138,24 @@
             <p class="mb-3 text-sm font-medium text-gr-text">Descuento (opcional)</p>
             <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
               <div>
-                <label for="discountPrice" class="mb-1.5 block text-sm font-medium text-gr-sub">Precio con descuento</label>
+                <label for="discountPrice" class="mb-1.5 flex items-center gap-1.5 text-sm font-medium text-gr-sub">Precio con descuento <app-info-hint [text]="hints.discountPrice" /></label>
                 <input
                   id="discountPrice" type="number" step="any" formControlName="discountPrice"
-                  class="w-full rounded-sm border border-gr-border bg-gr-surface px-4 py-2.5 text-gr-text transition focus:border-gr-primary focus:outline-none focus:ring-2 focus:ring-gr-primary/30"
+                  class="w-full rounded-md border border-gr-border bg-gr-surface px-4 py-2.5 text-gr-text transition focus:border-gr-primary focus:outline-none focus:ring-2 focus:ring-gr-primary/30"
                 >
               </div>
               <div>
-                <label for="discountStartsAt" class="mb-1.5 block text-sm font-medium text-gr-sub">Desde (opcional)</label>
+                <label for="discountStartsAt" class="mb-1.5 flex items-center gap-1.5 text-sm font-medium text-gr-sub">Desde (opcional) <app-info-hint [text]="hints.discountDates" /></label>
                 <input
                   id="discountStartsAt" type="datetime-local" formControlName="discountStartsAt"
-                  class="w-full rounded-sm border border-gr-border bg-gr-surface px-4 py-2.5 text-gr-text transition focus:border-gr-primary focus:outline-none focus:ring-2 focus:ring-gr-primary/30"
+                  class="w-full rounded-md border border-gr-border bg-gr-surface px-4 py-2.5 text-gr-text transition focus:border-gr-primary focus:outline-none focus:ring-2 focus:ring-gr-primary/30"
                 >
               </div>
               <div>
-                <label for="discountEndsAt" class="mb-1.5 block text-sm font-medium text-gr-sub">Hasta (opcional)</label>
+                <label for="discountEndsAt" class="mb-1.5 block text-sm font-medium text-gr-text">Hasta <span class="font-normal text-gr-sub">(opcional)</span></label>
                 <input
                   id="discountEndsAt" type="datetime-local" formControlName="discountEndsAt"
-                  class="w-full rounded-sm border border-gr-border bg-gr-surface px-4 py-2.5 text-gr-text transition focus:border-gr-primary focus:outline-none focus:ring-2 focus:ring-gr-primary/30"
+                  class="w-full rounded-md border border-gr-border bg-gr-surface px-4 py-2.5 text-gr-text transition focus:border-gr-primary focus:outline-none focus:ring-2 focus:ring-gr-primary/30"
                 >
               </div>
             </div>

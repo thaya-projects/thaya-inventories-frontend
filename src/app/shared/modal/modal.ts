@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, input, output } from '@angular/core';
+import { ChangeDetectionStrategy, Component, DestroyRef, computed, inject, input, output } from '@angular/core';
 
 export type ModalSize = 'sm' | 'md' | 'lg' | 'xl';
 
@@ -9,8 +9,13 @@ const SIZE_CLASSES: Record<ModalSize, string> = {
   xl: 'max-w-4xl',
 };
 
+// Ventanas abiertas, la última es la de arriba: Esc cierra solo esa (ej. una confirmación sobre un detalle).
+const openModals: Modal[] = [];
+let modalSeq = 0;
+
 @Component({
   selector: 'app-modal',
+  host: { '(document:keydown.escape)': 'onEscape($event)' },
   templateUrl: './modal.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
@@ -18,6 +23,25 @@ export class Modal {
   title = input('');
   size = input<ModalSize>('md');
   close = output<void>();
+
+  readonly titleId = `modal-title-${++modalSeq}`;
+
+  constructor() {
+    openModals.push(this);
+    // La página de atrás no se desplaza mientras hay una ventana abierta.
+    document.body.style.overflow = 'hidden';
+    inject(DestroyRef).onDestroy(() => {
+      const i = openModals.indexOf(this);
+      if (i >= 0) openModals.splice(i, 1);
+      if (openModals.length === 0) document.body.style.overflow = '';
+    });
+  }
+
+  onEscape(event: Event) {
+    if (openModals[openModals.length - 1] !== this) return;
+    event.preventDefault();
+    this.close.emit();
+  }
 
   panelClass = computed(
     () => `w-full ${SIZE_CLASSES[this.size()]} max-h-[90vh] overflow-y-auto rounded-lg bg-gr-surface p-6 shadow-lg`,

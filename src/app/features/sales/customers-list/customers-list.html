@@ -20,7 +20,7 @@
 
 <div class="mb-6 flex flex-wrap items-center gap-4">
   <app-search-input
-    placeholder="Buscar por nombre..."
+    placeholder="Buscar por nombre, NIT/CI o teléfono..."
     [value]="search()"
     (valueChange)="onSearch($event)"
   />
@@ -81,7 +81,7 @@
         (click)="askToggleActive(customer)"
         [disabled]="updatingId() === customer.id"
         class="cursor-pointer text-sm font-medium transition disabled:cursor-not-allowed disabled:opacity-50"
-        [class]="customer.isActive ? 'text-gr-danger hover:brightness-90' : 'text-gr-success hover:brightness-90'"
+        [class]="customer.isActive ? 'text-gr-sub hover:text-gr-danger' : 'text-gr-success hover:brightness-90'"
       >
         {{ customer.isActive ? 'Desactivar' : 'Activar' }}
       </button>

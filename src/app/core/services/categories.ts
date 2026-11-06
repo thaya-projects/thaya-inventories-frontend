@@ -35,6 +35,16 @@ export class CategoriesService {
     return this.http.put<Category>(`${BASE_URL}/${id}`, body);
   }
 
+  uploadImage(id: string, file: File): Observable<Category> {
+    const body = new FormData();
+    body.append('file', file);
+    return this.http.post<Category>(`${BASE_URL}/${id}/image`, body);
+  }
+
+  removeImage(id: string): Observable<Category> {
+    return this.http.delete<Category>(`${BASE_URL}/${id}/image`);
+  }
+
   activate(id: string): Observable<void> {
     return this.http.patch<void>(`${BASE_URL}/${id}/activate`, null);
   }

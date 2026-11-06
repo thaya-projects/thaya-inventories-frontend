@@ -14,9 +14,11 @@ const ROLES: { value: TeamRole; label: string }[] = [
   { value: 'Assistant', label: 'Asistente' },
 ];
 
+import { PhoneField, phoneFieldValidator } from '../../../shared/phone-field/phone-field';
+
 @Component({
   selector: 'app-team-form',
-  imports: [ReactiveFormsModule, RouterLink, ResetPasswordModal],
+  imports: [ReactiveFormsModule, RouterLink, ResetPasswordModal, PhoneField],
   templateUrl: './team-form.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
@@ -44,7 +46,7 @@ export class TeamForm {
     fullName: ['', Validators.required],
     email: ['', [Validators.required, Validators.email]],
     userName: ['', Validators.required],
-    phone: [''],
+    phone: [null as string | null, phoneFieldValidator],
     password: ['', [Validators.required, Validators.minLength(8)]],
     role: ['Warehouse' as TeamRole, Validators.required],
   });
@@ -64,7 +66,7 @@ export class TeamForm {
             fullName: user.fullName,
             email: user.email,
             userName: user.userName,
-            phone: user.phone ?? '',
+            phone: user.phone ?? null,
             role: user.role as TeamRole,
           });
           this.loading.set(false);

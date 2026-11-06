@@ -29,10 +29,10 @@
 
         <div class="space-y-4">
           <div>
-            <label for="fullName" class="mb-1.5 block text-sm font-medium text-gr-sub">Nombre completo</label>
+            <label for="fullName" class="mb-1.5 block text-sm font-medium text-gr-text">Nombre completo</label>
             <input
               id="fullName" type="text" formControlName="fullName" placeholder="Nombre y apellido"
-              class="w-full rounded-sm border border-gr-border bg-gr-surface px-4 py-2.5 text-gr-text placeholder-gr-muted transition focus:border-gr-primary focus:outline-none focus:ring-2 focus:ring-gr-primary/30"
+              class="w-full rounded-md border border-gr-border bg-gr-surface px-4 py-2.5 text-gr-text placeholder-gr-muted transition focus:border-gr-primary focus:outline-none focus:ring-2 focus:ring-gr-primary/30"
             >
             @if (form.controls.fullName.invalid && form.controls.fullName.touched) {
               <p class="mt-1.5 text-xs text-gr-danger">El nombre es obligatorio.</p>
@@ -41,10 +41,10 @@
 
           <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div>
-              <label for="email" class="mb-1.5 block text-sm font-medium text-gr-sub">Correo electrónico</label>
+              <label for="email" class="mb-1.5 block text-sm font-medium text-gr-text">Correo electrónico</label>
               <input
                 id="email" type="email" formControlName="email" placeholder="usuario@empresa.com"
-                class="w-full rounded-sm border border-gr-border bg-gr-surface px-4 py-2.5 text-gr-text placeholder-gr-muted transition focus:border-gr-primary focus:outline-none focus:ring-2 focus:ring-gr-primary/30 disabled:cursor-not-allowed disabled:bg-gr-bg disabled:text-gr-muted"
+                class="w-full rounded-md border border-gr-border bg-gr-surface px-4 py-2.5 text-gr-text placeholder-gr-muted transition focus:border-gr-primary focus:outline-none focus:ring-2 focus:ring-gr-primary/30 disabled:cursor-not-allowed disabled:bg-gr-bg disabled:text-gr-muted"
               >
               @if (form.controls.email.invalid && form.controls.email.touched) {
                 <p class="mt-1.5 text-xs text-gr-danger">Ingresa un correo válido.</p>
@@ -54,10 +54,10 @@
               }
             </div>
             <div>
-              <label for="userName" class="mb-1.5 block text-sm font-medium text-gr-sub">Usuario</label>
+              <label for="userName" class="mb-1.5 block text-sm font-medium text-gr-text">Usuario</label>
               <input
                 id="userName" type="text" formControlName="userName" placeholder="nombre.usuario"
-                class="w-full rounded-sm border border-gr-border bg-gr-surface px-4 py-2.5 text-gr-text placeholder-gr-muted transition focus:border-gr-primary focus:outline-none focus:ring-2 focus:ring-gr-primary/30 disabled:cursor-not-allowed disabled:bg-gr-bg disabled:text-gr-muted"
+                class="w-full rounded-md border border-gr-border bg-gr-surface px-4 py-2.5 text-gr-text placeholder-gr-muted transition focus:border-gr-primary focus:outline-none focus:ring-2 focus:ring-gr-primary/30 disabled:cursor-not-allowed disabled:bg-gr-bg disabled:text-gr-muted"
               >
               @if (form.controls.userName.invalid && form.controls.userName.touched) {
                 <p class="mt-1.5 text-xs text-gr-danger">El usuario es obligatorio.</p>
@@ -70,17 +70,17 @@
 
           <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div>
-              <label for="phone" class="mb-1.5 block text-sm font-medium text-gr-sub">Teléfono (opcional)</label>
-              <input
-                id="phone" type="text" formControlName="phone" placeholder="Ej. 70012345"
-                class="w-full rounded-sm border border-gr-border bg-gr-surface px-4 py-2.5 text-gr-text placeholder-gr-muted transition focus:border-gr-primary focus:outline-none focus:ring-2 focus:ring-gr-primary/30"
-              >
+              <label for="phone" class="mb-1.5 block text-sm font-medium text-gr-text">Teléfono <span class="font-normal text-gr-sub">(opcional)</span></label>
+              <app-phone-field inputId="phone" formControlName="phone" [invalid]="form.controls.phone.invalid && form.controls.phone.touched" />
+              @if (form.controls.phone.errors?.['phone'] && form.controls.phone.touched) {
+                <p class="mt-1.5 text-xs text-gr-danger">{{ form.controls.phone.errors?.['phone'] }}</p>
+              }
             </div>
             <div>
-              <label for="role" class="mb-1.5 block text-sm font-medium text-gr-sub">Rol</label>
+              <label for="role" class="mb-1.5 block text-sm font-medium text-gr-text">Rol</label>
               <select
                 id="role" formControlName="role"
-                class="w-full rounded-sm border border-gr-border bg-gr-surface px-4 py-2.5 text-gr-text transition focus:border-gr-primary focus:outline-none focus:ring-2 focus:ring-gr-primary/30"
+                class="w-full rounded-md border border-gr-border bg-gr-surface px-4 py-2.5 text-gr-text transition focus:border-gr-primary focus:outline-none focus:ring-2 focus:ring-gr-primary/30"
               >
                 @for (role of roles; track role.value) {
                   <option [value]="role.value">{{ role.label }}</option>
@@ -105,7 +105,7 @@
             <div class="relative">
               <input
                 id="password" [type]="showPassword() ? 'text' : 'password'" formControlName="password" placeholder="Mínimo 8 caracteres"
-                class="w-full rounded-sm border border-gr-border bg-gr-surface py-2.5 pr-20 pl-4 text-gr-text placeholder-gr-muted transition focus:border-gr-primary focus:outline-none focus:ring-2 focus:ring-gr-primary/30"
+                class="w-full rounded-md border border-gr-border bg-gr-surface py-2.5 pr-20 pl-4 text-gr-text placeholder-gr-muted transition focus:border-gr-primary focus:outline-none focus:ring-2 focus:ring-gr-primary/30"
               >
               <div class="absolute inset-y-0 right-0 flex items-center gap-1 pr-2.5">
                 <button

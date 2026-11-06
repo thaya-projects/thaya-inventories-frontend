@@ -12,20 +12,20 @@
       <div class="space-y-4">
         <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div>
-            <label for="name" class="mb-1.5 block text-sm font-medium text-gr-sub">Nombre</label>
+            <label for="name" class="mb-1.5 block text-sm font-medium text-gr-text">Nombre</label>
             <input
               id="name" type="text" formControlName="name" placeholder="Ej. QR Banco Unión"
-              class="w-full rounded-sm border border-gr-border bg-gr-surface px-4 py-2.5 text-gr-text placeholder-gr-muted transition focus:border-gr-primary focus:outline-none focus:ring-2 focus:ring-gr-primary/30"
+              class="w-full rounded-md border border-gr-border bg-gr-surface px-4 py-2.5 text-gr-text placeholder-gr-muted transition focus:border-gr-primary focus:outline-none focus:ring-2 focus:ring-gr-primary/30"
             >
             @if (form.controls.name.invalid && form.controls.name.touched) {
               <p class="mt-1.5 text-xs text-gr-danger">El nombre es obligatorio.</p>
             }
           </div>
           <div>
-            <label for="type" class="mb-1.5 block text-sm font-medium text-gr-sub">Tipo</label>
+            <label for="type" class="mb-1.5 block text-sm font-medium text-gr-text">Tipo</label>
             <select
               id="type" formControlName="type"
-              class="w-full rounded-sm border border-gr-border bg-gr-surface px-4 py-2.5 text-gr-text transition focus:border-gr-primary focus:outline-none focus:ring-2 focus:ring-gr-primary/30"
+              class="w-full rounded-md border border-gr-border bg-gr-surface px-4 py-2.5 text-gr-text transition focus:border-gr-primary focus:outline-none focus:ring-2 focus:ring-gr-primary/30"
             >
               @for (t of types; track t.value) {
                 <option [value]="t.value">{{ t.label }}</option>
@@ -36,10 +36,10 @@
 
         @if (form.controls.type.value === 'Transfer') {
           <div>
-            <label for="bank" class="mb-1.5 block text-sm font-medium text-gr-sub">Banco</label>
+            <label for="bank" class="mb-1.5 block text-sm font-medium text-gr-text">Banco</label>
             <input
               id="bank" type="text" formControlName="bank"
-              class="w-full rounded-sm border border-gr-border bg-gr-surface px-4 py-2.5 text-gr-text transition focus:border-gr-primary focus:outline-none focus:ring-2 focus:ring-gr-primary/30"
+              class="w-full rounded-md border border-gr-border bg-gr-surface px-4 py-2.5 text-gr-text transition focus:border-gr-primary focus:outline-none focus:ring-2 focus:ring-gr-primary/30"
             >
           </div>
         }
@@ -47,17 +47,17 @@
         @if (form.controls.type.value === 'Qr' || form.controls.type.value === 'Transfer') {
           <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div>
-              <label for="accountName" class="mb-1.5 block text-sm font-medium text-gr-sub">Nombre de cuenta</label>
+              <label for="accountName" class="mb-1.5 block text-sm font-medium text-gr-text">Nombre de cuenta</label>
               <input
                 id="accountName" type="text" formControlName="accountName"
-                class="w-full rounded-sm border border-gr-border bg-gr-surface px-4 py-2.5 text-gr-text transition focus:border-gr-primary focus:outline-none focus:ring-2 focus:ring-gr-primary/30"
+                class="w-full rounded-md border border-gr-border bg-gr-surface px-4 py-2.5 text-gr-text transition focus:border-gr-primary focus:outline-none focus:ring-2 focus:ring-gr-primary/30"
               >
             </div>
             <div>
-              <label for="accountNumber" class="mb-1.5 block text-sm font-medium text-gr-sub">Número de cuenta</label>
+              <label for="accountNumber" class="mb-1.5 block text-sm font-medium text-gr-text">Número de cuenta</label>
               <input
                 id="accountNumber" type="text" formControlName="accountNumber"
-                class="w-full rounded-sm border border-gr-border bg-gr-surface px-4 py-2.5 text-gr-text transition focus:border-gr-primary focus:outline-none focus:ring-2 focus:ring-gr-primary/30"
+                class="w-full rounded-md border border-gr-border bg-gr-surface px-4 py-2.5 text-gr-text transition focus:border-gr-primary focus:outline-none focus:ring-2 focus:ring-gr-primary/30"
               >
             </div>
           </div>

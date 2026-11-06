@@ -9,7 +9,7 @@ import { PaymentsService } from '../../../core/services/payments';
 import { PaymentMethodsService } from '../../../core/services/payment-methods';
 import { Expense, ExpenseCategory, ExpensePaymentStatus } from '../../../core/models/expense.model';
 import { Payment } from '../../../core/models/payment.model';
-import { PaymentMethod } from '../../../core/models/payment-method.model';
+import { PaymentMethod, paymentMethodLabel } from '../../../core/models/payment-method.model';
 import { ToastService } from '../../../shared/toast/toast.service';
 import { Modal } from '../../../shared/modal/modal';
 import { ExpenseFormModal } from '../expense-form-modal/expense-form-modal';
@@ -62,6 +62,12 @@ export class ExpenseDetail {
   payments = signal<Payment[]>([]);
   paymentsLoading = signal(true);
   paymentMethods = signal<PaymentMethod[]>([]);
+  // "QR", "Efectivo"… en vez del nombre interno de la cuenta.
+  methodLabel = (m: PaymentMethod) => paymentMethodLabel(m, this.paymentMethods());
+  payMethodLabel = (methodId: string | null, fallback: string | null) => {
+    const m = this.paymentMethods().find(x => x.id === methodId);
+    return m ? this.methodLabel(m) : (fallback ?? 'Pago');
+  };
   paymentModalOpen = signal(false);
   submittingPayment = signal(false);
   paymentErrorMessage = signal<string | null>(null);

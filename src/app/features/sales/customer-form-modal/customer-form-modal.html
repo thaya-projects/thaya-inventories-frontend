@@ -1,80 +1,196 @@
-<app-modal [title]="customerId() ? 'Editar cliente' : 'Nuevo cliente'" size="md" (close)="close.emit()">
+<app-modal [title]="customerId() ? 'Editar cliente' : 'Nuevo cliente'" size="lg" (close)="close.emit()">
   @if (errorMessage()) {
-    <div class="mb-6 rounded-sm border border-gr-danger/20 bg-gr-danger-bg px-4 py-3 text-sm text-gr-danger">
+    <div role="alert" class="mb-5 rounded-md border border-gr-danger/20 bg-gr-danger-bg px-4 py-3 text-sm text-gr-danger">
       {{ errorMessage() }}
     </div>
   }
 
   @if (loading()) {
-    <p class="text-gr-sub">Cargando...</p>
+    <div class="space-y-4" aria-hidden="true">
+      @for (i of [1, 2, 3]; track i) {
+        <div class="h-16 animate-pulse rounded-md bg-gr-border-lite"></div>
+      }
+    </div>
+    <p class="sr-only" role="status">Cargando…</p>
   } @else {
-    <form [formGroup]="form" (ngSubmit)="submit()">
-      <div class="space-y-4">
-        <div>
-          <label for="name" class="mb-1.5 block text-sm font-medium text-gr-sub">Nombre</label>
-          <input
-            id="name" type="text" formControlName="name" placeholder="Ej. Juan Pérez"
-            class="w-full rounded-sm border border-gr-border bg-gr-surface px-4 py-2.5 text-gr-text placeholder-gr-muted transition focus:border-gr-primary focus:outline-none focus:ring-2 focus:ring-gr-primary/30"
-          >
-          @if (form.controls.name.invalid && form.controls.name.touched) {
-            <p class="mt-1.5 text-xs text-gr-danger">El nombre es obligatorio.</p>
-          }
+    <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
+      <div class="space-y-5">
+        <!-- Identidad: nombre + NIT/CI -->
+        <div class="grid grid-cols-1 gap-4 sm:grid-cols-5">
+          <div class="sm:col-span-3">
+            <label for="name" class="mb-1.5 flex items-center gap-1.5 text-sm font-medium text-gr-text">
+              Nombre o razón social <app-info-hint [text]="hints.name" />
+            </label>
+            <input
+              id="name" type="text" formControlName="name" placeholder="Ej. Juan Pérez o Colegio La Salle" autocomplete="off"
+              class="w-full rounded-md border bg-gr-surface px-4 py-2.5 text-gr-text placeholder-gr-muted transition focus:outline-none focus:ring-2 focus:ring-gr-primary/30"
+              [class]="form.controls.name.invalid && form.controls.name.touched ? 'border-gr-danger' : 'border-gr-border focus:border-gr-primary'"
+            >
+            @if (form.controls.name.invalid && form.controls.name.touched) {
+              <p class="mt-1.5 text-xs text-gr-danger">Escribe el nombre del cliente.</p>
+            }
+          </div>
+          <div class="sm:col-span-2">
+            <label for="taxId" class="mb-1.5 flex items-center gap-1.5 text-sm font-medium text-gr-text">
+              NIT o CI <span class="font-normal text-gr-sub">(opcional)</span> <app-info-hint [text]="hints.taxId" />
+            </label>
+            <input
+              id="taxId" type="text" formControlName="taxId" placeholder="Ej. 4567890 SC" autocomplete="off"
+              class="w-full rounded-md border bg-gr-surface px-4 py-2.5 text-gr-text uppercase placeholder-gr-muted placeholder:normal-case transition focus:outline-none focus:ring-2 focus:ring-gr-primary/30"
+              [class]="taxIdConflict() ? 'border-gr-danger' : 'border-gr-border focus:border-gr-primary'"
+            >
+          </div>
         </div>
 
+        <!-- Ya existe con ese NIT/CI: bloquea -->
+        @if (taxIdConflict(); as d) {
+          <div role="alert" class="rounded-md border border-gr-danger/25 bg-gr-danger-bg p-4">
+            <p class="text-sm font-semibold text-gr-danger">Ya tienes un cliente con este NIT/CI</p>
+            <div class="mt-3 flex flex-wrap items-center justify-between gap-3 rounded-md bg-gr-surface px-3 py-2.5">
+              <div class="min-w-0">
+                <p class="truncate text-sm font-medium text-gr-text">{{ d.name }}</p>
+                <p class="text-xs text-gr-sub">
+                  NIT/CI {{ d.taxId }}{{ d.phone ? ' · ' + d.phone : '' }}{{ d.city ? ' · ' + d.city : '' }}{{ d.isActive ? '' : ' · Inactivo' }}
+                </p>
+              </div>
+              @if (allowPickExisting()) {
+                <button
+                  type="button" (click)="pickExisting(d)" [disabled]="picking() === d.id"
+                  class="cursor-pointer rounded-md bg-gr-primary-dark px-3.5 py-2 text-sm font-semibold text-gr-primary-lite transition hover:bg-gr-primary disabled:opacity-60"
+                >
+                  {{ picking() === d.id ? 'Cargando…' : 'Usar este cliente' }}
+                </button>
+              }
+            </div>
+            <p class="mt-2 text-xs text-gr-danger">Un NIT o CI identifica a un solo cliente. Revisa el número o usa el cliente que ya existe.</p>
+          </div>
+        }
+
+        <!-- Coincide teléfono o nombre: solo avisa -->
+        @if (!taxIdConflict() && softDuplicates().length > 0) {
+          <div role="status" class="rounded-md border border-gr-warning/25 bg-gr-warning-bg p-4">
+            <p class="text-sm font-semibold text-gr-warning">¿Es alguno de estos clientes?</p>
+            <ul class="mt-3 space-y-2">
+              @for (d of softDuplicates(); track d.id) {
+                <li class="flex flex-wrap items-center justify-between gap-3 rounded-md bg-gr-surface px-3 py-2.5">
+                  <div class="min-w-0">
+                    <p class="truncate text-sm font-medium text-gr-text">{{ d.name }}</p>
+                    <p class="text-xs text-gr-sub">
+                      Tiene {{ matchLabel(d) }}{{ d.phone ? ' · ' + d.phone : '' }}{{ d.taxId ? ' · NIT/CI ' + d.taxId : '' }}
+                    </p>
+                  </div>
+                  @if (allowPickExisting()) {
+                    <button
+                      type="button" (click)="pickExisting(d)" [disabled]="picking() === d.id"
+                      class="cursor-pointer rounded-md border border-gr-border px-3 py-1.5 text-sm font-semibold text-gr-primary-dark transition hover:border-gr-primary-mid hover:bg-gr-primary-lite/40 disabled:opacity-60"
+                    >
+                      {{ picking() === d.id ? 'Cargando…' : 'Usar este' }}
+                    </button>
+                  }
+                </li>
+              }
+            </ul>
+            <button type="button" (click)="dismissed.set(true)" class="mt-3 cursor-pointer text-sm font-medium text-gr-warning underline-offset-4 hover:underline">
+              No, es otro cliente
+            </button>
+          </div>
+        }
+
+        <!-- Contacto -->
         <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div>
-            <label for="phone" class="mb-1.5 block text-sm font-medium text-gr-sub">Teléfono (opcional)</label>
-            <input
-              id="phone" type="text" formControlName="phone"
-              class="w-full rounded-sm border border-gr-border bg-gr-surface px-4 py-2.5 text-gr-text transition focus:border-gr-primary focus:outline-none focus:ring-2 focus:ring-gr-primary/30"
+            <label for="phone" class="mb-1.5 flex items-center gap-1.5 text-sm font-medium text-gr-text">
+              Teléfono <span class="font-normal text-gr-sub">(opcional)</span> <app-info-hint [text]="hints.phone" />
+            </label>
+            <div
+              class="flex overflow-hidden rounded-md border bg-gr-surface transition focus-within:ring-2 focus-within:ring-gr-primary/30"
+              [class]="form.controls.phone.invalid && form.controls.phone.touched ? 'border-gr-danger' : 'border-gr-border focus-within:border-gr-primary'"
             >
+              <!-- Se ve solo "+591"; al abrir, la lista muestra el país completo -->
+              <span class="relative flex shrink-0 items-center gap-1 border-r border-gr-border-lite bg-gr-bg pr-2 pl-3 text-sm font-semibold text-gr-text tabular-nums">
+                +{{ form.controls.phoneCountry.value }}
+                <svg class="h-3.5 w-3.5 text-gr-sub" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m6 9 6 6 6-6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                <select
+                  id="phoneCountry" formControlName="phoneCountry" aria-label="Código de país"
+                  class="absolute inset-0 cursor-pointer opacity-0"
+                >
+                  @for (c of countries; track c.code) {
+                    <option [value]="c.code">{{ c.label }} (+{{ c.code }})</option>
+                  }
+                </select>
+              </span>
+              <input
+                id="phone" type="tel" inputmode="tel" formControlName="phone" autocomplete="off"
+                [placeholder]="isBolivia() ? '7123 4567' : 'Número sin código'"
+                (input)="formatPhoneInput()"
+                class="min-w-0 flex-1 bg-transparent px-3 py-2.5 text-gr-text tabular-nums placeholder-gr-muted focus:outline-none"
+              >
+            </div>
+            @if (form.controls.phone.errors?.['phone'] && form.controls.phone.touched) {
+              <p class="mt-1.5 text-xs text-gr-danger">{{ form.controls.phone.errors?.['phone'] }}</p>
+            }
           </div>
           <div>
-            <label for="email" class="mb-1.5 block text-sm font-medium text-gr-sub">Correo (opcional)</label>
+            <label for="email" class="mb-1.5 flex items-center gap-1.5 text-sm font-medium text-gr-text">
+              Correo <span class="font-normal text-gr-sub">(opcional)</span> <app-info-hint [text]="hints.email" />
+            </label>
             <input
-              id="email" type="email" formControlName="email"
-              class="w-full rounded-sm border border-gr-border bg-gr-surface px-4 py-2.5 text-gr-text transition focus:border-gr-primary focus:outline-none focus:ring-2 focus:ring-gr-primary/30"
+              id="email" type="email" formControlName="email" placeholder="nombre@correo.com" autocomplete="off"
+              class="w-full rounded-md border bg-gr-surface px-4 py-2.5 text-gr-text placeholder-gr-muted transition focus:outline-none focus:ring-2 focus:ring-gr-primary/30"
+              [class]="form.controls.email.invalid && form.controls.email.touched ? 'border-gr-danger' : 'border-gr-border focus:border-gr-primary'"
             >
+            @if (form.controls.email.invalid && form.controls.email.touched) {
+              <p class="mt-1.5 text-xs text-gr-danger">Revisa el correo (ej. nombre&#64;correo.com).</p>
+            }
           </div>
         </div>
 
+        <!-- Ubicación -->
         <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div>
-            <label for="city" class="mb-1.5 block text-sm font-medium text-gr-sub">Ciudad (opcional)</label>
+            <label for="city" class="mb-1.5 flex items-center gap-1.5 text-sm font-medium text-gr-text">
+              Ciudad <span class="font-normal text-gr-sub">(opcional)</span> <app-info-hint [text]="hints.city" />
+            </label>
             <input
-              id="city" type="text" formControlName="city"
-              class="w-full rounded-sm border border-gr-border bg-gr-surface px-4 py-2.5 text-gr-text transition focus:border-gr-primary focus:outline-none focus:ring-2 focus:ring-gr-primary/30"
+              id="city" type="text" formControlName="city" placeholder="Santa Cruz" list="bo-cities" autocomplete="off"
+              class="w-full rounded-md border border-gr-border bg-gr-surface px-4 py-2.5 text-gr-text placeholder-gr-muted transition focus:border-gr-primary focus:outline-none focus:ring-2 focus:ring-gr-primary/30"
             >
+            <datalist id="bo-cities">
+              <option value="Santa Cruz"></option>
+              <option value="La Paz"></option>
+              <option value="El Alto"></option>
+              <option value="Cochabamba"></option>
+              <option value="Sucre"></option>
+              <option value="Oruro"></option>
+              <option value="Potosí"></option>
+              <option value="Tarija"></option>
+              <option value="Trinidad"></option>
+              <option value="Cobija"></option>
+            </datalist>
           </div>
           <div>
-            <label for="taxId" class="mb-1.5 block text-sm font-medium text-gr-sub">NIT (opcional)</label>
+            <label for="address" class="mb-1.5 flex items-center gap-1.5 text-sm font-medium text-gr-text">
+              Dirección <span class="font-normal text-gr-sub">(opcional)</span> <app-info-hint [text]="hints.address" />
+            </label>
             <input
-              id="taxId" type="text" formControlName="taxId"
-              class="w-full rounded-sm border border-gr-border bg-gr-surface px-4 py-2.5 text-gr-text transition focus:border-gr-primary focus:outline-none focus:ring-2 focus:ring-gr-primary/30"
+              id="address" type="text" formControlName="address" placeholder="Calle, número y una referencia" autocomplete="off"
+              class="w-full rounded-md border border-gr-border bg-gr-surface px-4 py-2.5 text-gr-text placeholder-gr-muted transition focus:border-gr-primary focus:outline-none focus:ring-2 focus:ring-gr-primary/30"
             >
           </div>
-        </div>
-
-        <div>
-          <label for="address" class="mb-1.5 block text-sm font-medium text-gr-sub">Dirección (opcional)</label>
-          <input
-            id="address" type="text" formControlName="address"
-            class="w-full rounded-sm border border-gr-border bg-gr-surface px-4 py-2.5 text-gr-text transition focus:border-gr-primary focus:outline-none focus:ring-2 focus:ring-gr-primary/30"
-          >
         </div>
       </div>
 
       <div class="mt-8 flex items-center justify-end gap-3 border-t border-gr-border-lite pt-5">
-        <button type="button" (click)="close.emit()" class="rounded-sm px-4 py-2.5 font-medium text-gr-sub transition hover:text-gr-text">
+        <button type="button" (click)="close.emit()" class="cursor-pointer rounded-md px-4 py-2.5 font-medium text-gr-sub transition hover:text-gr-text">
           Cancelar
         </button>
         <button
           type="submit"
-          [disabled]="submitting()"
-          class="flex items-center gap-2 rounded-sm bg-gr-primary-dark px-5 py-2.5 font-semibold text-gr-primary-lite transition hover:brightness-95 disabled:cursor-not-allowed disabled:opacity-60"
+          [disabled]="submitting() || !!taxIdConflict()"
+          class="flex cursor-pointer items-center gap-2 rounded-md bg-gr-primary-dark px-5 py-2.5 font-semibold text-gr-primary-lite transition hover:bg-gr-primary disabled:cursor-not-allowed disabled:opacity-50"
         >
           @if (submitting()) {
-            <svg class="h-4 w-4 animate-spin" fill="none" viewBox="0 0 24 24">
+            <svg class="h-4 w-4 animate-spin" fill="none" viewBox="0 0 24 24" aria-hidden="true">
               <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
               <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
             </svg>

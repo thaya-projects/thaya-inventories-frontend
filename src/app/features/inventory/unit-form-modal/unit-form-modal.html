@@ -11,10 +11,10 @@
     <form [formGroup]="form" (ngSubmit)="submit()">
       <div class="space-y-4">
         <div>
-          <label for="name" class="mb-1.5 block text-sm font-medium text-gr-sub">Nombre</label>
+          <label for="name" class="mb-1.5 block text-sm font-medium text-gr-text">Nombre</label>
           <input
             id="name" type="text" formControlName="name" placeholder="Ej. Unidad" (input)="onNameInput()"
-            class="w-full rounded-sm border border-gr-border bg-gr-surface px-4 py-2.5 text-gr-text placeholder-gr-muted transition focus:border-gr-primary focus:outline-none focus:ring-2 focus:ring-gr-primary/30"
+            class="w-full rounded-md border border-gr-border bg-gr-surface px-4 py-2.5 text-gr-text placeholder-gr-muted transition focus:border-gr-primary focus:outline-none focus:ring-2 focus:ring-gr-primary/30"
           >
           @if (form.controls.name.invalid && form.controls.name.touched) {
             <p class="mt-1.5 text-xs text-gr-danger">El nombre es obligatorio.</p>
@@ -23,32 +23,32 @@
 
         <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div>
-            <label for="code" class="mb-1.5 block text-sm font-medium text-gr-sub">Código</label>
+            <label for="code" class="mb-1.5 block text-sm font-medium text-gr-text">Código</label>
             <input
               id="code" type="text" formControlName="code" placeholder="Ej. UN" (input)="onCodeInput()"
-              class="w-full rounded-sm border border-gr-border bg-gr-surface px-4 py-2.5 text-gr-text placeholder-gr-muted transition focus:border-gr-primary focus:outline-none focus:ring-2 focus:ring-gr-primary/30"
+              class="w-full rounded-md border border-gr-border bg-gr-surface px-4 py-2.5 text-gr-text placeholder-gr-muted transition focus:border-gr-primary focus:outline-none focus:ring-2 focus:ring-gr-primary/30"
             >
             @if (form.controls.code.invalid && form.controls.code.touched) {
               <p class="mt-1.5 text-xs text-gr-danger">El código es obligatorio.</p>
             } @else {
-              <p class="mt-1.5 text-xs text-gr-muted">Se genera a partir del nombre; podés editarlo.</p>
+              <p class="mt-1.5 text-xs text-gr-muted">Se genera a partir del nombre; puedes editarlo.</p>
             }
           </div>
           <div>
-            <label for="abbreviation" class="mb-1.5 block text-sm font-medium text-gr-sub">Abreviatura (opcional)</label>
+            <label for="abbreviation" class="mb-1.5 block text-sm font-medium text-gr-text">Abreviatura <span class="font-normal text-gr-sub">(opcional)</span></label>
             <input
               id="abbreviation" type="text" formControlName="abbreviation" placeholder="Ej. un"
-              class="w-full rounded-sm border border-gr-border bg-gr-surface px-4 py-2.5 text-gr-text placeholder-gr-muted transition focus:border-gr-primary focus:outline-none focus:ring-2 focus:ring-gr-primary/30"
+              class="w-full rounded-md border border-gr-border bg-gr-surface px-4 py-2.5 text-gr-text placeholder-gr-muted transition focus:border-gr-primary focus:outline-none focus:ring-2 focus:ring-gr-primary/30"
             >
           </div>
         </div>
 
         <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div>
-            <label for="type" class="mb-1.5 block text-sm font-medium text-gr-sub">Tipo</label>
+            <label for="type" class="mb-1.5 block text-sm font-medium text-gr-text">Tipo</label>
             <select
               id="type" formControlName="type"
-              class="w-full rounded-sm border border-gr-border bg-gr-surface px-4 py-2.5 text-gr-text transition focus:border-gr-primary focus:outline-none focus:ring-2 focus:ring-gr-primary/30"
+              class="w-full rounded-md border border-gr-border bg-gr-surface px-4 py-2.5 text-gr-text transition focus:border-gr-primary focus:outline-none focus:ring-2 focus:ring-gr-primary/30"
             >
               @for (t of types; track t.value) {
                 <option [value]="t.value">{{ t.label }}</option>
@@ -56,10 +56,10 @@
             </select>
           </div>
           <div>
-            <label for="baseFactor" class="mb-1.5 block text-sm font-medium text-gr-sub">Factor base</label>
+            <label for="baseFactor" class="mb-1.5 block text-sm font-medium text-gr-text">Factor base</label>
             <input
               id="baseFactor" type="number" step="any" formControlName="baseFactor"
-              class="w-full rounded-sm border border-gr-border bg-gr-surface px-4 py-2.5 text-gr-text transition focus:border-gr-primary focus:outline-none focus:ring-2 focus:ring-gr-primary/30"
+              class="w-full rounded-md border border-gr-border bg-gr-surface px-4 py-2.5 text-gr-text transition focus:border-gr-primary focus:outline-none focus:ring-2 focus:ring-gr-primary/30"
             >
             @if (form.controls.baseFactor.invalid && form.controls.baseFactor.touched) {
               <p class="mt-1.5 text-xs text-gr-danger">Ingresa un factor base válido.</p>

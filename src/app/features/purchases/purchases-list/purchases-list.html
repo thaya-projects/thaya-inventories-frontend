@@ -15,14 +15,14 @@
 <app-purchases-tabs active="purchases" />
 
 @if (showCreateModal()) {
-  <app-purchase-form-modal (close)="closeCreateModal()" (saved)="onPurchaseCreated()" />
+  <app-purchase-form-modal (close)="closeCreateModal()" (saved)="onPurchaseCreated($event)" />
 }
 
 @if (selectedPurchaseId(); as purchaseId) {
   <app-purchase-detail-modal [purchaseId]="purchaseId" (close)="closeDetail()" (updated)="onPurchaseUpdated($event)" />
 }
 
-<div class="mb-6 flex gap-2">
+<div class="mb-6 flex flex-wrap items-center gap-2">
   <button
     type="button" (click)="setFilter('all')"
     class="cursor-pointer rounded-sm px-3.5 py-2 text-sm font-medium transition-colors"
@@ -35,7 +35,7 @@
     class="cursor-pointer rounded-sm px-3.5 py-2 text-sm font-medium transition-colors"
     [class]="statusFilter() === 'Pending' ? 'bg-gr-primary-dark text-gr-primary-lite' : 'text-gr-sub hover:bg-gr-bg'"
   >
-    Pendientes
+    Por recibir
   </button>
   <button
     type="button" (click)="setFilter('Received')"
@@ -51,6 +51,25 @@
   >
     Canceladas
   </button>
+
+  <!-- Ver cada compra o agrupar por proveedor -->
+  <div class="ml-auto flex items-center gap-2">
+  <span class="text-sm text-gr-sub">Ver:</span>
+  <div class="flex rounded-lg border border-gr-border bg-gr-surface p-1" role="radiogroup" aria-label="Cómo ver las compras">
+    <button type="button" role="radio" [attr.aria-checked]="viewMode() === 'list'" (click)="setViewMode('list')"
+      class="flex cursor-pointer items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium transition"
+      [class]="viewMode() === 'list' ? 'bg-gr-primary-dark text-gr-primary-lite' : 'text-gr-sub hover:bg-gr-bg hover:text-gr-text'">
+      <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg>
+      Por compra
+    </button>
+    <button type="button" role="radio" [attr.aria-checked]="viewMode() === 'supplier'" (click)="setViewMode('supplier')"
+      class="flex cursor-pointer items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium transition"
+      [class]="viewMode() === 'supplier' ? 'bg-gr-primary-dark text-gr-primary-lite' : 'text-gr-sub hover:bg-gr-bg hover:text-gr-text'">
+      <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 21h18M5 21V7l7-4 7 4v14M9 21v-6h6v6"/></svg>
+      Por proveedor
+    </button>
+  </div>
+  </div>
 </div>
 
 @if (errorMessage()) {
@@ -61,6 +80,71 @@
 
 @if (loading()) {
   <p class="text-gr-sub">Cargando compras...</p>
+} @else if (viewMode() === 'supplier') {
+  @if (groups().length === 0) {
+    <p class="rounded-lg border border-gr-border bg-gr-surface px-6 py-10 text-center text-gr-sub">No hay compras registradas todavía.</p>
+  } @else {
+    <ul class="space-y-3">
+      @for (g of groups(); track g.supplierId) {
+        <li class="overflow-hidden rounded-lg border border-gr-border bg-gr-surface">
+          <button
+            type="button" (click)="toggleGroup(g.supplierId)" [attr.aria-expanded]="isExpanded(g.supplierId)"
+            class="flex w-full cursor-pointer flex-wrap items-center gap-x-6 gap-y-2 px-5 py-4 text-left transition hover:bg-gr-bg"
+          >
+            <svg class="h-4 w-4 shrink-0 text-gr-sub transition-transform" [class.rotate-90]="isExpanded(g.supplierId)" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg>
+            <span class="min-w-0 flex-1">
+              <span class="block truncate font-semibold text-gr-text">{{ g.supplierName }}</span>
+              <span class="block text-xs text-gr-sub">
+                {{ g.purchases.length }} {{ g.purchases.length === 1 ? 'compra' : 'compras' }} · última el {{ g.lastDate | date: 'dd/MM/yyyy' }}
+              </span>
+            </span>
+            @if (g.pendingCount > 0) {
+              <span class="rounded-full bg-gr-warning-bg px-2.5 py-0.5 text-xs font-medium text-gr-warning">
+                {{ g.pendingCount }} por recibir
+              </span>
+            }
+            <span class="text-right">
+              <span class="block text-xs text-gr-sub">Total comprado</span>
+              <span class="block font-bold text-gr-text tabular-nums">Bs {{ g.total.toFixed(2) }}</span>
+            </span>
+          </button>
+
+          @if (isExpanded(g.supplierId)) {
+            <table class="w-full border-t border-gr-border-lite text-sm">
+              <thead class="sr-only">
+                <tr><th>Número</th><th>Fecha</th><th>Productos</th><th>Total</th><th>Estado</th><th>Acciones</th></tr>
+              </thead>
+              <tbody class="divide-y divide-gr-border-lite">
+                @for (p of g.purchases; track p.id) {
+                  <tr class="bg-gr-bg/40">
+                    <td class="py-3 pr-3 pl-14 text-gr-sub tabular-nums">#{{ p.number }}</td>
+                    <td class="py-3 pr-3 text-gr-text">{{ p.date | date: 'dd/MM/yyyy' }}</td>
+                    <td class="hidden py-3 pr-3 sm:table-cell">
+                      <div class="flex flex-wrap gap-1.5">
+                        @for (l of (p.lines ?? []).slice(0, visibleLines); track $index) {
+                          <span class="max-w-48 truncate rounded-full bg-gr-primary-lite/50 px-2 py-0.5 text-xs text-gr-primary-dark">{{ l.productName }} <span class="font-semibold tabular-nums">×{{ qty(l.quantity) }}</span></span>
+                        }
+                        @if ((p.lines?.length ?? 0) > visibleLines) {
+                          <span class="rounded-full bg-gr-bg px-2 py-0.5 text-xs font-medium text-gr-sub">+{{ p.lines!.length - visibleLines }} más</span>
+                        }
+                      </div>
+                    </td>
+                    <td class="py-3 pr-3 text-right font-medium text-gr-text tabular-nums">{{ p.total != null ? ('Bs ' + p.total.toFixed(2)) : '—' }}</td>
+                    <td class="py-3 pr-3">
+                      <span class="rounded-full px-2.5 py-0.5 text-xs font-medium" [class]="statusBadgeClass(p.status)">{{ statusLabel(p.status) }}</span>
+                    </td>
+                    <td class="py-3 pr-5 text-right">
+                      <button type="button" (click)="openDetail(p)" class="cursor-pointer text-sm font-medium text-gr-primary transition hover:text-gr-gold">Ver</button>
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          }
+        </li>
+      }
+    </ul>
+  }
 } @else {
   <app-data-table
     [columns]="columns()"
@@ -74,6 +158,48 @@
     emptyMessage="No hay compras registradas todavía."
   />
 }
+
+<ng-template #supplierTpl let-p>
+  <div class="min-w-0 max-w-md">
+    <p class="truncate font-medium text-gr-text">{{ p.supplierName ?? '—' }}</p>
+    @if (p.lines?.length) {
+      <div class="mt-1.5 flex flex-wrap gap-1.5">
+        @for (l of p.lines.slice(0, visibleLines); track $index) {
+          <span class="max-w-48 truncate rounded-full bg-gr-primary-lite/50 px-2 py-0.5 text-xs text-gr-primary-dark" [title]="l.productName + ' ×' + qty(l.quantity)">
+            {{ l.productName }} <span class="font-semibold tabular-nums">×{{ qty(l.quantity) }}</span>
+          </span>
+        }
+        @if (p.lines.length > visibleLines) {
+          <span class="rounded-full bg-gr-bg px-2 py-0.5 text-xs font-medium text-gr-sub" [title]="p.lines.slice(visibleLines).map(x => x.productName).join(', ')">
+            +{{ p.lines.length - visibleLines }} más
+          </span>
+        }
+      </div>
+    }
+  </div>
+</ng-template>
+
+<ng-template #paymentTpl let-p>
+  @let info = paymentInfo(p);
+  @switch (info.tone) {
+    @case ('paid') {
+      <span class="inline-flex items-center gap-1 text-sm font-medium text-gr-success">
+        <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 13l4 4L19 7"/></svg>
+        {{ info.label }}
+      </span>
+    }
+    @case ('partial') {
+      <span class="block text-sm font-medium whitespace-nowrap text-gr-warning tabular-nums">{{ info.label }}</span>
+      <span class="block text-xs text-gr-sub tabular-nums">{{ info.detail }}</span>
+    }
+    @case ('none') {
+      <span class="text-sm font-medium text-gr-danger">{{ info.label }}</span>
+    }
+    @default {
+      <span class="text-gr-sub">—</span>
+    }
+  }
+</ng-template>
 
 <ng-template #dateTpl let-p>
   {{ p.date | date: 'dd/MM/yyyy' }}

@@ -80,7 +80,7 @@
       (click)="askToggleActive(supplier)"
       [disabled]="updatingId() === supplier.id"
       class="cursor-pointer text-sm font-medium transition disabled:cursor-not-allowed disabled:opacity-50"
-      [class]="supplier.isActive ? 'text-gr-danger hover:brightness-90' : 'text-gr-success hover:brightness-90'"
+      [class]="supplier.isActive ? 'text-gr-sub hover:text-gr-danger' : 'text-gr-success hover:brightness-90'"
     >
       {{ supplier.isActive ? 'Desactivar' : 'Activar' }}
     </button>

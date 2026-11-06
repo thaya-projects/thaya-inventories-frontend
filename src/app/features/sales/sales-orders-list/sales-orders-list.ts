@@ -6,22 +6,11 @@ import { SalesOrdersService } from '../../../core/services/sales-orders';
 import { SalesOrder, SalesOrderStatus } from '../../../core/models/sales-order.model';
 import { SalesOrderDetailModal } from '../sales-order-detail-modal/sales-order-detail-modal';
 import { SalesTabs } from '../sales-tabs/sales-tabs';
+import { CompanyContextService } from '../../../core/services/company-context';
+import { saleStatusBadgeClass, saleStatusLabel } from '../sale-status';
+import { PAYMENT_TYPE_LABELS, PaymentMethodType } from '../../../core/models/payment-method.model';
 
 type StatusFilter = 'all' | SalesOrderStatus;
-
-const STATUS_LABELS: Record<SalesOrderStatus, string> = {
-  Pending: 'Pendiente',
-  Dispatched: 'Despachada',
-  Delivered: 'Entregada',
-  Cancelled: 'Cancelada',
-};
-
-const STATUS_BADGE_CLASS: Record<SalesOrderStatus, string> = {
-  Pending: 'bg-gr-warning-bg text-gr-warning',
-  Dispatched: 'bg-gr-info-bg text-gr-info',
-  Delivered: 'bg-gr-success-bg text-gr-success',
-  Cancelled: 'bg-gr-danger-bg text-gr-danger',
-};
 
 const STATUS_VALUES: SalesOrderStatus[] = ['Pending', 'Dispatched', 'Delivered', 'Cancelled'];
 
@@ -45,15 +34,32 @@ export class SalesOrdersList {
 
   selectedOrderId = signal<string | null>(null);
 
-  statusLabel = (status: string) => STATUS_LABELS[status as SalesOrderStatus] ?? status;
-  statusBadgeClass = (status: string) =>
-    STATUS_BADGE_CLASS[status as SalesOrderStatus] ?? 'bg-gr-border-lite text-gr-sub';
+  private companyContext = inject(CompanyContextService);
+  isFactory = computed(() => this.companyContext.company()?.settings?.usesProduction === true);
+
+  statusLabel = (o: SalesOrder) => saleStatusLabel(o.status, o.freightType, this.isFactory());
+  statusBadgeClass = (o: SalesOrder) => saleStatusBadgeClass(o.status, this.isFactory());
 
   // Solo relevante mientras está Pending — una vez despachada, el stock ya se
   // descontó o el back rechazó el despacho.
   hasInsufficientStock = (order: SalesOrder) =>
     order.status === 'Pending' && order.items.some(i => i.insufficientStock);
 
+  // Cobro de la venta en palabras: "Efectivo", "Efectivo + QR", "Debe Bs 120.00" o "Sin cobrar".
+  paymentInfo = (o: SalesOrder): { label: string; detail: string | null; tone: 'paid' | 'partial' | 'none' | 'muted' } => {
+    if (o.status === 'Cancelled' || o.total == null) return { label: '—', detail: null, tone: 'muted' };
+    const paid = o.paidAmount ?? 0;
+    const due = Math.max(0, o.total - paid);
+    const methods = (o.paymentMethodTypes ?? [])
+      .map(t => PAYMENT_TYPE_LABELS[t as PaymentMethodType] ?? 'Otro')
+      .join(' + ');
+    if (o.total > 0 && due <= 0.009) return { label: methods || 'Pagada', detail: null, tone: 'paid' };
+    if (paid > 0) return { label: `Debe Bs ${due.toFixed(2)}`, detail: methods ? `Pagó ${paid.toFixed(2)} · ${methods}` : null, tone: 'partial' };
+    return { label: 'Sin cobrar', detail: null, tone: 'none' };
+  };
+
+  private customerTpl = viewChild.required<TemplateRef<{ $implicit: SalesOrder }>>('customerTpl');
+  private paymentTpl = viewChild.required<TemplateRef<{ $implicit: SalesOrder }>>('paymentTpl');
   private dateTpl = viewChild.required<TemplateRef<{ $implicit: SalesOrder }>>('dateTpl');
   private totalTpl = viewChild.required<TemplateRef<{ $implicit: SalesOrder }>>('totalTpl');
   private statusTpl = viewChild.required<TemplateRef<{ $implicit: SalesOrder }>>('statusTpl');
@@ -62,8 +68,9 @@ export class SalesOrdersList {
   columns = computed<DataTableColumn<SalesOrder>[]>(() => [
     { key: 'number', label: '#' },
     { key: 'date', label: 'Fecha', cellTemplate: this.dateTpl() },
-    { key: 'customerName', label: 'Cliente' },
+    { key: 'customerName', label: 'Cliente', cellTemplate: this.customerTpl() },
     { key: 'total', label: 'Total', cellTemplate: this.totalTpl() },
+    { key: 'paidAmount', label: 'Cobro', cellTemplate: this.paymentTpl() },
     { key: 'status', label: 'Estado', cellTemplate: this.statusTpl() },
     { key: 'id', label: '', cellTemplate: this.actionsTpl() },
   ]);

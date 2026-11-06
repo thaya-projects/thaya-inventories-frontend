@@ -31,3 +31,24 @@ export interface SaveCustomerRequest {
   city?: string | null;
   taxId?: string | null;
 }
+
+// GET /api/customers/duplicates — mientras se llena el formulario.
+// "TaxId" bloquea el alta (el backend responde 409); "Phone" y "Name" solo avisan.
+export type CustomerDuplicateMatch = 'TaxId' | 'Phone' | 'Name';
+
+export interface CustomerDuplicate {
+  id: string;
+  name: string;
+  phone: string | null;
+  taxId: string | null;
+  city: string | null;
+  isActive: boolean;
+  matches: CustomerDuplicateMatch[];
+}
+
+export interface CustomerDuplicatesResponse {
+  normalizedPhone: string | null;
+  phoneValid: boolean;
+  normalizedTaxId: string | null;
+  duplicates: CustomerDuplicate[];
+}

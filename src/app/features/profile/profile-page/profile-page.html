@@ -27,5 +27,78 @@
         </div>
       </dl>
     </div>
+
+    <!-- Verificación de teléfono -->
+    <div class="mt-6 rounded-lg border border-gr-border bg-gr-surface p-6">
+      <div class="mb-4 flex items-center justify-between gap-3">
+        <h2 class="text-lg font-semibold text-gr-text">Teléfono</h2>
+        @if (phoneStatus(); as ps) {
+          @if (ps.phoneVerified) {
+            <span class="rounded-full bg-gr-success-bg px-3 py-1 text-xs font-medium text-gr-success">Verificado</span>
+          } @else if (ps.phone) {
+            <span class="rounded-full bg-gr-warning-bg px-3 py-1 text-xs font-medium text-gr-warning">Sin verificar</span>
+          }
+        }
+      </div>
+
+      @if (phoneLoading()) {
+        <p class="text-sm text-gr-sub">Cargando...</p>
+      } @else if (phoneStatus(); as ps) {
+        @if (!ps.phone) {
+          <p class="text-sm text-gr-sub">
+            No tienes un teléfono registrado. Pídele a un administrador de tu empresa que lo agregue desde <strong>Equipo</strong>.
+          </p>
+        } @else {
+          <p class="text-gr-text tabular-nums">{{ ps.phone }}</p>
+
+          @if (!ps.phoneVerified) {
+            <p class="mt-1 text-sm text-gr-sub">
+              Verifica tu número para recibir alertas y avisos por WhatsApp. Te enviaremos un código de 6 dígitos.
+            </p>
+
+            @if (phoneError()) {
+              <div class="mt-4 rounded-sm border border-gr-danger/20 bg-gr-danger-bg px-4 py-3 text-sm text-gr-danger">
+                {{ phoneError() }}
+              </div>
+            }
+
+            @if (codeSentTo()) {
+              <form class="mt-4 space-y-3" (ngSubmit)="confirmCode()">
+                <label for="phoneCode" class="block text-sm font-medium text-gr-sub">
+                  Código enviado por WhatsApp al {{ codeSentTo() }}
+                </label>
+                <div class="flex flex-wrap gap-3">
+                  <input
+                    id="phoneCode" name="phoneCode" type="text" inputmode="numeric" autocomplete="one-time-code"
+                    maxlength="6" placeholder="000000"
+                    [ngModel]="code()" (ngModelChange)="onCodeInput($event)"
+                    class="w-40 rounded-sm border border-gr-border bg-gr-surface px-4 py-2.5 text-center text-lg tracking-[0.4em] text-gr-text tabular-nums placeholder-gr-muted transition focus:border-gr-primary focus:outline-none focus:ring-2 focus:ring-gr-primary/30"
+                  >
+                  <button
+                    type="submit" [disabled]="confirming() || code().length !== 6"
+                    class="cursor-pointer rounded-sm bg-gr-primary-dark px-5 py-2.5 font-semibold text-gr-primary-lite transition hover:brightness-95 disabled:cursor-not-allowed disabled:opacity-60"
+                  >
+                    {{ confirming() ? 'Verificando…' : 'Verificar' }}
+                  </button>
+                </div>
+                <button
+                  type="button" (click)="sendCode()" [disabled]="sending() || resendIn() > 0"
+                  class="cursor-pointer text-sm font-medium text-gr-primary transition hover:text-gr-gold disabled:cursor-not-allowed disabled:text-gr-muted"
+                >
+                  {{ resendIn() > 0 ? 'Reenviar código en ' + resendIn() + ' s' : 'Reenviar código' }}
+                </button>
+              </form>
+            } @else {
+              <button
+                type="button" (click)="sendCode()" [disabled]="sending()"
+                class="mt-4 cursor-pointer rounded-sm bg-gr-primary-dark px-5 py-2.5 font-semibold text-gr-primary-lite transition hover:brightness-95 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {{ sending() ? 'Enviando…' : 'Enviar código por WhatsApp' }}
+              </button>
+            }
+          }
+        }
+      }
+    </div>
   }
 </div>

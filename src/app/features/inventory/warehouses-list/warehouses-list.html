@@ -85,7 +85,7 @@
       (click)="toggleActive(warehouse)"
       [disabled]="updatingId() === warehouse.id"
       class="cursor-pointer text-sm font-medium transition disabled:cursor-not-allowed disabled:opacity-50"
-      [class]="warehouse.isActive ? 'text-gr-danger hover:brightness-90' : 'text-gr-success hover:brightness-90'"
+      [class]="warehouse.isActive ? 'text-gr-sub hover:text-gr-danger' : 'text-gr-success hover:brightness-90'"
     >
       {{ warehouse.isActive ? 'Desactivar' : 'Activar' }}
     </button>

@@ -38,6 +38,10 @@ export interface Purchase {
   items: PurchaseItemResponse[];
   createdAt: string;
   updatedAt: string | null;
+  // Solo en el listado: qué se compró, lo pagado y con qué tipos de pago ('Cash', 'Qr', ...).
+  lines?: { productName: string; quantity: number }[] | null;
+  paidAmount?: number | null;
+  paymentMethodTypes?: string[] | null;
 }
 
 export interface PurchaseListFilters {
@@ -62,10 +66,30 @@ export interface PurchaseItemRequest {
 }
 
 export interface SavePurchaseRequest {
+  // Solo en alta. Compra directa: el backend la guarda y la recibe en el mismo paso (stock sube al instante).
+  receiveNow?: boolean;
   date: string;
   warehouseId: string | null;
   supplierId: string;
   discount: number;
   notes: string | null;
   items: PurchaseItemRequest[];
+}
+
+// GET /api/purchases/last-cost?productId&supplierId — para avisar subas de precio al comprar.
+export interface LastPurchaseCostItem {
+  purchaseId: string;
+  purchaseNumber: number;
+  date: string;
+  supplierId: string | null;
+  supplierName: string | null;
+  unitCost: number;
+}
+
+export interface LastPurchaseCost {
+  productId: string;
+  last: LastPurchaseCostItem | null;
+  lastFromSupplier: LastPurchaseCostItem | null;
+  averageCost: number;
+  salePrice: number | null;
 }

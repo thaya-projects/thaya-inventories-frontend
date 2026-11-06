@@ -1,6 +1,6 @@
-<app-modal title="Entrada / Salida de inventario" size="md" (close)="close.emit()">
+<app-modal title="Movimiento manual" size="lg" (close)="close.emit()">
   @if (errorMessage()) {
-    <div class="mb-6 rounded-sm border border-gr-danger/20 bg-gr-danger-bg px-4 py-3 text-sm text-gr-danger">
+    <div role="alert" class="mb-5 rounded-md border border-gr-danger/20 bg-gr-danger-bg px-4 py-3 text-sm text-gr-danger">
       {{ errorMessage() }}
     </div>
   }
@@ -8,117 +8,135 @@
   @if (blockedByMultiWarehouse()) {
     <p class="text-gr-sub">El registro manual de entradas/salidas todavía no está disponible para empresas con multi-almacén activado.</p>
   } @else if (loading()) {
-    <p class="text-gr-sub">Cargando...</p>
+    <div class="space-y-3" aria-hidden="true">
+      @for (i of [1, 2, 3]; track i) {
+        <div class="h-12 animate-pulse rounded-md bg-gr-border-lite"></div>
+      }
+    </div>
+    <p class="sr-only" role="status">Cargando…</p>
   } @else {
-    <form [formGroup]="form" (ngSubmit)="submit()">
-      <div class="space-y-4">
-        <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <div>
-            <label for="date" class="mb-1.5 block text-sm font-medium text-gr-sub">Fecha</label>
-            <input
-              id="date" type="date" formControlName="date"
-              class="w-full rounded-sm border border-gr-border bg-gr-surface px-4 py-2.5 text-gr-text transition focus:border-gr-primary focus:outline-none focus:ring-2 focus:ring-gr-primary/30"
-            >
-          </div>
-          <div>
-            <label for="movementType" class="mb-1.5 block text-sm font-medium text-gr-sub">Tipo</label>
-            <select
-              id="movementType" formControlName="movementType"
-              class="w-full rounded-sm border border-gr-border bg-gr-surface px-4 py-2.5 text-gr-text transition focus:border-gr-primary focus:outline-none focus:ring-2 focus:ring-gr-primary/30"
-            >
-              <option value="In">Entrada</option>
-              <option value="Out">Salida</option>
-            </select>
-          </div>
-        </div>
+    <!-- Lo automático no se carga aquí: así no se duplica stock ni se pierde el control de compras y ventas. -->
+    <p class="mb-5 rounded-md bg-gr-bg px-4 py-3 text-sm text-gr-sub">
+      Las ventas y compras ya mueven el stock solas.
+      ¿Le compraste a un proveedor? <a routerLink="/purchases" [queryParams]="{ new: true }" (click)="close.emit()" class="font-medium text-gr-primary underline-offset-4 hover:underline">Regístralo en Compras</a>.
+      ¿Lo vendiste? <a routerLink="/sales/new" (click)="close.emit()" class="font-medium text-gr-primary underline-offset-4 hover:underline">Haz una venta</a>.
+    </p>
 
-        <div>
-          <label for="productId" class="mb-1.5 block text-sm font-medium text-gr-sub">Producto</label>
-          <select
-            id="productId" formControlName="productId"
-            class="w-full rounded-sm border border-gr-border bg-gr-surface px-4 py-2.5 text-gr-text transition focus:border-gr-primary focus:outline-none focus:ring-2 focus:ring-gr-primary/30"
-          >
-            <option value="" disabled>— Selecciona un producto —</option>
-            @for (p of products(); track p.id) {
-              <option [value]="p.id">{{ p.code }} — {{ p.name }}</option>
-            }
-          </select>
-          @if (form.controls.productId.invalid && form.controls.productId.touched) {
-            <p class="mt-1.5 text-xs text-gr-danger">Selecciona un producto.</p>
+    <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
+      <div class="space-y-5">
+        <!-- 1. ¿Entra o sale? -->
+        <div class="grid grid-cols-2 gap-2" role="radiogroup" aria-label="Entra o sale">
+          @for (t of [{ v: 'Out', label: 'Sale del inventario', hint: 'Se rompió, se perdió, se regaló…' }, { v: 'In', label: 'Entra al inventario', hint: 'Devolución, sobrante, regalo…' }]; track t.v) {
+            <button
+              type="button" role="radio" [attr.aria-checked]="type() === t.v" (click)="form.controls.movementType.setValue($any(t.v))"
+              class="cursor-pointer rounded-md px-4 py-3 text-left transition"
+              [class]="type() === t.v ? 'bg-gr-primary-dark text-gr-primary-lite' : 'bg-gr-surface text-gr-text ring-1 ring-gr-border ring-inset hover:bg-gr-bg'"
+            >
+              <span class="block font-semibold">{{ t.label }}</span>
+              <span class="block text-xs" [class]="type() === t.v ? 'text-gr-primary-lite/80' : 'text-gr-sub'">{{ t.hint }}</span>
+            </button>
           }
         </div>
 
-        <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <div>
-            <label for="quantity" class="mb-1.5 block text-sm font-medium text-gr-sub">Cantidad</label>
-            <input
-              id="quantity" type="number" step="any" formControlName="quantity"
-              class="w-full rounded-sm border border-gr-border bg-gr-surface px-4 py-2.5 text-gr-text transition focus:border-gr-primary focus:outline-none focus:ring-2 focus:ring-gr-primary/30"
-            >
-            @if (form.controls.quantity.invalid && form.controls.quantity.touched) {
-              <p class="mt-1.5 text-xs text-gr-danger">La cantidad debe ser mayor a 0.</p>
+        <!-- 2. ¿Por qué? -->
+        <div>
+          <p class="mb-2 text-sm font-medium text-gr-text">¿Por qué?</p>
+          <div class="flex flex-wrap gap-2" role="radiogroup" aria-label="Motivo">
+            @for (r of reasons[type()]; track r.value) {
+              <button
+                type="button" role="radio" [attr.aria-checked]="reason() === r.value" (click)="reason.set(r.value); errorMessage.set(null)"
+                class="cursor-pointer rounded-full px-3.5 py-1.5 text-sm font-medium transition"
+                [class]="reason() === r.value ? 'bg-gr-primary-dark text-gr-primary-lite' : 'bg-gr-surface text-gr-sub ring-1 ring-gr-border ring-inset hover:text-gr-text'"
+              >{{ r.label }}</button>
             }
           </div>
+        </div>
+
+        <!-- 3. Qué y cuánto -->
+        <div class="grid grid-cols-1 gap-4 sm:grid-cols-[minmax(0,1fr)_7rem]">
           <div>
-            <label for="unitCost" class="mb-1.5 block text-sm font-medium text-gr-sub">Costo unitario (opcional)</label>
+            <label for="mov-product" class="mb-1.5 block text-sm font-medium text-gr-text">Producto</label>
+            <app-product-picker
+              inputId="mov-product"
+              [selected]="selectedProduct()"
+              [preloaded]="products()"
+              [invalid]="form.controls.productId.invalid && form.controls.productId.touched"
+              (picked)="onProductPicked($event)"
+            />
+          </div>
+          <div>
+            <label for="quantity" class="mb-1.5 block text-sm font-medium text-gr-text">Cantidad</label>
             <input
-              id="unitCost" type="number" step="any" formControlName="unitCost"
-              class="w-full rounded-sm border border-gr-border bg-gr-surface px-4 py-2.5 text-gr-text transition focus:border-gr-primary focus:outline-none focus:ring-2 focus:ring-gr-primary/30"
+              id="quantity" type="number" min="0" step="any" inputmode="decimal" formControlName="quantity"
+              class="w-full rounded-md border border-gr-border bg-gr-surface px-3 py-2 text-gr-text tabular-nums transition focus:border-gr-primary focus:outline-none focus:ring-2 focus:ring-gr-primary/30 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none"
             >
           </div>
         </div>
 
-        @if (usesLots()) {
-          <div>
-            <label for="lotOrSerial" class="mb-1.5 block text-sm font-medium text-gr-sub">Lote / serie (opcional)</label>
-            <input
-              id="lotOrSerial" type="text" formControlName="lotOrSerial"
-              class="w-full rounded-sm border border-gr-border bg-gr-surface px-4 py-2.5 text-gr-text transition focus:border-gr-primary focus:outline-none focus:ring-2 focus:ring-gr-primary/30"
-            >
-          </div>
+        @if (selectedProduct(); as p) {
+          <p class="-mt-2 text-sm text-gr-sub">
+            Stock: <span class="font-medium text-gr-text tabular-nums">{{ p.currentStock }}</span>
+            →
+            <span class="font-semibold tabular-nums" [class]="(stockAfter() ?? 0) < 0 ? 'text-gr-danger' : 'text-gr-text'">{{ stockAfter() }}</span>
+            @if ((stockAfter() ?? 0) < 0) { <span class="text-gr-danger"> · no alcanza el stock</span> }
+          </p>
         }
 
-        @if (form.controls.movementType.value === 'In') {
+        <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div>
-            <label for="supplierId" class="mb-1.5 block text-sm font-medium text-gr-sub">Proveedor (opcional)</label>
-            <select
-              id="supplierId" formControlName="supplierId"
-              class="w-full rounded-sm border border-gr-border bg-gr-surface px-4 py-2.5 text-gr-text transition focus:border-gr-primary focus:outline-none focus:ring-2 focus:ring-gr-primary/30"
+            <label for="date" class="mb-1.5 block text-sm font-medium text-gr-text">Fecha</label>
+            <input
+              id="date" type="date" formControlName="date"
+              class="w-full rounded-md border border-gr-border bg-gr-surface px-4 py-2.5 text-gr-text transition focus:border-gr-primary focus:outline-none focus:ring-2 focus:ring-gr-primary/30"
             >
-              <option value="">— Sin proveedor —</option>
-              @for (s of suppliers(); track s.id) {
-                <option [value]="s.id">{{ s.name }}</option>
-              }
-            </select>
+          </div>
+          @if (type() === 'In') {
+            <div>
+              <label for="unitCost" class="mb-1.5 block text-sm font-medium text-gr-text">Costo c/u <span class="font-normal text-gr-sub">(opcional)</span></label>
+              <input
+                id="unitCost" type="number" min="0" step="any" inputmode="decimal" formControlName="unitCost" placeholder="Si no lo sabes, déjalo vacío"
+                class="w-full rounded-md border border-gr-border bg-gr-surface px-4 py-2.5 text-gr-text placeholder-gr-muted tabular-nums transition focus:border-gr-primary focus:outline-none focus:ring-2 focus:ring-gr-primary/30 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none"
+              >
+            </div>
+          }
+        </div>
+
+        @if (usesLots()) {
+          <div class="max-w-xs">
+            <label for="lotOrSerial" class="mb-1.5 block text-sm font-medium text-gr-text">Lote / serie <span class="font-normal text-gr-sub">(opcional)</span></label>
+            <input
+              id="lotOrSerial" type="text" formControlName="lotOrSerial"
+              class="w-full rounded-md border border-gr-border bg-gr-surface px-4 py-2.5 text-gr-text transition focus:border-gr-primary focus:outline-none focus:ring-2 focus:ring-gr-primary/30"
+            >
           </div>
         }
 
         <div>
-          <label for="notes" class="mb-1.5 block text-sm font-medium text-gr-sub">Notas (opcional)</label>
-          <textarea
-            id="notes" rows="2" formControlName="notes"
-            class="w-full rounded-sm border border-gr-border bg-gr-surface px-4 py-2.5 text-gr-text transition focus:border-gr-primary focus:outline-none focus:ring-2 focus:ring-gr-primary/30"
-          ></textarea>
+          <label for="notes" class="mb-1.5 block text-sm font-medium text-gr-text">Detalle <span class="font-normal text-gr-sub">(opcional)</span></label>
+          <input
+            id="notes" type="text" formControlName="notes"
+            [placeholder]="type() === 'Out' ? 'Ej. se cayó en el depósito' : 'Ej. devolvió Juan Pérez, venta #12'"
+            class="w-full rounded-md border border-gr-border bg-gr-surface px-4 py-2.5 text-gr-text placeholder-gr-muted transition focus:border-gr-primary focus:outline-none focus:ring-2 focus:ring-gr-primary/30"
+          >
         </div>
       </div>
 
       <div class="mt-8 flex items-center justify-end gap-3 border-t border-gr-border-lite pt-5">
-        <button type="button" (click)="close.emit()" class="rounded-sm px-4 py-2.5 font-medium text-gr-sub transition hover:text-gr-text">
+        <button type="button" (click)="close.emit()" class="cursor-pointer rounded-md px-4 py-2.5 font-medium text-gr-sub transition hover:bg-gr-bg hover:text-gr-text">
           Cancelar
         </button>
         <button
-          type="submit"
-          [disabled]="submitting()"
-          class="flex items-center gap-2 rounded-sm bg-gr-primary-dark px-5 py-2.5 font-semibold text-gr-primary-lite transition hover:brightness-95 disabled:cursor-not-allowed disabled:opacity-60"
+          type="submit" [disabled]="submitting()"
+          class="flex cursor-pointer items-center gap-2 rounded-md bg-gr-primary-dark px-5 py-2.5 font-semibold text-gr-primary-lite transition hover:bg-gr-primary disabled:cursor-not-allowed disabled:opacity-60"
         >
           @if (submitting()) {
-            <svg class="h-4 w-4 animate-spin" fill="none" viewBox="0 0 24 24">
+            <svg class="h-4 w-4 animate-spin" fill="none" viewBox="0 0 24 24" aria-hidden="true">
               <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
               <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
             </svg>
             Guardando…
           } @else {
-            Registrar movimiento
+            {{ type() === 'Out' ? 'Registrar salida' : 'Registrar entrada' }}
           }
         </button>
       </div>

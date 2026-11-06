@@ -14,10 +14,10 @@
 
         <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div>
-            <label for="productId" class="mb-1.5 block text-sm font-medium text-gr-sub">Producto terminado</label>
+            <label for="productId" class="mb-1.5 block text-sm font-medium text-gr-text">Producto terminado</label>
             <select
               id="productId" formControlName="productId" (change)="onProductChange()"
-              class="w-full rounded-sm border border-gr-border bg-gr-surface px-4 py-2.5 text-gr-text transition focus:border-gr-primary focus:outline-none focus:ring-2 focus:ring-gr-primary/30"
+              class="w-full rounded-md border border-gr-border bg-gr-surface px-4 py-2.5 text-gr-text transition focus:border-gr-primary focus:outline-none focus:ring-2 focus:ring-gr-primary/30"
             >
               <option value="" disabled>— Selecciona un producto —</option>
               @for (p of finishedProducts(); track p.id) {
@@ -29,10 +29,10 @@
             }
           </div>
           <div>
-            <label for="quantityProduced" class="mb-1.5 block text-sm font-medium text-gr-sub">Cantidad a producir</label>
+            <label for="quantityProduced" class="mb-1.5 block text-sm font-medium text-gr-text">Cantidad a producir</label>
             <input
               id="quantityProduced" type="number" step="any" formControlName="quantityProduced"
-              class="w-full rounded-sm border border-gr-border bg-gr-surface px-4 py-2.5 text-gr-text transition focus:border-gr-primary focus:outline-none focus:ring-2 focus:ring-gr-primary/30"
+              class="w-full rounded-md border border-gr-border bg-gr-surface px-4 py-2.5 text-gr-text transition focus:border-gr-primary focus:outline-none focus:ring-2 focus:ring-gr-primary/30"
             >
             @if (form.controls.quantityProduced.invalid && form.controls.quantityProduced.touched) {
               <p class="mt-1.5 text-xs text-gr-danger">Ingresa una cantidad válida.</p>
@@ -40,7 +40,7 @@
           </div>
 
           <div>
-            <label class="mb-1.5 block text-sm font-medium text-gr-sub">Código de lote</label>
+            <label class="mb-1.5 block text-sm font-medium text-gr-text">Código de lote</label>
             <app-lot-code-field
               [value]="form.controls.lotCode.value ?? ''"
               [loading]="generatingLotCode()"
@@ -49,52 +49,52 @@
             @if (form.controls.lotCode.invalid && form.controls.lotCode.touched) {
               <p class="mt-1.5 text-xs text-gr-danger">Máximo 40 caracteres.</p>
             }
-            <p class="mt-1.5 text-xs text-gr-muted">Se genera solo al elegir el producto — podés editarlo.</p>
+            <p class="mt-1.5 text-xs text-gr-muted">Se genera solo al elegir el producto — puedes editarlo.</p>
           </div>
           <div>
-            <label for="date" class="mb-1.5 block text-sm font-medium text-gr-sub">Fecha</label>
+            <label for="date" class="mb-1.5 block text-sm font-medium text-gr-text">Fecha</label>
             <input
               id="date" type="date" formControlName="date"
-              class="w-full rounded-sm border border-gr-border bg-gr-surface px-4 py-2.5 text-gr-text transition focus:border-gr-primary focus:outline-none focus:ring-2 focus:ring-gr-primary/30"
+              class="w-full rounded-md border border-gr-border bg-gr-surface px-4 py-2.5 text-gr-text transition focus:border-gr-primary focus:outline-none focus:ring-2 focus:ring-gr-primary/30"
             >
           </div>
 
           <div>
-            <label for="expirationDate" class="mb-1.5 block text-sm font-medium text-gr-sub">Vencimiento (opcional)</label>
+            <label for="expirationDate" class="mb-1.5 block text-sm font-medium text-gr-text">Vencimiento <span class="font-normal text-gr-sub">(opcional)</span></label>
             <input
               id="expirationDate" type="date" formControlName="expirationDate"
-              class="w-full rounded-sm border border-gr-border bg-gr-surface px-4 py-2.5 text-gr-text transition focus:border-gr-primary focus:outline-none focus:ring-2 focus:ring-gr-primary/30"
+              class="w-full rounded-md border border-gr-border bg-gr-surface px-4 py-2.5 text-gr-text transition focus:border-gr-primary focus:outline-none focus:ring-2 focus:ring-gr-primary/30"
             >
           </div>
           <div>
-            <label for="sanitaryRegistration" class="mb-1.5 block text-sm font-medium text-gr-sub">Registro sanitario (opcional)</label>
+            <label for="sanitaryRegistration" class="mb-1.5 block text-sm font-medium text-gr-text">Registro sanitario <span class="font-normal text-gr-sub">(opcional)</span></label>
             <input
               id="sanitaryRegistration" type="text" formControlName="sanitaryRegistration"
-              class="w-full rounded-sm border border-gr-border bg-gr-surface px-4 py-2.5 text-gr-text transition focus:border-gr-primary focus:outline-none focus:ring-2 focus:ring-gr-primary/30"
+              class="w-full rounded-md border border-gr-border bg-gr-surface px-4 py-2.5 text-gr-text transition focus:border-gr-primary focus:outline-none focus:ring-2 focus:ring-gr-primary/30"
             >
           </div>
 
           <div>
-            <label for="referencePrice" class="mb-1.5 block text-sm font-medium text-gr-sub">Precio de referencia (opcional)</label>
+            <label for="referencePrice" class="mb-1.5 block text-sm font-medium text-gr-text">Precio de referencia <span class="font-normal text-gr-sub">(opcional)</span></label>
             <input
               id="referencePrice" type="number" step="any" formControlName="referencePrice"
-              class="w-full rounded-sm border border-gr-border bg-gr-surface px-4 py-2.5 text-gr-text transition focus:border-gr-primary focus:outline-none focus:ring-2 focus:ring-gr-primary/30"
+              class="w-full rounded-md border border-gr-border bg-gr-surface px-4 py-2.5 text-gr-text transition focus:border-gr-primary focus:outline-none focus:ring-2 focus:ring-gr-primary/30"
             >
           </div>
           <div>
-            <label for="wasteQuantity" class="mb-1.5 block text-sm font-medium text-gr-sub">Merma de PT (opcional)</label>
+            <label for="wasteQuantity" class="mb-1.5 block text-sm font-medium text-gr-text">Merma de PT <span class="font-normal text-gr-sub">(opcional)</span></label>
             <input
               id="wasteQuantity" type="number" step="any" formControlName="wasteQuantity"
-              class="w-full rounded-sm border border-gr-border bg-gr-surface px-4 py-2.5 text-gr-text transition focus:border-gr-primary focus:outline-none focus:ring-2 focus:ring-gr-primary/30"
+              class="w-full rounded-md border border-gr-border bg-gr-surface px-4 py-2.5 text-gr-text transition focus:border-gr-primary focus:outline-none focus:ring-2 focus:ring-gr-primary/30"
             >
             <p class="mt-1.5 text-xs text-gr-muted">Puede ir en 0 y afinarse al completar la orden.</p>
           </div>
 
           <div class="sm:col-span-2">
-            <label for="wasteNotes" class="mb-1.5 block text-sm font-medium text-gr-sub">Nota de merma (opcional)</label>
+            <label for="wasteNotes" class="mb-1.5 block text-sm font-medium text-gr-text">Nota de merma <span class="font-normal text-gr-sub">(opcional)</span></label>
             <input
               id="wasteNotes" type="text" formControlName="wasteNotes"
-              class="w-full rounded-sm border border-gr-border bg-gr-surface px-4 py-2.5 text-gr-text transition focus:border-gr-primary focus:outline-none focus:ring-2 focus:ring-gr-primary/30"
+              class="w-full rounded-md border border-gr-border bg-gr-surface px-4 py-2.5 text-gr-text transition focus:border-gr-primary focus:outline-none focus:ring-2 focus:ring-gr-primary/30"
             >
           </div>
         </div>
@@ -131,7 +131,7 @@
                   <td class="py-2 pr-3">
                     <select
                       formControlName="productId" (change)="onConsumptionProductChange(i)"
-                      class="w-full rounded-sm border border-gr-border bg-gr-surface px-2.5 py-2 text-gr-text transition focus:border-gr-primary focus:outline-none focus:ring-2 focus:ring-gr-primary/30"
+                      class="w-full rounded-md border border-gr-border bg-gr-surface px-2.5 py-2 text-gr-text transition focus:border-gr-primary focus:outline-none focus:ring-2 focus:ring-gr-primary/30"
                     >
                       <option value="" disabled>— Producto —</option>
                       @for (p of mpProducts(); track p.id) {
@@ -142,19 +142,19 @@
                   <td class="py-2 pr-3">
                     <input
                       type="number" step="any" formControlName="quantity"
-                      class="w-full rounded-sm border border-gr-border bg-gr-surface px-2.5 py-2 text-gr-text transition focus:border-gr-primary focus:outline-none focus:ring-2 focus:ring-gr-primary/30"
+                      class="w-full rounded-md border border-gr-border bg-gr-surface px-2.5 py-2 text-gr-text transition focus:border-gr-primary focus:outline-none focus:ring-2 focus:ring-gr-primary/30"
                     >
                   </td>
                   <td class="py-2 pr-3">
                     <input
                       type="number" step="any" formControlName="wasteQuantity"
-                      class="w-full rounded-sm border border-gr-border bg-gr-surface px-2.5 py-2 text-gr-text transition focus:border-gr-primary focus:outline-none focus:ring-2 focus:ring-gr-primary/30"
+                      class="w-full rounded-md border border-gr-border bg-gr-surface px-2.5 py-2 text-gr-text transition focus:border-gr-primary focus:outline-none focus:ring-2 focus:ring-gr-primary/30"
                     >
                   </td>
                   <td class="py-2 pr-3">
                     <input
                       type="number" step="any" formControlName="unitCost"
-                      class="w-full rounded-sm border border-gr-border bg-gr-surface px-2.5 py-2 text-gr-text transition focus:border-gr-primary focus:outline-none focus:ring-2 focus:ring-gr-primary/30"
+                      class="w-full rounded-md border border-gr-border bg-gr-surface px-2.5 py-2 text-gr-text transition focus:border-gr-primary focus:outline-none focus:ring-2 focus:ring-gr-primary/30"
                     >
                   </td>
                   <td class="py-2 text-right">

@@ -77,7 +77,7 @@
       (click)="askToggleActive(plan)"
       [disabled]="updatingId() === plan.id"
       class="cursor-pointer text-sm font-medium transition disabled:cursor-not-allowed disabled:opacity-50"
-      [class]="plan.isActive ? 'text-gr-danger hover:brightness-90' : 'text-gr-success hover:brightness-90'"
+      [class]="plan.isActive ? 'text-gr-sub hover:text-gr-danger' : 'text-gr-success hover:brightness-90'"
     >
       {{ plan.isActive ? 'Desactivar' : 'Activar' }}
     </button>

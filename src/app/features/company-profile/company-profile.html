@@ -38,10 +38,10 @@
 
       <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <div class="sm:col-span-2">
-          <label class="mb-1.5 block text-sm font-medium text-gr-sub">Nombre</label>
+          <label class="mb-1.5 block text-sm font-medium text-gr-text">Nombre</label>
           <input
             type="text" formControlName="name"
-            class="w-full rounded-sm border border-gr-border bg-gr-bg px-3.5 py-2.5 text-gr-text outline-none focus:border-gr-primary-mid"
+            class="w-full rounded-md border border-gr-border bg-gr-bg px-3.5 py-2.5 text-gr-text outline-none focus:border-gr-primary-mid"
           />
           @if (form.controls.name.invalid && form.controls.name.touched) {
             <p class="mt-1 text-xs text-gr-danger">El nombre es obligatorio.</p>
@@ -49,28 +49,31 @@
         </div>
 
         <div>
-          <label class="mb-1.5 block text-sm font-medium text-gr-sub">Industria</label>
-          <input type="text" formControlName="industry" class="w-full rounded-sm border border-gr-border bg-gr-bg px-3.5 py-2.5 text-gr-text outline-none focus:border-gr-primary-mid" />
+          <label class="mb-1.5 block text-sm font-medium text-gr-text">Industria</label>
+          <input type="text" formControlName="industry" class="w-full rounded-md border border-gr-border bg-gr-bg px-3.5 py-2.5 text-gr-text outline-none focus:border-gr-primary-mid" />
         </div>
         <div>
-          <label class="mb-1.5 block text-sm font-medium text-gr-sub">NIT</label>
-          <input type="text" formControlName="taxId" class="w-full rounded-sm border border-gr-border bg-gr-bg px-3.5 py-2.5 text-gr-text outline-none focus:border-gr-primary-mid" />
+          <label class="mb-1.5 block text-sm font-medium text-gr-text">NIT</label>
+          <input type="text" formControlName="taxId" class="w-full rounded-md border border-gr-border bg-gr-bg px-3.5 py-2.5 text-gr-text outline-none focus:border-gr-primary-mid" />
         </div>
         <div>
-          <label class="mb-1.5 block text-sm font-medium text-gr-sub">Teléfono</label>
-          <input type="text" formControlName="phone" class="w-full rounded-sm border border-gr-border bg-gr-bg px-3.5 py-2.5 text-gr-text outline-none focus:border-gr-primary-mid" />
+          <label for="company-phone" class="mb-1.5 block text-sm font-medium text-gr-text">Teléfono</label>
+          <app-phone-field inputId="company-phone" formControlName="phone" [invalid]="form.controls.phone.invalid && form.controls.phone.touched" />
+          @if (form.controls.phone.errors?.['phone'] && form.controls.phone.touched) {
+            <p class="mt-1.5 text-xs text-gr-danger">{{ form.controls.phone.errors?.['phone'] }}</p>
+          }
         </div>
         <div>
-          <label class="mb-1.5 block text-sm font-medium text-gr-sub">Correo</label>
-          <input type="email" formControlName="email" class="w-full rounded-sm border border-gr-border bg-gr-bg px-3.5 py-2.5 text-gr-text outline-none focus:border-gr-primary-mid" />
+          <label class="mb-1.5 block text-sm font-medium text-gr-text">Correo</label>
+          <input type="email" formControlName="email" class="w-full rounded-md border border-gr-border bg-gr-bg px-3.5 py-2.5 text-gr-text outline-none focus:border-gr-primary-mid" />
         </div>
         <div>
-          <label class="mb-1.5 block text-sm font-medium text-gr-sub">Ciudad</label>
-          <input type="text" formControlName="city" class="w-full rounded-sm border border-gr-border bg-gr-bg px-3.5 py-2.5 text-gr-text outline-none focus:border-gr-primary-mid" />
+          <label class="mb-1.5 block text-sm font-medium text-gr-text">Ciudad</label>
+          <input type="text" formControlName="city" class="w-full rounded-md border border-gr-border bg-gr-bg px-3.5 py-2.5 text-gr-text outline-none focus:border-gr-primary-mid" />
         </div>
         <div>
-          <label class="mb-1.5 block text-sm font-medium text-gr-sub">Dirección</label>
-          <input type="text" formControlName="address" class="w-full rounded-sm border border-gr-border bg-gr-bg px-3.5 py-2.5 text-gr-text outline-none focus:border-gr-primary-mid" />
+          <label class="mb-1.5 block text-sm font-medium text-gr-text">Dirección</label>
+          <input type="text" formControlName="address" class="w-full rounded-md border border-gr-border bg-gr-bg px-3.5 py-2.5 text-gr-text outline-none focus:border-gr-primary-mid" />
         </div>
       </div>
 
@@ -141,7 +144,7 @@
       <span class="block text-xs font-medium tracking-wide text-gr-muted uppercase">Operación</span>
       <span class="mt-1 block font-medium text-gr-text">{{ presetLabel() }}</span>
     </div>
-    <p class="mt-3 text-sm text-gr-sub">Para cambiar módulos, contactá a Thaya.</p>
+    <p class="mt-3 text-sm text-gr-sub">Para cambiar módulos, contacta a Thaya.</p>
   </div>
 
   <!-- Códigos de lote — solo si la empresa usa lotes (no aplica para "Compran y venden") -->
@@ -153,7 +156,7 @@
     </p>
 
     <div>
-      <label class="mb-1.5 block text-sm font-medium text-gr-sub">¿Quién arma el código?</label>
+      <label class="mb-1.5 block text-sm font-medium text-gr-text">¿Quién arma el código?</label>
       <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
         <button
           type="button" (click)="setLotCodeMode('auto')"
@@ -177,19 +180,19 @@
     <div class="mt-5 grid grid-cols-1 gap-4" [class.sm:grid-cols-2]="showMpPrefix()">
       @if (showMpPrefix()) {
         <div>
-          <label class="mb-1.5 block text-sm font-medium text-gr-sub">Prefijo para materia prima (MP)</label>
+          <label class="mb-1.5 block text-sm font-medium text-gr-text">Prefijo para materia prima (MP)</label>
           <input
             type="text" formControlName="lotCodePrefixMp" placeholder="MP"
-            class="w-full rounded-sm border border-gr-border bg-gr-surface px-3.5 py-2.5 text-gr-text placeholder-gr-muted transition focus:border-gr-primary focus:outline-none focus:ring-2 focus:ring-gr-primary/30"
+            class="w-full rounded-md border border-gr-border bg-gr-surface px-3.5 py-2.5 text-gr-text placeholder-gr-muted transition focus:border-gr-primary focus:outline-none focus:ring-2 focus:ring-gr-primary/30"
           >
           <p class="mt-1.5 text-xs text-gr-muted">Se usa al registrar compras de insumos. Ejemplo: <span class="font-mono text-gr-sub">{{ mpCodeExample() }}</span></p>
         </div>
       }
       <div>
-        <label class="mb-1.5 block text-sm font-medium text-gr-sub">Prefijo para producto terminado (PT)</label>
+        <label class="mb-1.5 block text-sm font-medium text-gr-text">Prefijo para producto terminado (PT)</label>
         <input
           type="text" formControlName="lotCodePrefixPt" placeholder="PT"
-          class="w-full rounded-sm border border-gr-border bg-gr-surface px-3.5 py-2.5 text-gr-text placeholder-gr-muted transition focus:border-gr-primary focus:outline-none focus:ring-2 focus:ring-gr-primary/30"
+          class="w-full rounded-md border border-gr-border bg-gr-surface px-3.5 py-2.5 text-gr-text placeholder-gr-muted transition focus:border-gr-primary focus:outline-none focus:ring-2 focus:ring-gr-primary/30"
         >
         <p class="mt-1.5 text-xs text-gr-muted">Se usa al registrar producción. Ejemplo: <span class="font-mono text-gr-sub">{{ ptCodeExample() }}</span></p>
       </div>

@@ -2,6 +2,10 @@
 // Create/Update/Activate/Deactivate/Kardex → Admin, Warehouse (Assistant es solo lectura).
 export type ProductType = 'RawMaterial' | 'Finished' | 'Service' | 'Kit' | 'Consumable';
 
+// Calculado por el backend: OutOfStock (stock <= 0), Low (stock <= mínimo),
+// Normal, o NotTracked si el producto no controla stock.
+export type StockStatus = 'OutOfStock' | 'Low' | 'Normal' | 'NotTracked';
+
 export interface Product {
   id: string;
   code: string;
@@ -16,6 +20,7 @@ export interface Product {
   hasVariants: boolean;
   currentStock: number;
   minimumStock: number;
+  stockStatus: StockStatus;
   averageCost: number;
   salePrice: number | null;
   // Descuento opcional: sin fechas queda activo indefinidamente; con ambas,
@@ -43,6 +48,8 @@ export interface ProductListFilters {
   isActive?: boolean;
   tracksStock?: boolean;
   hasVariants?: boolean;
+  // Solo productos que controlan stock y están en o bajo su mínimo.
+  lowStock?: boolean;
 }
 
 // currentStock y averageCost no se mandan nunca — arrancan en 0 y solo se

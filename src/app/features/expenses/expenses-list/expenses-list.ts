@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, TemplateRef, computed, inject, signal, viewChild } from '@angular/core';
-import { RouterLink } from '@angular/router';
+import { ActivatedRoute, RouterLink } from '@angular/router';
 import { DatePipe } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import { DataTable, DataTableColumn } from '../../../shared/data-table/data-table';
@@ -45,6 +45,7 @@ const PAYMENT_STATUS_BADGE_CLASS: Record<ExpensePaymentStatus, string> = {
 export class ExpensesList {
   private expensesService = inject(ExpensesService);
   private toast = inject(ToastService);
+  private route = inject(ActivatedRoute);
 
   expenses = signal<Expense[]>([]);
   totalCount = signal(0);
@@ -81,6 +82,9 @@ export class ExpensesList {
   ]);
 
   constructor() {
+    if (this.route.snapshot.queryParamMap.get('new') === 'true') {
+      this.showFormModal.set(true);
+    }
     this.load();
   }
 

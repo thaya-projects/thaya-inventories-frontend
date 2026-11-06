@@ -4,43 +4,38 @@ import { DatePipe } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { HttpErrorResponse } from '@angular/common/http';
 import { SalesOrdersService } from '../../../core/services/sales-orders';
-import { SalesOrder, SalesOrderStatus } from '../../../core/models/sales-order.model';
+import { SalesOrder } from '../../../core/models/sales-order.model';
 import { SalesOrderPaymentsService } from '../../../core/services/sales-order-payments';
 import { SalesOrderPayment } from '../../../core/models/sales-order-payment.model';
 import { PaymentMethodsService } from '../../../core/services/payment-methods';
-import { PaymentMethod } from '../../../core/models/payment-method.model';
+import { PaymentMethod, paymentMethodLabel } from '../../../core/models/payment-method.model';
 import { AuthService } from '../../../core/services/auth';
 import { CompanyContextService } from '../../../core/services/company-context';
 import { ToastService } from '../../../shared/toast/toast.service';
 import { Modal } from '../../../shared/modal/modal';
 import { ConfirmDialog } from '../../../shared/confirm-dialog/confirm-dialog';
+import { InfoHint } from '../../../shared/info-hint/info-hint';
+import { dispatchActionLabel, saleStatusBadgeClass, saleStatusLabel } from '../sale-status';
 
 type SalesOrderConfirmAction = 'dispatch' | 'cancel';
 
-const STATUS_LABELS: Record<SalesOrderStatus, string> = {
-  Pending: 'Pendiente',
-  Dispatched: 'Despachada',
-  Delivered: 'Entregada',
-  Cancelled: 'Cancelada',
-};
-
-const STATUS_BADGE_CLASS: Record<SalesOrderStatus, string> = {
-  Pending: 'bg-gr-warning-bg text-gr-warning',
-  Dispatched: 'bg-gr-info-bg text-gr-info',
-  Delivered: 'bg-gr-success-bg text-gr-success',
-  Cancelled: 'bg-gr-danger-bg text-gr-danger',
-};
-
-const FREIGHT_LABELS: Record<string, string> = {
-  None: 'Sin flete',
-  Included: 'Incluido en la venta',
+const FREIGHT_LABELS_FACTORY: Record<string, string> = {
+  None: 'Retira en planta',
+  Included: 'Flete en la venta',
   CustomerPays: 'Cliente paga el flete',
   CompanyPays: 'Lo paga la empresa',
 };
 
+const FREIGHT_LABELS_INVENTORY: Record<string, string> = {
+  None: 'Se lo lleva',
+  Included: 'Envío',
+  CustomerPays: 'Envío (lo paga el cliente)',
+  CompanyPays: 'Envío gratis',
+};
+
 @Component({
   selector: 'app-sales-order-detail-modal',
-  imports: [RouterLink, DatePipe, ReactiveFormsModule, Modal, ConfirmDialog],
+  imports: [InfoHint, RouterLink, DatePipe, ReactiveFormsModule, Modal, ConfirmDialog],
   templateUrl: './sales-order-detail-modal.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
@@ -84,15 +79,50 @@ export class SalesOrderDetailModal implements OnInit {
   });
 
   totalPaid = computed(() => this.payments().reduce((sum, p) => sum + p.amount, 0));
+  paidPercent = computed(() => {
+    const total = this.order()?.total ?? 0;
+    return total > 0 ? Math.min(100, Math.round((this.totalPaid() / total) * 100)) : 0;
+  });
+
+  // "Efectivo" o "Efectivo + QR" si pagó con varios métodos.
+  paymentMethodsSummary = computed(() =>
+    [...new Set(this.payments().map(p => {
+      const method = this.paymentMethods().find(m => m.id === p.paymentMethodId);
+      return method ? this.methodLabel(method) : (p.paymentMethodName ?? 'Pago');
+    }))].join(' + '),
+  );
+
+  halfDue = computed(() => Math.round(((this.balanceDue() ?? 0) / 2) * 100) / 100);
+
+  // Estado del cobro en palabras: lo que el usuario necesita saber de un vistazo.
+  methodLabel = (m: PaymentMethod) => paymentMethodLabel(m, this.paymentMethods());
+  payMethodLabel = (methodId: string | null, fallback: string | null) => {
+    const m = this.paymentMethods().find(x => x.id === methodId);
+    return m ? this.methodLabel(m) : (fallback ?? 'Pago');
+  };
+
+  paymentStatus = computed(() => {
+    const due = this.balanceDue() ?? 0;
+    const paid = this.totalPaid();
+    if (due <= 0) return { label: 'Pagada', badge: 'bg-gr-success-bg text-gr-success' };
+    if (paid > 0) return { label: 'Pago parcial', badge: 'bg-gr-warning-bg text-gr-warning' };
+    return { label: 'Sin cobrar', badge: 'bg-gr-danger-bg text-gr-danger' };
+  });
+
   balanceDue = computed(() => {
     const total = this.order()?.total;
     return total != null ? Math.max(0, total - this.totalPaid()) : null;
   });
 
-  statusLabel = (status: string) => STATUS_LABELS[status as SalesOrderStatus] ?? status;
-  statusBadgeClass = (status: string) =>
-    STATUS_BADGE_CLASS[status as SalesOrderStatus] ?? 'bg-gr-border-lite text-gr-sub';
-  freightLabel = (type: string) => FREIGHT_LABELS[type] ?? type;
+  isFactory = computed(() => this.companyContext.company()?.settings?.usesProduction === true);
+  statusLabel = (o: SalesOrder) => saleStatusLabel(o.status, o.freightType, this.isFactory());
+  statusBadgeClass = (o: SalesOrder) => saleStatusBadgeClass(o.status, this.isFactory());
+  // "Despachar" (fábrica) · "Entregar" / "Marcar como enviada" (inventario).
+  dispatchLabel = computed(() => {
+    const o = this.order();
+    return o ? dispatchActionLabel(o.freightType, this.isFactory()) : 'Despachar';
+  });
+  freightLabel = (type: string) => (this.isFactory() ? FREIGHT_LABELS_FACTORY : FREIGHT_LABELS_INVENTORY)[type] ?? type;
 
   paymentForm = this.fb.group({
     paymentMethodId: ['', Validators.required],
@@ -196,9 +226,14 @@ export class SalesOrderDetailModal implements OnInit {
   confirmAction = signal<SalesOrderConfirmAction | null>(null);
 
   dispatchConfirmMessage = computed(() => {
-    const base = 'Esto saca stock y no se puede deshacer. ¿Confirmas despachar esta venta?';
+    const o = this.order();
+    const base = this.isFactory()
+      ? 'Esto saca stock y no se puede deshacer. ¿Confirmas despachar esta venta?'
+      : o && o.freightType !== 'None'
+        ? 'Los productos salen del inventario y la venta queda como Enviada. ¿Confirmas?'
+        : 'Los productos salen del inventario y la venta queda como Vendida. ¿Confirmas que el cliente ya los recibió?';
     return this.hasInsufficientStock()
-      ? `Hay líneas sin stock suficiente. Si al confirmar no alcanza, el sistema rechazará el despacho. ${base}`
+      ? `Hay productos sin stock suficiente: si no alcanza, el sistema no dejará continuar. ${base}`
       : base;
   });
 
@@ -231,7 +266,7 @@ export class SalesOrderDetailModal implements OnInit {
         this.order.set(order);
         this.working.set(false);
         this.confirmAction.set(null);
-        this.toast.success('Venta despachada — el stock ya se actualizó.');
+        this.toast.success(`Venta ${saleStatusLabel(order.status, order.freightType, this.isFactory()).toLowerCase()}. El stock ya se actualizó.`);
         this.updated.emit(order);
       },
       error: (err: HttpErrorResponse) => {

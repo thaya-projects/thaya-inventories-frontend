@@ -31,6 +31,8 @@ const PAGE_NAMES: Record<string, string> = {
   '/sales/new':                'Nueva venta',
   '/sales/customers':          'Clientes',
   '/cash/payments':            'Pagos',
+  '/cash/receivables':         'Por cobrar',
+  '/cash/payables':            'Por pagar',
   '/cash/methods':             'Métodos de pago',
   '/expenses':                 'Gastos',
   '/notifications':            'Notificaciones',
@@ -67,10 +69,11 @@ export class Header {
 
   pageName = computed(() => {
     const path = this.pathname();
+    if (path === '/dashboard' && this.auth.currentUser()?.role !== 'SuperAdmin') return 'Inicio';
     if (PAGE_NAMES[path]) return PAGE_NAMES[path];
     if (path.startsWith('/team/')) return 'Editar usuario';
     if (path.startsWith('/inventory/warehouses/')) return 'Editar almacén';
-    if (path.endsWith('/kardex')) return 'Kardex';
+    if (path.endsWith('/kardex')) return 'Historial de stock';
     if (path.startsWith('/sales/') && path.endsWith('/edit')) return 'Editar venta';
     if (path.startsWith('/cash/payments/')) return 'Detalle de pago';
     if (path.startsWith('/expenses/')) return 'Detalle de gasto';
