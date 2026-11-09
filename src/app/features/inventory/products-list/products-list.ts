@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component, TemplateRef, computed, inject, signal, viewChild } from '@angular/core';
+import { CompanyContextService } from '../../../core/services/company-context';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { HttpErrorResponse } from '@angular/common/http';
 import { DataTable, DataTableColumn } from '../../../shared/data-table/data-table';
@@ -8,6 +9,8 @@ import { Product } from '../../../core/models/product.model';
 import { AuthService } from '../../../core/services/auth';
 import { ToastService } from '../../../shared/toast/toast.service';
 import { ProductFormModal } from '../product-form-modal/product-form-modal';
+import { ProductImportModal } from '../product-import-modal/product-import-modal';
+import { ImportProductsResult } from '../../../core/models/product-import.model';
 import { InventoryTabs } from '../inventory-tabs/inventory-tabs';
 import { StockBadge } from '../../../shared/stock-badge/stock-badge';
 import { InfoHint } from '../../../shared/info-hint/info-hint';
@@ -18,13 +21,16 @@ const SEARCH_DEBOUNCE_MS = 400;
 
 @Component({
   selector: 'app-products-list',
-  imports: [DataTable, RouterLink, SearchInput, ProductFormModal, InventoryTabs, StockBadge, InfoHint],
+  imports: [DataTable, RouterLink, SearchInput, ProductFormModal, ProductImportModal, InventoryTabs, StockBadge, InfoHint],
   templateUrl: './products-list.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ProductsList {
   private productsService = inject(ProductsService);
   private auth = inject(AuthService);
+  private companyContext = inject(CompanyContextService);
+  // El precio rebajado solo existe para la landing: sin landing se muestra el precio normal.
+  hasStore = computed(() => this.companyContext.company()?.settings.hasPublicStorefront === true);
   private toast = inject(ToastService);
   private route = inject(ActivatedRoute);
 
@@ -124,6 +130,13 @@ export class ProductsList {
     this.pageSize.set(size);
     this.page.set(1);
     this.load();
+  }
+
+  showImportModal = signal(false);
+
+  // La lista se refresca al terminar; el modal queda abierto mostrando el resultado.
+  onImported(result: ImportProductsResult) {
+    if (result.created) this.load();
   }
 
   openCreateModal() {

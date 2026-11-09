@@ -48,3 +48,6 @@ Thumbs.db
 
 # Claude Code (configuración local, no se sube)
 .claude/
+
+# Lista de skills instaladas (local)
+skills-lock.json

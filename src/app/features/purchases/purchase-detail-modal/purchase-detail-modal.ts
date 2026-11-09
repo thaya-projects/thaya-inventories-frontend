@@ -11,6 +11,7 @@ import { PaymentMethod, paymentMethodLabel } from '../../../core/models/payment-
 import { ToastService } from '../../../shared/toast/toast.service';
 import { Modal } from '../../../shared/modal/modal';
 import { ConfirmDialog } from '../../../shared/confirm-dialog/confirm-dialog';
+import { AuthService } from '../../../core/services/auth';
 import { PurchaseFormModal } from '../purchase-form-modal/purchase-form-modal';
 
 type PurchaseConfirmAction = 'receive' | 'cancel';
@@ -36,6 +37,9 @@ const STATUS_BADGE_CLASS: Record<PurchaseStatus, string> = {
 export class PurchaseDetailModal implements OnInit {
   private purchasesService = inject(PurchasesService);
   private purchasePaymentsService = inject(PurchasePaymentsService);
+  private auth = inject(AuthService);
+  // Pagar al proveedor es solo del Admin: Almacén ve la compra, no su dinero (el API le da 403).
+  isAdmin = computed(() => this.auth.currentUser()?.role === 'Admin');
   private paymentMethodsService = inject(PaymentMethodsService);
   private toast = inject(ToastService);
   private fb = inject(FormBuilder);
@@ -89,6 +93,10 @@ export class PurchaseDetailModal implements OnInit {
 
   ngOnInit(): void {
     this.load();
+    if (!this.isAdmin()) {
+      this.paymentsLoading.set(false);
+      return;
+    }
     this.loadPayments();
 
     this.paymentMethodsService.list({ isActive: true }).subscribe({

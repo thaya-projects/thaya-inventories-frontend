@@ -25,8 +25,8 @@ export class CustomersList {
   private auth = inject(AuthService);
   private toast = inject(ToastService);
 
-  // Activar/desactivar es solo Admin/Warehouse — Assistant ve la lista pero sin ese botón.
-  canToggleActive = computed(() => this.auth.currentUser()?.role !== 'Assistant');
+  // Clientes son de Admin y Ventas (Almacén no entra aquí): los dos pueden activar/desactivar.
+  canToggleActive = computed(() => ['Admin', 'Assistant'].includes(this.auth.currentUser()?.role ?? ''));
 
   customers = signal<Customer[]>([]);
   loading = signal(true);

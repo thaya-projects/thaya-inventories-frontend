@@ -190,45 +190,45 @@ export const routes: Routes = [
           ),
       },
       // --- Fase 4: Ventas ---
-      // Ver/crear/editar Pending: Admin, Warehouse, Assistant. Despachar/cancelar
-      // se gatea aparte dentro del detalle (Assistant no las ve).
+      // Ventas: Admin y Ventas (Assistant). Almacén no ve ventas. Dentro del detalle,
+      // despachar es Admin/Ventas y cancelar solo Admin.
       {
         path: 'sales',
-        canActivate: [roleGuard('Admin', 'Warehouse', 'Assistant')],
+        canActivate: [roleGuard('Admin', 'Assistant')],
         loadComponent: () =>
           import('./features/sales/sales-orders-list/sales-orders-list').then(m => m.SalesOrdersList),
       },
       // 'sales/new' y 'sales/customers*' antes que 'sales/:id'.
       {
         path: 'sales/new',
-        canActivate: [roleGuard('Admin', 'Warehouse', 'Assistant')],
+        canActivate: [roleGuard('Admin', 'Assistant')],
         loadComponent: () =>
           import('./features/sales/sales-order-form/sales-order-form').then(m => m.SalesOrderForm),
       },
       // 'sales/customers/new' e 'sales/customers/:id' ya no son páginas — alta y edición por modal desde customers-list.
       {
         path: 'sales/customers',
-        canActivate: [roleGuard('Admin', 'Warehouse', 'Assistant')],
+        canActivate: [roleGuard('Admin', 'Assistant')],
         loadComponent: () =>
           import('./features/sales/customers-list/customers-list').then(m => m.CustomersList),
       },
       {
         path: 'sales/:id/edit',
-        canActivate: [roleGuard('Admin', 'Warehouse', 'Assistant')],
+        canActivate: [roleGuard('Admin', 'Assistant')],
         loadComponent: () =>
           import('./features/sales/sales-order-form/sales-order-form').then(m => m.SalesOrderForm),
       },
       // 'sales/:id' (detalle) ya no es página — "Ver" abre un modal desde sales-orders-list.
       // --- Fase 4b: Caja ---
-      // Ver pagos: Admin, Warehouse, Assistant. CRUD de métodos: solo Admin.
+      // Ver pagos: Admin y Ventas (solo cobros de ventas). CRUD de métodos: solo Admin.
       {
         path: 'cash/payments',
-        canActivate: [roleGuard('Admin', 'Warehouse', 'Assistant')],
+        canActivate: [roleGuard('Admin', 'Assistant')],
         loadComponent: () => import('./features/cash/payments-list/payments-list').then(m => m.PaymentsList),
       },
       {
         path: 'cash/payments/:id',
-        canActivate: [roleGuard('Admin', 'Warehouse', 'Assistant')],
+        canActivate: [roleGuard('Admin', 'Assistant')],
         loadComponent: () => import('./features/cash/payment-detail/payment-detail').then(m => m.PaymentDetail),
       },
       {
@@ -264,10 +264,10 @@ export const routes: Routes = [
           import('./features/expenses/expense-detail/expense-detail').then(m => m.ExpenseDetail),
       },
 
-      // --- Reportes (empresa): rentabilidad combinando ventas/compras/gastos ---
+      // --- Reportes (solo Admin): rentabilidad combinando ventas/compras/gastos ---
       {
         path: 'reports/profit',
-        canActivate: [roleGuard('Admin', 'Warehouse', 'Assistant')],
+        canActivate: [roleGuard('Admin')],
         loadComponent: () =>
           import('./features/reports/profit-report/profit-report').then(m => m.ProfitReportPage),
       },

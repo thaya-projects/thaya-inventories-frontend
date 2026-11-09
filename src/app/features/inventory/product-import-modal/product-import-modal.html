@@ -1,0 +1,195 @@
+<app-modal title="Importar productos" size="xl" (close)="close.emit()">
+  @if (errorMessage()) {
+    <div role="alert" class="mb-5 rounded-md border border-gr-danger/20 bg-gr-danger-bg px-4 py-3 text-sm text-gr-danger">
+      {{ errorMessage() }}
+    </div>
+  }
+
+  @switch (stage()) {
+    <!-- 1. Elegir archivo -->
+    @case ('pick') {
+      <p class="-mt-2 mb-5 text-sm text-gr-sub">
+        Carga muchos productos de una vez desde Excel. Si ya tienes tu lista, súbela tal cual: reconocemos columnas como
+        <span class="font-medium text-gr-text">Nombre, Código, Precio, Costo, Stock y Categoría</span>.
+        Cualquier otra columna (Marca, Modelo, Talla, Graduación…) queda como característica del producto.
+      </p>
+
+      <input id="import-file" type="file" accept=".xlsx,.csv,.xls,.txt" class="sr-only" (change)="onFileInput($event)">
+      <label
+        for="import-file"
+        (dragover)="onDragOver($event)" (dragleave)="dragging.set(false)" (drop)="onDrop($event)"
+        class="flex min-h-48 cursor-pointer flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed px-6 py-8 text-center transition"
+        [class]="dragging() ? 'border-gr-primary bg-gr-primary-lite/50' : 'border-gr-border bg-gr-bg hover:border-gr-primary'"
+      >
+        @if (reading()) {
+          <svg class="h-7 w-7 animate-spin text-gr-primary" fill="none" viewBox="0 0 24 24" aria-hidden="true">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+          </svg>
+          <span class="text-sm font-medium text-gr-text" role="status">Leyendo {{ fileName() }}…</span>
+        } @else {
+          <svg class="h-8 w-8 text-gr-sub" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M9 13h6M9 17h6"/>
+          </svg>
+          <span class="font-medium text-gr-text">Sube tu Excel o CSV</span>
+          <span class="text-xs text-gr-sub">Arrastra el archivo aquí o toca para elegirlo. Hasta 2000 productos y 5 MB.</span>
+        }
+      </label>
+
+      <div class="mt-4 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm">
+        <span class="text-gr-sub">¿Empiezas de cero?</span>
+        <button type="button" (click)="downloadTemplate()" class="flex cursor-pointer items-center gap-1.5 font-medium text-gr-primary transition hover:text-gr-gold">
+          <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11m0 0-4-4m4 4 4-4M5 20h14"/></svg>
+          Descargar plantilla
+        </button>
+        <span class="text-xs text-gr-sub">Se abre en Excel. Llénala y súbela.</span>
+      </div>
+
+      <div class="mt-8 flex justify-end border-t border-gr-border-lite pt-5">
+        <button type="button" (click)="close.emit()" class="cursor-pointer rounded-md px-4 py-2.5 font-medium text-gr-sub transition hover:bg-gr-bg hover:text-gr-text">
+          Cancelar
+        </button>
+      </div>
+    }
+
+    <!-- 2. Revisar -->
+    @case ('preview') {
+      @if (preview(); as p) {
+        <div class="-mt-2 mb-4">
+          <p class="text-gr-text">
+            Se van a crear <span class="font-semibold">{{ p.validCount }} {{ p.validCount === 1 ? 'producto' : 'productos' }}</span>
+            @if (p.newCategories.length) {
+              y <span class="font-semibold">{{ p.newCategories.length }} {{ p.newCategories.length === 1 ? 'categoría nueva' : 'categorías nuevas' }}</span>&nbsp;<span class="text-gr-sub">({{ p.newCategories.join(', ') }})</span>
+            }.
+          </p>
+          @if (p.errorCount) {
+            <p class="mt-1 text-sm text-gr-danger">
+              {{ p.errorCount }} {{ p.errorCount === 1 ? 'fila tiene un problema y no se importa' : 'filas tienen problemas y no se importan' }}.
+              Corrígelas en el archivo y súbelas después.
+            </p>
+          }
+          <p class="mt-2 text-xs text-gr-sub">
+            Archivo: {{ fileName() }} ·
+            Columnas reconocidas: <span class="text-gr-text">{{ recognizedText() }}</span>
+            @if (attributesText()) {
+              · Como característica: <span class="text-gr-text">{{ attributesText() }}</span>
+            }
+          </p>
+          @if (missingImportant().length) {
+            <p class="mt-1 text-xs text-gr-warning">No encontramos columna de {{ missingImportant().join(' ni de ') }}: esos datos quedarán vacíos.</p>
+          }
+        </div>
+
+        @if (p.errorCount) {
+          <div class="mb-3 flex gap-2 text-sm" role="tablist">
+            <button type="button" role="tab" [attr.aria-selected]="!onlyProblems()" (click)="onlyProblems.set(false)"
+              class="cursor-pointer rounded-md px-3 py-1.5 font-medium transition"
+              [class]="!onlyProblems() ? 'bg-gr-primary-dark text-gr-primary-lite' : 'text-gr-sub hover:bg-gr-bg'">Todas ({{ p.rows.length }})</button>
+            <button type="button" role="tab" [attr.aria-selected]="onlyProblems()" (click)="onlyProblems.set(true)"
+              class="cursor-pointer rounded-md px-3 py-1.5 font-medium transition"
+              [class]="onlyProblems() ? 'bg-gr-primary-dark text-gr-primary-lite' : 'text-gr-sub hover:bg-gr-bg'">Con problemas ({{ p.errorCount }})</button>
+          </div>
+        }
+
+        <div class="max-h-[46vh] overflow-auto rounded-lg border border-gr-border-lite">
+          <table class="w-full min-w-[40rem] text-sm">
+            <thead class="sticky top-0 z-10 bg-gr-bg text-left text-xs font-medium text-gr-sub">
+              <tr>
+                <th scope="col" class="w-12 px-3 py-2 font-medium">Fila</th>
+                <th scope="col" class="px-3 py-2 font-medium">Producto</th>
+                <th scope="col" class="px-3 py-2 text-right font-medium">Precio</th>
+                <th scope="col" class="px-3 py-2 text-right font-medium">Stock</th>
+                <th scope="col" class="px-3 py-2 font-medium">Categoría</th>
+                <th scope="col" class="w-56 px-3 py-2 font-medium">Estado</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (r of visibleRows(); track r.rowNumber) {
+                <tr class="border-t border-gr-border-lite align-top" [class.bg-gr-danger-bg]="r.errors.length">
+                  <td class="px-3 py-2 text-gr-sub tabular-nums">{{ r.rowNumber }}</td>
+                  <td class="max-w-72 px-3 py-2">
+                    <p class="truncate font-medium text-gr-text">{{ r.name || '(sin nombre)' }}</p>
+                    <p class="truncate text-xs text-gr-sub">
+                      <span class="tabular-nums">{{ r.code }}</span>@if (r.codeGenerated) { <span class="text-gr-muted"> (automático)</span> }
+                      @if (attributeText(r)) { · {{ attributeText(r) }} }
+                    </p>
+                  </td>
+                  <td class="px-3 py-2 text-right whitespace-nowrap tabular-nums text-gr-text">
+                    {{ r.salePrice !== null ? 'Bs ' + (r.salePrice | number: '1.2-2') : '—' }}
+                  </td>
+                  <td class="px-3 py-2 text-right whitespace-nowrap tabular-nums text-gr-text">
+                    {{ r.stock ?? '—' }}
+                    @if (r.cost !== null) { <span class="block text-xs text-gr-sub">costo {{ r.cost | number: '1.2-2' }}</span> }
+                  </td>
+                  <td class="min-w-28 px-3 py-2 text-gr-text">{{ r.categoryName ?? '—' }}</td>
+                  <td class="px-3 py-2 text-xs">
+                    @if (r.errors.length) {
+                      @for (e of r.errors; track e) { <p class="font-medium text-gr-danger">{{ e }}</p> }
+                    } @else if (r.warnings.length) {
+                      @for (w of r.warnings; track w) { <p class="text-gr-warning">{{ w }}</p> }
+                    } @else {
+                      <span class="inline-flex items-center gap-1.5 font-medium text-gr-success">
+                        <span class="h-1.5 w-1.5 rounded-full bg-gr-success" aria-hidden="true"></span>Listo
+                      </span>
+                    }
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+
+        <div class="mt-6 flex flex-wrap items-center justify-between gap-3 border-t border-gr-border-lite pt-5">
+          <button type="button" (click)="chooseAnother()" [disabled]="importing()" class="cursor-pointer rounded-md px-4 py-2.5 font-medium text-gr-sub transition hover:bg-gr-bg hover:text-gr-text disabled:opacity-50">
+            Elegir otro archivo
+          </button>
+          <button
+            type="button" (click)="confirm()" [disabled]="importing() || p.validCount === 0"
+            class="flex cursor-pointer items-center gap-2 rounded-md bg-gr-primary-dark px-5 py-2.5 font-semibold text-gr-primary-lite transition hover:bg-gr-primary disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            @if (importing()) {
+              <svg class="h-4 w-4 animate-spin" fill="none" viewBox="0 0 24 24" aria-hidden="true">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+              </svg>
+              Importando {{ p.validCount }}…
+            } @else {
+              Importar {{ p.validCount }} {{ p.validCount === 1 ? 'producto' : 'productos' }}
+            }
+          </button>
+        </div>
+      }
+    }
+
+    <!-- 3. Resultado -->
+    @case ('done') {
+      @if (result(); as r) {
+        <div class="paid-in -mt-2 flex items-start gap-3 rounded-lg bg-gr-success-bg px-4 py-4">
+          <svg class="h-6 w-6 shrink-0 text-gr-success" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>
+          <div>
+            <p class="font-semibold text-gr-text">{{ r.created }} {{ r.created === 1 ? 'producto creado' : 'productos creados' }}</p>
+            <p class="mt-0.5 text-sm text-gr-sub">
+              @if (r.withStock) { {{ r.withStock }} con su stock inicial cargado. }
+              @if (r.categoriesCreated.length) { Categorías nuevas: {{ r.categoriesCreated.join(', ') }}. }
+            </p>
+          </div>
+        </div>
+
+        @if (r.skipped.length) {
+          <p class="mt-5 mb-2 text-sm font-medium text-gr-text">{{ r.skipped.length }} no se pudieron crear:</p>
+          <ul class="max-h-48 space-y-1 overflow-auto text-sm">
+            @for (s of r.skipped; track s.rowNumber) {
+              <li><span class="text-gr-sub tabular-nums">Fila {{ s.rowNumber }}</span> · <span class="font-medium text-gr-text">{{ s.name }}</span> — <span class="text-gr-danger">{{ s.reason }}</span></li>
+            }
+          </ul>
+        }
+
+        <div class="mt-8 flex justify-end border-t border-gr-border-lite pt-5">
+          <button type="button" (click)="close.emit()" class="cursor-pointer rounded-md bg-gr-primary-dark px-5 py-2.5 font-semibold text-gr-primary-lite transition hover:bg-gr-primary">
+            Ver mis productos
+          </button>
+        </div>
+      }
+    }
+  }
+</app-modal>

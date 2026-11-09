@@ -3,14 +3,8 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../../core/services/auth';
 import { PhoneVerificationService, PhoneVerificationStatus } from '../../../core/services/phone-verification';
+import { ROLE_LABELS } from '../../../core/models/user.model';
 import { ToastService } from '../../../shared/toast/toast.service';
-
-const ROLE_LABELS: Record<string, string> = {
-  SuperAdmin: 'Super administrador',
-  Admin: 'Administrador',
-  Warehouse: 'Almacén',
-  Assistant: 'Asistente',
-};
 
 // Datos de sesión + verificación del teléfono por WhatsApp. El teléfono en sí
 // lo edita un Admin desde Equipo (no hay PUT para el propio usuario).

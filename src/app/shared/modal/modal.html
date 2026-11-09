@@ -1,6 +1,6 @@
 <div class="fixed inset-0 z-50 flex items-center justify-center bg-gr-text/50 p-4" (click)="close.emit()">
   <div [class]="panelClass()" role="dialog" aria-modal="true" [attr.aria-labelledby]="titleId" (click)="$event.stopPropagation()">
-    <div class="mb-4 flex items-center justify-between">
+    <div class="flex shrink-0 items-center justify-between px-6 pt-6 pb-2">
       <h2 [id]="titleId" class="text-lg font-semibold text-gr-text">{{ title() }}</h2>
       <button
         type="button"
@@ -14,6 +14,10 @@
         </svg>
       </button>
     </div>
-    <ng-content />
+    <!-- Solo el cuerpo se desplaza; título y pie (si lo hay) quedan siempre a la vista. -->
+    <div class="min-h-0 flex-1 overflow-y-auto px-6 pt-2 pb-6">
+      <ng-content />
+    </div>
+    <ng-content select="[modalFooter]" />
   </div>
 </div>

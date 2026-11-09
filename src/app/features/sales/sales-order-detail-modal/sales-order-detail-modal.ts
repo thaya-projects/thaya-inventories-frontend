@@ -64,8 +64,9 @@ export class SalesOrderDetailModal implements OnInit {
   submittingPayment = signal(false);
   paymentErrorMessage = signal<string | null>(null);
 
-  // Despachar/cancelar: Admin, Warehouse — Assistant puede crear/editar Pending pero no esto.
-  canDispatchOrCancel = computed(() => this.auth.currentUser()?.role !== 'Assistant');
+  // Entregar: Admin y Ventas (Assistant). Cancelar: solo Admin (Almacén ya no ve ventas).
+  canDispatch = computed(() => ['Admin', 'Assistant'].includes(this.auth.currentUser()?.role ?? ''));
+  canCancel = computed(() => this.auth.currentUser()?.role === 'Admin');
 
   // Estricto === true (a diferencia de LotCodeField, que es visible-por-defecto)
   // — acá se trata de mostrar una columna de solo lectura con el lote asignado

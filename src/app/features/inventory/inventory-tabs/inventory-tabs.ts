@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, Component, computed, input } from '@angular/co
 import { RouterLink } from '@angular/router';
 import { inject } from '@angular/core';
 import { CompanyContextService } from '../../../core/services/company-context';
+import { AuthService } from '../../../core/services/auth';
 
 export type InventoryTab = 'products' | 'movements' | 'categories' | 'units' | 'warehouses';
 
@@ -13,6 +14,10 @@ export type InventoryTab = 'products' | 'movements' | 'categories' | 'units' | '
 })
 export class InventoryTabs {
   private companyContext = inject(CompanyContextService);
+  private auth = inject(AuthService);
+
+  // Ventas solo consulta el catálogo: sin pestañas de movimientos, categorías, unidades ni almacenes.
+  showTabs = computed(() => this.auth.currentUser()?.role !== 'Assistant');
 
   active = input.required<InventoryTab>();
 

@@ -12,13 +12,15 @@ export interface DashboardPeriod {
   to: string;
 }
 
+// Importes en null = el rol no los ve (el backend los recorta: Almacén sin importes,
+// Ventas sin por pagar ni gastos).
 export interface DashboardKpis {
-  salesTodayAmount: number;
+  salesTodayAmount: number | null;
   salesTodayCount: number;
-  salesMonthAmount: number;
-  receivablesAmount: number;
-  payablesAmount: number;
-  expensesMonthAmount: number;
+  salesMonthAmount: number | null;
+  receivablesAmount: number | null;
+  payablesAmount: number | null;
+  expensesMonthAmount: number | null;
   lowStockCount: number;
   purchasesPendingCount: number;
   salesPendingDispatchCount: number;
