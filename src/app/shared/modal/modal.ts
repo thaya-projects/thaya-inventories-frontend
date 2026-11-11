@@ -1,12 +1,13 @@
 import { ChangeDetectionStrategy, Component, DestroyRef, computed, inject, input, output } from '@angular/core';
 
-export type ModalSize = 'sm' | 'md' | 'lg' | 'xl';
+export type ModalSize = 'sm' | 'md' | 'lg' | 'xl' | '2xl';
 
 const SIZE_CLASSES: Record<ModalSize, string> = {
   sm: 'max-w-sm',
   md: 'max-w-md',
   lg: 'max-w-2xl',
   xl: 'max-w-4xl',
+  '2xl': 'max-w-5xl',
 };
 
 // Ventanas abiertas, la última es la de arriba: Esc cierra solo esa (ej. una confirmación sobre un detalle).
@@ -44,6 +45,6 @@ export class Modal {
   }
 
   panelClass = computed(
-    () => `w-full ${SIZE_CLASSES[this.size()]} max-h-[90vh] overflow-y-auto rounded-lg bg-gr-surface p-6 shadow-lg`,
+    () => `flex w-full ${SIZE_CLASSES[this.size()]} max-h-[90vh] flex-col overflow-hidden rounded-lg bg-gr-surface shadow-lg`,
   );
 }

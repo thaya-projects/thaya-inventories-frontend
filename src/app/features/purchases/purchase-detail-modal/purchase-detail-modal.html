@@ -63,6 +63,7 @@
       </p>
     }
 
+    @if (isAdmin()) {
     <div class="mt-6"></div>
     @if (!paymentsLoading() && payments().length > 0 && (balanceDue() ?? 1) <= 0) {
       <!-- Compra pagada completa: basta con confirmarlo. -->
@@ -131,6 +132,7 @@
           }
         </div>
       </div>
+    }
     }
 
     @if (p.status === 'Pending') {

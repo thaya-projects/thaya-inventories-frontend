@@ -184,7 +184,7 @@
         >
           Editar
         </a>
-        @if (canDispatchOrCancel()) {
+        @if (canDispatch()) {
           <button
             type="button" (click)="askDispatch()"
             [disabled]="working()"
@@ -192,6 +192,8 @@
           >
             {{ dispatchLabel() }}
           </button>
+        }
+        @if (canCancel()) {
           <button
             type="button" (click)="askCancel()"
             [disabled]="working()"

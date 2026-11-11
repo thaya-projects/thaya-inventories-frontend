@@ -211,7 +211,8 @@ export class Dashboard {
 
   showLowStockList = computed(() => this.isCompanyAdmin() || this.isWarehouse());
   showReceiveList = computed(() => this.isCompanyAdmin() || this.isWarehouse());
-  showDispatchList = computed(() => true);
+  // Almacén ya no ve ventas: los despachos pendientes son de Admin y Ventas.
+  showDispatchList = computed(() => this.isCompanyAdmin() || this.isAssistant());
   showPaymentsList = computed(() => this.isCompanyAdmin() || this.isAssistant());
 
   // "Inicio con botones gordos" (prompt UX Admin): hasta 4 acciones grandes

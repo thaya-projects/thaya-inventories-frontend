@@ -21,7 +21,7 @@ export interface Product {
   currentStock: number;
   minimumStock: number;
   stockStatus: StockStatus;
-  averageCost: number;
+  averageCost: number | null; // null para Ventas (no ve costos)
   salePrice: number | null;
   // Descuento opcional: sin fechas queda activo indefinidamente; con ambas,
   // se prende y apaga solo. isDiscountActive lo calcula el backend (ya
@@ -72,8 +72,8 @@ export interface CreateProductRequest {
   attributes?: Record<string, unknown>;
 }
 
-// Mismo body que crear, hasVariants incluido — confirmado que el backend ya
-// lo acepta en el PUT (antes no se podía cambiar después de creado).
+// Mismo body que crear. hasVariants en el PUT solo sirve para desmarcarlo (las
+// variantes no están soportadas). Sin attributes, el backend conserva las que había.
 export interface UpdateProductRequest {
   code: string;
   name: string;

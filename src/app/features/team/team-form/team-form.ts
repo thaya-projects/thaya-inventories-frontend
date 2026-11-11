@@ -3,16 +3,15 @@ import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { HttpErrorResponse } from '@angular/common/http';
 import { UsersService } from '../../../core/services/users';
-import { TeamRole } from '../../../core/models/user.model';
+import { ROLE_HINTS, ROLE_LABELS, TeamRole } from '../../../core/models/user.model';
 import { generatePassword } from '../../../shared/password-generator';
 import { ToastService } from '../../../shared/toast/toast.service';
 import { ResetPasswordModal, ResetPasswordResult } from '../../../shared/reset-password-modal/reset-password-modal';
 
-const ROLES: { value: TeamRole; label: string }[] = [
-  { value: 'Admin', label: 'Administrador' },
-  { value: 'Warehouse', label: 'Almacén' },
-  { value: 'Assistant', label: 'Asistente' },
-];
+const ROLES: { value: TeamRole; label: string }[] = (['Admin', 'Warehouse', 'Assistant'] as TeamRole[]).map(value => ({
+  value,
+  label: ROLE_LABELS[value],
+}));
 
 import { PhoneField, phoneFieldValidator } from '../../../shared/phone-field/phone-field';
 
@@ -32,6 +31,7 @@ export class TeamForm {
   userId = this.route.snapshot.paramMap.get('id');
   isEditMode = !!this.userId;
   roles = ROLES;
+  roleHints = ROLE_HINTS;
 
   loading = signal(this.isEditMode);
   submitting = signal(false);

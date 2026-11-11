@@ -209,7 +209,7 @@
                       <span class="block truncate text-sm font-medium text-gr-text">{{ item.customerName || 'Sin cliente' }}</span>
                       <span class="block text-xs text-gr-sub">Venta #{{ item.number }}</span>
                     </span>
-                    <span class="shrink-0 text-sm font-semibold text-gr-text tabular-nums">{{ money(item.total) }}</span>
+                    @if (item.total != null) { <span class="shrink-0 text-sm font-semibold text-gr-text tabular-nums">{{ money(item.total) }}</span> }
                   </a>
                 </li>
               }
@@ -245,7 +245,7 @@
                       <span class="block truncate text-sm font-medium text-gr-text">{{ item.supplierName || 'Sin proveedor' }}</span>
                       <span class="block text-xs text-gr-sub">Compra #{{ item.number }}</span>
                     </span>
-                    <span class="shrink-0 text-sm font-semibold text-gr-text tabular-nums">{{ money(item.total) }}</span>
+                    @if (item.total != null) { <span class="shrink-0 text-sm font-semibold text-gr-text tabular-nums">{{ money(item.total) }}</span> }
                   </a>
                 </li>
               }

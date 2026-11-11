@@ -3,14 +3,8 @@ import { RouterLink } from '@angular/router';
 import { HttpErrorResponse } from '@angular/common/http';
 import { DataTable, DataTableColumn } from '../../../shared/data-table/data-table';
 import { UsersService } from '../../../core/services/users';
-import { TeamUser } from '../../../core/models/user.model';
+import { TeamUser, ROLE_LABELS } from '../../../core/models/user.model';
 import { ToastService } from '../../../shared/toast/toast.service';
-
-const ROLE_LABELS: Record<string, string> = {
-  Admin: 'Administrador',
-  Warehouse: 'Almacén',
-  Assistant: 'Asistente',
-};
 
 @Component({
   selector: 'app-team-list',

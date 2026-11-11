@@ -47,9 +47,10 @@ const SUPER_ADMIN_NAV: NavItem[] = [
 // Ventas/Compras/Inventario/Caja, no como ítems hermanos acá. Por rol:
 //   Admin: Inicio, Ventas, Compras, Inventario, Caja, Producción (si aplica),
 //          Reportes, + grupo "Empresa" (Gastos, Equipo, Mi empresa).
-//   Warehouse: Inicio, Inventario, Compras, Ventas, Producción (si aplica), Reportes.
-//          Sin Caja, sin grupo Empresa.
-//   Assistant: Inicio, Ventas, Caja, Reportes. Sin Compras/Inventario/Producción/Empresa.
+//   Warehouse (Almacén): Inicio, Compras, Inventario, Producción (si aplica).
+//          Carga datos de inventario: sin Ventas, Caja, Reportes ni Empresa.
+//   Assistant (Ventas): Inicio, Ventas, Inventario (solo ver el catálogo), Caja
+//          (Pagos, Por cobrar). Sin Compras, Producción, Reportes ni Empresa.
 
 @Component({
   selector: 'app-sidebar',
@@ -88,12 +89,11 @@ export class Sidebar {
     const isWarehouse = role === 'Warehouse';
     const isAssistant = role === 'Assistant';
 
-    // Assistant: solo Ventas + Caja — sin catálogo/compras/producción.
-    const showInventory = features.inventory !== false && !isAssistant;
+    // Ventas ve Inventario para consultar el catálogo (sin editar); Compras no.
+    const showInventory = features.inventory !== false;
     const showPurchases = features.purchases !== false && !isAssistant;
-    const showSales = features.sales !== false;
-    // Warehouse no maneja plata — sin Caja en su menú (igual conserva acceso
-    // por URL vía roleGuard, esto es solo navegación).
+    // Almacén no ve ventas ni dinero (el backend también se lo niega).
+    const showSales = features.sales !== false && !isWarehouse;
     const showCash = !isWarehouse;
     // Producción: solo Admin/Warehouse, y solo si el plan la incluye Y la
     // empresa tiene el módulo habilitado (si no, el backend rechaza todo con
@@ -104,7 +104,7 @@ export class Sidebar {
     // demás catálogos, son dos pantallas igual de importantes, no una
     // secundaria dentro de otra.
     const cashChildren: NavChild[] = [{ label: 'Pagos', route: '/cash/payments' }];
-    if (isAdmin || role === 'Assistant') cashChildren.push({ label: 'Por cobrar', route: '/cash/receivables' });
+    if (isAdmin || isAssistant) cashChildren.push({ label: 'Por cobrar', route: '/cash/receivables' });
     if (isAdmin) cashChildren.push({ label: 'Por pagar', route: '/cash/payables' });
     if (isAdmin) cashChildren.push({ label: 'Métodos de pago', route: '/cash/methods' });
 
@@ -118,8 +118,8 @@ export class Sidebar {
     if (showInventory) items.push({ label: 'Inventario', route: '/inventory/products', icon: 'box' });
     if (showCash) items.push({ label: 'Caja', icon: 'wallet', children: cashChildren });
     if (showProduction) items.push({ label: 'Producción', route: '/production', icon: 'factory' });
-    // Rentabilidad combina ventas/compras/gastos — mismos roles que ven esos módulos.
-    items.push({ label: 'Reportes', route: '/reports/profit', icon: 'chart' });
+    // Rentabilidad combina ventas/compras/gastos: información del dueño.
+    if (isAdmin) items.push({ label: 'Reportes', route: '/reports/profit', icon: 'chart' });
 
     if (isAdmin) {
       items.push({ label: 'Gastos', route: '/expenses', icon: 'card', dividerBefore: 'Empresa' });

@@ -3,6 +3,21 @@
 // (el backend responde 400 "No se puede asignar el rol SuperAdmin." si se intenta).
 export type TeamRole = 'Admin' | 'Warehouse' | 'Assistant';
 
+// "Assistant" se muestra como Ventas: el valor técnico no cambia (va en el JWT y en los [Authorize]).
+export const ROLE_LABELS: Record<string, string> = {
+  SuperAdmin: 'Super administrador',
+  Admin: 'Administrador',
+  Warehouse: 'Almacén',
+  Assistant: 'Ventas',
+};
+
+// Qué puede hacer cada rol, en una línea (se ve al elegir el rol en Equipo).
+export const ROLE_HINTS: Record<TeamRole, string> = {
+  Admin: 'Todo: ventas, compras, inventario, caja, gastos, reportes, equipo y empresa.',
+  Warehouse: 'Carga inventario: productos, stock, compras y producción. No ve ventas ni dinero.',
+  Assistant: 'Vende, entrega y cobra. Ve productos y stock, sin costos ni ganancias.',
+};
+
 export interface TeamUser {
   id: string;
   fullName: string;

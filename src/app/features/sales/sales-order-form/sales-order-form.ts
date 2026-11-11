@@ -159,7 +159,7 @@ export class SalesOrderForm {
     });
 
     // La empresa se carga en el Shell; cuando se sabe que es fábrica, se piden los transportistas.
-    // Si el rol no tiene acceso (Asistente), queda la lista vacía en vez de romper la pantalla.
+    // Si el rol no tiene acceso (Ventas), queda la lista vacía en vez de romper la pantalla.
     effect(() => {
       if (!this.isFactory() || this.transportersRequested) return;
       this.transportersRequested = true;
