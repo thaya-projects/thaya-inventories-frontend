@@ -304,11 +304,11 @@
           </div>
 
           <div>
-            <label for="description" class="mb-1.5 block text-sm font-medium text-gr-text">Descripción <span class="font-normal text-gr-sub">(opcional)</span></label>
-            <textarea
-              id="description" rows="2" formControlName="description" [placeholder]="hasStore() ? 'Tamaño, material, para qué sirve… Se muestra en tu tienda online.' : 'Tamaño, material, para qué sirve…'"
-              class="w-full rounded-md border border-gr-border bg-gr-surface px-4 py-2.5 text-gr-text placeholder-gr-muted transition focus:border-gr-primary focus:outline-none focus:ring-2 focus:ring-gr-primary/30"
-            ></textarea>
+            <label for="description" (click)="focusDescription()" class="mb-1.5 block text-sm font-medium text-gr-text">Descripción <span class="font-normal text-gr-sub">(opcional)</span></label>
+            <app-rich-text-field
+              inputId="description" label="Descripción" formControlName="description"
+              [placeholder]="hasStore() ? 'Para qué sirve, qué incluye, medidas… Se muestra en tu tienda online.' : 'Para qué sirve, qué incluye, medidas…'"
+            />
           </div>
 
           <!-- Características: lo propio de cada rubro (Marca, Procesador, Graduación, Talla…) -->
@@ -337,11 +337,14 @@
                       <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg>
                     </button>
                   </div>
+                  @if (mergedAttributeHints().get(a.id); as hint) {
+                    <p class="-mt-1 text-xs text-gr-sub">En tu tienda se verá así: <span class="font-medium text-gr-text">{{ hint }}</span></p>
+                  }
                 }
               </div>
             }
             <div class="flex flex-wrap items-center gap-1.5">
-              @for (s of attributeSuggestions(); track s) {
+              @for (s of attributeSuggestions; track s) {
                 <button
                   type="button" (click)="addAttribute(s)"
                   class="cursor-pointer rounded-full bg-gr-surface px-2.5 py-1 text-xs font-medium text-gr-sub ring-1 ring-gr-border ring-inset transition hover:text-gr-text hover:ring-gr-primary"

@@ -19,6 +19,7 @@ import { ToastService } from '../../../shared/toast/toast.service';
 import { generateProductCode } from '../../../shared/product-code-generator';
 import { InfoHint } from '../../../shared/info-hint/info-hint';
 import { DateRangeField } from '../../../shared/date-range-field/date-range-field';
+import { RichTextField } from '../../../shared/rich-text-field/rich-text-field';
 
 // Explicación corta de para qué sirve cada atributo del producto (ícono "i").
 export const PRODUCT_FIELD_HINTS = {
@@ -120,7 +121,7 @@ const UNITS_PAGE_SIZE = 200;
 
 @Component({
   selector: 'app-product-form-modal',
-  imports: [ReactiveFormsModule, NgTemplateOutlet, Modal, ConfirmDialog, InfoHint, DateRangeField],
+  imports: [ReactiveFormsModule, NgTemplateOutlet, Modal, ConfirmDialog, InfoHint, DateRangeField, RichTextField],
   templateUrl: './product-form-modal.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
@@ -147,10 +148,8 @@ export class ProductFormModal implements OnInit {
   // Características (Marca, Procesador, Graduación…): se ven en la ficha de la tienda.
   attributes = signal<AttributeRow[]>([]);
   private attributeSeq = 0;
-  attributeSuggestions = computed(() => {
-    const used = new Set(this.attributes().map(a => a.key.trim().toLowerCase()));
-    return ATTRIBUTE_SUGGESTIONS.filter(s => !used.has(s.toLowerCase()));
-  });
+  // Siempre visibles: se puede agregar otra Talla u otro Color (al guardar se juntan: "Talla: 7, 8").
+  attributeSuggestions = ATTRIBUTE_SUGGESTIONS;
   private unitsRaw: { id: string; code: string; name: string; abbreviation: string | null }[] = [];
 
   // Fábrica: tipo y unidad importan (materia prima, kg, litros). Tienda: casi
@@ -393,6 +392,12 @@ export class ProductFormModal implements OnInit {
   }
 
   addAttribute(key = '') {
+    // Ya hay una fila de ese nombre sin valor: se usa esa en vez de sumar otra vacía.
+    const empty = key && this.attributes().find(a => a.key.trim().toLowerCase() === key.toLowerCase() && !a.value.trim());
+    if (empty) {
+      document.getElementById(`attr-value-${empty.id}`)?.focus();
+      return;
+    }
     this.attributes.update(list => [...list, { id: ++this.attributeSeq, key, value: '' }]);
     // Foco en el campo recién agregado: el valor si ya trae nombre, si no el nombre.
     const id = this.attributeSeq;
@@ -404,16 +409,45 @@ export class ProductFormModal implements OnInit {
     this.attributes.update(list => list.map(a => (a.id === id ? { ...a, [field]: value } : a)));
   }
 
+  // Un <label for> no enfoca un div editable: se hace a mano.
+  focusDescription() {
+    document.getElementById('description')?.focus();
+  }
+
+  // Varias filas con el mismo nombre ("Talla" 7 y "Talla" 8) se guardan juntas: "Talla: 7, 8".
+  // Para cada nombre repetido, la última fila muestra cómo va a quedar en la tienda.
+  mergedAttributeHints = computed(() => {
+    const merged = this.mergedAttributes();
+    const hints = new Map<number, string>();
+    for (const group of merged) {
+      if (group.ids.length > 1 && group.value) hints.set(group.ids[group.ids.length - 1], `${group.key}: ${group.value}`);
+    }
+    return hints;
+  });
+
+  private mergedAttributes(): { key: string; value: string; ids: number[] }[] {
+    const groups = new Map<string, { key: string; values: string[]; ids: number[] }>();
+    for (const a of this.attributes()) {
+      const key = a.key.trim();
+      if (!key) continue;
+      const id = key.toLowerCase();
+      const group = groups.get(id) ?? { key, values: [], ids: [] };
+      group.ids.push(a.id);
+      const value = a.value.trim();
+      if (value && !group.values.some(v => v.toLowerCase() === value.toLowerCase())) group.values.push(value);
+      groups.set(id, group);
+    }
+    return [...groups.values()].map(g => ({ key: g.key, value: g.values.join(', '), ids: g.ids }));
+  }
+
   removeAttribute(id: number) {
     this.attributes.update(list => list.filter(a => a.id !== id));
   }
 
   private attributesPayload(): Record<string, string> {
     const result: Record<string, string> = {};
-    for (const a of this.attributes()) {
-      const key = a.key.trim();
-      const value = a.value.trim();
-      if (key && value) result[key] = value;
+    for (const a of this.mergedAttributes()) {
+      if (a.value) result[a.key] = a.value;
     }
     return result;
   }
