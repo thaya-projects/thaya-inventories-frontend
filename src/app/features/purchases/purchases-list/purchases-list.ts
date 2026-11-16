@@ -224,8 +224,10 @@ export class PurchasesList {
     this.selectedPurchaseId.set(null);
   }
 
-  onPurchaseUpdated(updated: Purchase) {
-    this.purchases.update(list => list.map(p => (p.id === updated.id ? updated : p)));
+  // Se recarga del servidor: la respuesta de recibir/editar/cancelar no trae lo pagado
+  // (paidAmount, métodos) — solo el listado lo calcula — y pegarla dejaba "Sin pagar".
+  onPurchaseUpdated(_updated: Purchase) {
+    this.load();
   }
 }
 

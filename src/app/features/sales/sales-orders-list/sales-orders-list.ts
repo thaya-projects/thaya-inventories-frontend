@@ -136,7 +136,9 @@ export class SalesOrdersList {
     this.selectedOrderId.set(null);
   }
 
-  onOrderUpdated(updated: SalesOrder) {
-    this.orders.update(list => list.map(o => (o.id === updated.id ? updated : o)));
+  // Se recarga del servidor: la respuesta de despachar/cancelar no trae lo cobrado
+  // (paidAmount, métodos) — solo el listado lo calcula — y pegarla dejaba "Sin cobrar".
+  onOrderUpdated(_updated: SalesOrder) {
+    this.load();
   }
 }

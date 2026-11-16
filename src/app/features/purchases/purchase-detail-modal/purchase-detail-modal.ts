@@ -179,6 +179,8 @@ export class PurchaseDetailModal implements OnInit {
           this.paymentModalOpen.set(false);
           this.toast.success(markAsPaid ? 'Pago registrado como pagado.' : 'Pago registrado. Queda pendiente en Caja.');
           this.loadPayments();
+          // Avisar a la lista: su columna "Pago" depende de los pagos.
+          this.updated.emit(purchase);
         },
         error: (err: HttpErrorResponse) => {
           this.submittingPayment.set(false);

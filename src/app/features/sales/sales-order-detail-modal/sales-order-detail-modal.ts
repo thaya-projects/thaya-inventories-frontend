@@ -216,6 +216,8 @@ export class SalesOrderDetailModal implements OnInit {
           this.paymentModalOpen.set(false);
           this.toast.success(markAsPaid ? 'Cobro registrado como pagado.' : 'Cobro registrado. Queda pendiente en Caja.');
           this.loadPayments();
+          // Avisar a la lista: su columna "Cobro" depende de los pagos.
+          this.updated.emit(order);
         },
         error: (err: HttpErrorResponse) => {
           this.submittingPayment.set(false);
