@@ -497,6 +497,10 @@ export class PurchaseFormModal implements OnInit {
     if (typeof err.error?.error === 'string') {
       return err.error.error;
     }
-    return 'Ocurrió un error al guardar la compra.';
+    // Sin mensaje del servidor: al menos decir por qué, para poder resolverlo (y reportarlo).
+    if (err.status === 0) return 'No hay conexión con el servidor. Revisa tu internet y vuelve a intentar.';
+    if (err.status === 401) return 'Tu sesión venció. Vuelve a iniciar sesión e intenta de nuevo.';
+    if (err.status === 403) return 'Tu usuario no tiene permiso para registrar compras. Pídeselo a un administrador.';
+    return `No se pudo guardar la compra (error ${err.status}). Intenta de nuevo; si sigue, avísanos con este número.`;
   }
 }
