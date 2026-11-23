@@ -59,6 +59,7 @@ export class ProductionOrdersList {
     order.consumptions.some(c => c.insufficientStock);
 
   private dateTpl = viewChild.required<TemplateRef<{ $implicit: ProductionOrder }>>('dateTpl');
+  private warehouseTpl = viewChild.required<TemplateRef<{ $implicit: ProductionOrder }>>('warehouseTpl');
   private statusTpl = viewChild.required<TemplateRef<{ $implicit: ProductionOrder }>>('statusTpl');
   private actionsTpl = viewChild.required<TemplateRef<{ $implicit: ProductionOrder }>>('actionsTpl');
 
@@ -67,6 +68,7 @@ export class ProductionOrdersList {
     { key: 'date', label: 'Fecha', cellTemplate: this.dateTpl() },
     { key: 'productName', label: 'Producto' },
     { key: 'quantityProduced', label: 'Cantidad' },
+    { key: 'destinationWarehouseName', label: 'Almacén', cellTemplate: this.warehouseTpl() },
     { key: 'status', label: 'Estado', cellTemplate: this.statusTpl() },
     { key: 'id', label: '', cellTemplate: this.actionsTpl() },
   ]);

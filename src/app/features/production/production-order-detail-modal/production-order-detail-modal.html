@@ -60,6 +60,14 @@
           <dt class="text-xs font-medium tracking-wide text-gr-muted uppercase">Responsable</dt>
           <dd class="mt-1 text-gr-text">{{ o.responsibleName }}</dd>
         </div>
+        <div>
+          <dt class="text-xs font-medium tracking-wide text-gr-muted uppercase">Almacén origen (MP)</dt>
+          <dd class="mt-1 text-gr-text">{{ o.sourceWarehouseName ?? '—' }}</dd>
+        </div>
+        <div>
+          <dt class="text-xs font-medium tracking-wide text-gr-muted uppercase">Almacén destino (PT)</dt>
+          <dd class="mt-1 text-gr-text">{{ o.destinationWarehouseName ?? '—' }}</dd>
+        </div>
         @if (o.wasteNotes) {
           <div class="sm:col-span-3">
             <dt class="text-xs font-medium tracking-wide text-gr-muted uppercase">Nota de merma</dt>

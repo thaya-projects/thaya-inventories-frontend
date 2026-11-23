@@ -39,6 +39,19 @@
             <p class="mt-1.5 text-xs text-gr-muted">Al confirmar se descontará la materia prima por lote (el más antiguo primero).</p>
           </div>
 
+          <div class="sm:col-span-2">
+            <label class="mb-1.5 block text-sm font-medium text-gr-sub">Almacén origen (opcional)</label>
+            <select
+              [value]="sourceWarehouseId()" (change)="sourceWarehouseId.set($any($event.target).value)"
+              class="w-full rounded-sm border border-gr-border bg-gr-surface px-4 py-2.5 text-gr-text transition focus:border-gr-primary focus:outline-none focus:ring-2 focus:ring-gr-primary/30"
+            >
+              <option value="">— Sin almacén —</option>
+              @for (w of warehouses(); track w.id) {
+                <option [value]="w.id">{{ w.name }}</option>
+              }
+            </select>
+          </div>
+
           <div>
             <label class="mb-1.5 block text-sm font-medium text-gr-sub">Cantidad usada</label>
             <div class="flex items-center gap-2">
@@ -97,6 +110,19 @@
           @if (ptUnit(); as u) {
             <p class="mt-1.5 text-xs text-gr-muted">Unidad: {{ u.name }} ({{ u.abbreviation ?? u.code }})</p>
           }
+        </div>
+
+        <div class="mt-4">
+          <label class="mb-1.5 block text-sm font-medium text-gr-sub">Almacén destino (opcional)</label>
+          <select
+            [value]="destinationWarehouseId()" (change)="destinationWarehouseId.set($any($event.target).value)"
+            class="w-full rounded-sm border border-gr-border bg-gr-surface px-4 py-2.5 text-gr-text transition focus:border-gr-primary focus:outline-none focus:ring-2 focus:ring-gr-primary/30"
+          >
+            <option value="">— Sin almacén —</option>
+            @for (w of warehouses(); track w.id) {
+              <option [value]="w.id">{{ w.name }}</option>
+            }
+          </select>
         </div>
       </section>
 

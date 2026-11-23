@@ -1,13 +1,16 @@
 import { ChangeDetectionStrategy, Component, OnInit, computed, inject, input, output, signal } from '@angular/core';
 import { FormArray, FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { HttpErrorResponse } from '@angular/common/http';
+import { forkJoin } from 'rxjs';
 import { Modal } from '../../../shared/modal/modal';
 import { LotCodeField } from '../../../shared/lot-code-field/lot-code-field';
 import { ProductionOrdersService } from '../../../core/services/production-orders';
 import { ProductsService } from '../../../core/services/products';
 import { LotsService } from '../../../core/services/lots';
+import { WarehousesService } from '../../../core/services/warehouses';
 import { CompanyContextService } from '../../../core/services/company-context';
 import { Product } from '../../../core/models/product.model';
+import { Warehouse } from '../../../core/models/warehouse.model';
 import { ProductionOrder, SaveProductionOrderRequest } from '../../../core/models/production-order.model';
 
 const PRODUCTS_PAGE_SIZE = 200;
@@ -43,6 +46,7 @@ export class ProductionOrderFormModal implements OnInit {
   private productionOrdersService = inject(ProductionOrdersService);
   private productsService = inject(ProductsService);
   private lotsService = inject(LotsService);
+  private warehousesService = inject(WarehousesService);
   private companyContext = inject(CompanyContextService);
 
   // null/omitido = alta. Con id = edición de esa orden (solo si está Planned/InProgress).
@@ -63,11 +67,18 @@ export class ProductionOrderFormModal implements OnInit {
   // trackear stock, pero no es materia prima.
   mpProducts = computed(() => this.products().filter(p => p.productType === 'RawMaterial'));
 
+  // Ambos opcionales — de dónde sale la MP y a dónde entra el PT. Sin
+  // multi-almacén la empresa suele tener uno solo, pero el selector queda
+  // armado igual para cuando haya más.
+  warehouses = signal<Warehouse[]>([]);
+
   today = new Date().toISOString().slice(0, 10);
 
   form = this.fb.group({
     lotCode: ['', Validators.maxLength(40)],
     date: [this.today, Validators.required],
+    sourceWarehouseId: [''],
+    destinationWarehouseId: [''],
     productId: ['', Validators.required],
     unitOfMeasureId: [''],
     quantityProduced: [0, [Validators.required, Validators.min(0.0001)]],
@@ -84,10 +95,14 @@ export class ProductionOrderFormModal implements OnInit {
   }
 
   ngOnInit(): void {
-    this.productsService.list(1, PRODUCTS_PAGE_SIZE, { isActive: true }).subscribe({
-      next: result => {
-        this.products.set(result.items);
-        this.finishedProducts.set(result.items.filter(p => p.productType === 'Finished'));
+    forkJoin({
+      products: this.productsService.list(1, PRODUCTS_PAGE_SIZE, { isActive: true }),
+      warehouses: this.warehousesService.list({ isActive: true }),
+    }).subscribe({
+      next: ({ products, warehouses }) => {
+        this.products.set(products.items);
+        this.finishedProducts.set(products.items.filter(p => p.productType === 'Finished'));
+        this.warehouses.set(warehouses);
 
         const id = this.orderId();
         if (id) {
@@ -98,7 +113,7 @@ export class ProductionOrderFormModal implements OnInit {
         }
       },
       error: () => {
-        this.errorMessage.set('No se pudieron cargar los productos.');
+        this.errorMessage.set('No se pudieron cargar los productos/almacenes.');
         this.loading.set(false);
       },
     });
@@ -110,6 +125,8 @@ export class ProductionOrderFormModal implements OnInit {
         this.form.patchValue({
           lotCode: order.lotCode,
           date: order.date?.slice(0, 10) ?? this.today,
+          sourceWarehouseId: order.sourceWarehouseId ?? '',
+          destinationWarehouseId: order.destinationWarehouseId ?? '',
           productId: order.productId,
           unitOfMeasureId: order.unitOfMeasureId,
           quantityProduced: order.quantityProduced,
@@ -219,7 +236,8 @@ export class ProductionOrderFormModal implements OnInit {
     const payload: SaveProductionOrderRequest = {
       lotCode: value.lotCode || null,
       date: value.date!,
-      warehouseId: null,
+      sourceWarehouseId: value.sourceWarehouseId || null,
+      destinationWarehouseId: value.destinationWarehouseId || null,
       productId: value.productId!,
       unitOfMeasureId: value.unitOfMeasureId || '',
       quantityProduced: value.quantityProduced!,

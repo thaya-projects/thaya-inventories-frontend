@@ -3,12 +3,18 @@ import { RouterLink } from '@angular/router';
 import { HttpErrorResponse } from '@angular/common/http';
 import { DataTable, DataTableColumn } from '../../../shared/data-table/data-table';
 import { WarehousesService } from '../../../core/services/warehouses';
-import { Warehouse } from '../../../core/models/warehouse.model';
+import { Warehouse, WarehouseType } from '../../../core/models/warehouse.model';
 import { AuthService } from '../../../core/services/auth';
 import { ToastService } from '../../../shared/toast/toast.service';
 import { InventoryTabs } from '../inventory-tabs/inventory-tabs';
 
 type StatusFilter = 'all' | 'active' | 'inactive';
+
+const WAREHOUSE_TYPE_LABELS: Record<WarehouseType, string> = {
+  RawMaterial: 'Materia prima',
+  FinishedGoods: 'Producto terminado',
+  General: 'General',
+};
 
 @Component({
   selector: 'app-warehouses-list',
@@ -30,6 +36,9 @@ export class WarehousesList {
   statusFilter = signal<StatusFilter>('all');
   updatingId = signal<string | null>(null);
 
+  typeLabel = (type: WarehouseType) => WAREHOUSE_TYPE_LABELS[type] ?? type;
+
+  private typeTpl = viewChild.required<TemplateRef<{ $implicit: Warehouse }>>('typeTpl');
   private defaultTpl = viewChild.required<TemplateRef<{ $implicit: Warehouse }>>('defaultTpl');
   private activeTpl = viewChild.required<TemplateRef<{ $implicit: Warehouse }>>('activeTpl');
   private actionsTpl = viewChild.required<TemplateRef<{ $implicit: Warehouse }>>('actionsTpl');
@@ -37,7 +46,7 @@ export class WarehousesList {
   columns = computed<DataTableColumn<Warehouse>[]>(() => [
     { key: 'code', label: 'Código' },
     { key: 'name', label: 'Nombre' },
-    { key: 'address', label: 'Dirección' },
+    { key: 'warehouseType', label: 'Tipo', cellTemplate: this.typeTpl() },
     { key: 'isDefault', label: 'Predeterminado', cellTemplate: this.defaultTpl() },
     { key: 'isActive', label: 'Estado', cellTemplate: this.activeTpl() },
     { key: 'id', label: '', cellTemplate: this.actionsTpl() },

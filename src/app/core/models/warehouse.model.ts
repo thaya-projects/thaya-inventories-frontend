@@ -1,10 +1,15 @@
 // Confirmado con /api/warehouses. Rol: Admin, Warehouse en todo excepto
 // set-default (solo Admin). Solo aparece en el menú si settings.usesMultiWarehouse.
+// `address` ya no existe acá — el almacén ahora pertenece a una sucursal
+// (branchId), que es la que tiene dirección (ver branch.model.ts).
+export type WarehouseType = 'RawMaterial' | 'FinishedGoods' | 'General';
+
 export interface Warehouse {
   id: string;
   code: string | null;
   name: string;
-  address: string | null;
+  branchId: string;
+  warehouseType: WarehouseType;
   isDefault: boolean;
   isActive: boolean;
   createdAt: string;
@@ -24,7 +29,8 @@ export interface ListWarehousesResponse {
 export interface CreateWarehouseRequest {
   code?: string | null;
   name: string;
-  address?: string | null;
+  branchId: string;
+  warehouseType: WarehouseType;
   isDefault: boolean;
 }
 
@@ -32,5 +38,6 @@ export interface CreateWarehouseRequest {
 export interface UpdateWarehouseRequest {
   code?: string | null;
   name: string;
-  address?: string | null;
+  branchId: string;
+  warehouseType: WarehouseType;
 }

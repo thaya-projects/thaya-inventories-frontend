@@ -29,8 +29,12 @@ export interface ProductionOrder {
   id: string;
   lotCode: string;
   date: string;
-  warehouseId: string | null;
-  warehouseName: string | null;
+  // Reemplaza al anterior warehouseId/warehouseName único — ahora son dos
+  // pares independientes: de dónde sale la MP y a dónde entra el PT.
+  sourceWarehouseId: string | null;
+  sourceWarehouseName: string | null;
+  destinationWarehouseId: string | null;
+  destinationWarehouseName: string | null;
   productId: string;
   productCode: string;
   productName: string;
@@ -79,7 +83,8 @@ export interface SaveProductionOrderRequest {
   // ("El código de lote es requerido"). Máx. 40 caracteres.
   lotCode: string | null;
   date: string;
-  warehouseId: string | null;
+  sourceWarehouseId: string | null;
+  destinationWarehouseId: string | null;
   productId: string;
   unitOfMeasureId: string;
   quantityProduced: number;

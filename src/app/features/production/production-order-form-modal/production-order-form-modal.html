@@ -60,6 +60,31 @@
           </div>
 
           <div>
+            <label for="sourceWarehouseId" class="mb-1.5 block text-sm font-medium text-gr-sub">Almacén origen (MP, opcional)</label>
+            <select
+              id="sourceWarehouseId" formControlName="sourceWarehouseId"
+              class="w-full rounded-sm border border-gr-border bg-gr-surface px-4 py-2.5 text-gr-text transition focus:border-gr-primary focus:outline-none focus:ring-2 focus:ring-gr-primary/30"
+            >
+              <option value="">— Sin almacén —</option>
+              @for (w of warehouses(); track w.id) {
+                <option [value]="w.id">{{ w.name }}</option>
+              }
+            </select>
+          </div>
+          <div>
+            <label for="destinationWarehouseId" class="mb-1.5 block text-sm font-medium text-gr-sub">Almacén destino (PT, opcional)</label>
+            <select
+              id="destinationWarehouseId" formControlName="destinationWarehouseId"
+              class="w-full rounded-sm border border-gr-border bg-gr-surface px-4 py-2.5 text-gr-text transition focus:border-gr-primary focus:outline-none focus:ring-2 focus:ring-gr-primary/30"
+            >
+              <option value="">— Sin almacén —</option>
+              @for (w of warehouses(); track w.id) {
+                <option [value]="w.id">{{ w.name }}</option>
+              }
+            </select>
+          </div>
+
+          <div>
             <label for="expirationDate" class="mb-1.5 block text-sm font-medium text-gr-sub">Vencimiento (opcional)</label>
             <input
               id="expirationDate" type="date" formControlName="expirationDate"

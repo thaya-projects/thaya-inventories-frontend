@@ -3,7 +3,16 @@ import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { HttpErrorResponse } from '@angular/common/http';
 import { WarehousesService } from '../../../core/services/warehouses';
+import { BranchesService } from '../../../core/services/branches';
+import { Branch } from '../../../core/models/branch.model';
+import { WarehouseType } from '../../../core/models/warehouse.model';
 import { ToastService } from '../../../shared/toast/toast.service';
+
+const WAREHOUSE_TYPES: { value: WarehouseType; label: string }[] = [
+  { value: 'RawMaterial', label: 'Materia prima' },
+  { value: 'FinishedGoods', label: 'Producto terminado' },
+  { value: 'General', label: 'General' },
+];
 
 @Component({
   selector: 'app-warehouse-form',
@@ -14,6 +23,7 @@ import { ToastService } from '../../../shared/toast/toast.service';
 export class WarehouseForm {
   private fb = inject(FormBuilder);
   private warehousesService = inject(WarehousesService);
+  private branchesService = inject(BranchesService);
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   private toast = inject(ToastService);
@@ -21,35 +31,61 @@ export class WarehouseForm {
   warehouseId = this.route.snapshot.paramMap.get('id');
   isEditMode = !!this.warehouseId;
 
-  loading = signal(this.isEditMode);
+  warehouseTypes = WAREHOUSE_TYPES;
+  branches = signal<Branch[]>([]);
+
+  loading = signal(true);
   submitting = signal(false);
   errorMessage = signal<string | null>(null);
 
   form = this.fb.group({
     code: [''],
     name: ['', Validators.required],
-    address: [''],
+    branchId: ['', Validators.required],
+    warehouseType: ['General' as WarehouseType, Validators.required],
     // Solo aplica en alta — en edición se cambia con "Predeterminar" en el listado.
     isDefault: [false],
   });
 
   constructor() {
-    if (this.warehouseId) {
-      this.warehousesService.get(this.warehouseId).subscribe({
-        next: warehouse => {
-          this.form.patchValue({
-            code: warehouse.code ?? '',
-            name: warehouse.name,
-            address: warehouse.address ?? '',
-          });
+    this.branchesService.list().subscribe({
+      next: branches => {
+        this.branches.set(branches);
+        // Hoy casi siempre hay una sola sucursal — se preselecciona para no
+        // obligar a elegir algo obvio, pero el selector queda armado igual.
+        if (!this.isEditMode && branches.length === 1) {
+          this.form.controls.branchId.setValue(branches[0].id);
+        }
+
+        if (this.warehouseId) {
+          this.loadWarehouse(this.warehouseId);
+        } else {
           this.loading.set(false);
-        },
-        error: () => {
-          this.errorMessage.set('No se pudo cargar el almacén.');
-          this.loading.set(false);
-        },
-      });
-    }
+        }
+      },
+      error: () => {
+        this.errorMessage.set('No se pudieron cargar las sucursales.');
+        this.loading.set(false);
+      },
+    });
+  }
+
+  private loadWarehouse(id: string) {
+    this.warehousesService.get(id).subscribe({
+      next: warehouse => {
+        this.form.patchValue({
+          code: warehouse.code ?? '',
+          name: warehouse.name,
+          branchId: warehouse.branchId,
+          warehouseType: warehouse.warehouseType,
+        });
+        this.loading.set(false);
+      },
+      error: () => {
+        this.errorMessage.set('No se pudo cargar el almacén.');
+        this.loading.set(false);
+      },
+    });
   }
 
   submit() {
@@ -66,12 +102,14 @@ export class WarehouseForm {
       ? this.warehousesService.update(this.warehouseId!, {
           code: value.code || null,
           name: value.name!,
-          address: value.address || null,
+          branchId: value.branchId!,
+          warehouseType: value.warehouseType!,
         })
       : this.warehousesService.create({
           code: value.code || null,
           name: value.name!,
-          address: value.address || null,
+          branchId: value.branchId!,
+          warehouseType: value.warehouseType!,
           isDefault: value.isDefault!,
         });
 

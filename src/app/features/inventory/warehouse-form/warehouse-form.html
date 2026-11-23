@@ -42,12 +42,33 @@
             </div>
           </div>
 
-          <div>
-            <label for="address" class="mb-1.5 block text-sm font-medium text-gr-sub">Dirección (opcional)</label>
-            <input
-              id="address" type="text" formControlName="address" placeholder="Ej. Av. Siempre Viva 123"
-              class="w-full rounded-sm border border-gr-border bg-gr-surface px-4 py-2.5 text-gr-text placeholder-gr-muted transition focus:border-gr-primary focus:outline-none focus:ring-2 focus:ring-gr-primary/30"
-            >
+          <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <div>
+              <label for="branchId" class="mb-1.5 block text-sm font-medium text-gr-sub">Sucursal</label>
+              <select
+                id="branchId" formControlName="branchId"
+                class="w-full rounded-sm border border-gr-border bg-gr-surface px-4 py-2.5 text-gr-text transition focus:border-gr-primary focus:outline-none focus:ring-2 focus:ring-gr-primary/30"
+              >
+                <option value="" disabled>— Selecciona una sucursal —</option>
+                @for (b of branches(); track b.id) {
+                  <option [value]="b.id">{{ b.name }}</option>
+                }
+              </select>
+              @if (form.controls.branchId.invalid && form.controls.branchId.touched) {
+                <p class="mt-1.5 text-xs text-gr-danger">Selecciona la sucursal.</p>
+              }
+            </div>
+            <div>
+              <label for="warehouseType" class="mb-1.5 block text-sm font-medium text-gr-sub">Tipo de almacén</label>
+              <select
+                id="warehouseType" formControlName="warehouseType"
+                class="w-full rounded-sm border border-gr-border bg-gr-surface px-4 py-2.5 text-gr-text transition focus:border-gr-primary focus:outline-none focus:ring-2 focus:ring-gr-primary/30"
+              >
+                @for (t of warehouseTypes; track t.value) {
+                  <option [value]="t.value">{{ t.label }}</option>
+                }
+              </select>
+            </div>
           </div>
 
           @if (!isEditMode) {

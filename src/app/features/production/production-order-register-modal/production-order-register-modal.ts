@@ -7,8 +7,10 @@ import { ProductionOrdersService } from '../../../core/services/production-order
 import { ProductsService } from '../../../core/services/products';
 import { UnitsOfMeasureService } from '../../../core/services/units-of-measure';
 import { LotsService } from '../../../core/services/lots';
+import { WarehousesService } from '../../../core/services/warehouses';
 import { Product } from '../../../core/models/product.model';
 import { UnitOfMeasure } from '../../../core/models/unit-of-measure.model';
+import { Warehouse } from '../../../core/models/warehouse.model';
 import { ProductionOrder, SaveProductionOrderRequest } from '../../../core/models/production-order.model';
 import { ToastService } from '../../../shared/toast/toast.service';
 
@@ -30,6 +32,7 @@ export class ProductionOrderRegisterModal implements OnInit {
   private productsService = inject(ProductsService);
   private unitsService = inject(UnitsOfMeasureService);
   private lotsService = inject(LotsService);
+  private warehousesService = inject(WarehousesService);
   private toast = inject(ToastService);
 
   close = output<void>();
@@ -41,6 +44,7 @@ export class ProductionOrderRegisterModal implements OnInit {
 
   products = signal<Product[]>([]);
   units = signal<UnitOfMeasure[]>([]);
+  warehouses = signal<Warehouse[]>([]);
 
   // MP = solo RawMaterial (se compran, se consumen). PT = solo Finished (se
   // producen) — no mezclar: un Finished también puede trackear stock, pero
@@ -52,6 +56,8 @@ export class ProductionOrderRegisterModal implements OnInit {
 
   // Campos que elige el usuario.
   date = signal(this.today);
+  sourceWarehouseId = signal('');
+  destinationWarehouseId = signal('');
   mpProductId = signal('');
   mpQuantity = signal<number | null>(null);
   mpWaste = signal<number | null>(0);
@@ -147,14 +153,16 @@ export class ProductionOrderRegisterModal implements OnInit {
     forkJoin({
       products: this.productsService.list(1, PRODUCTS_PAGE_SIZE, { isActive: true }),
       units: this.unitsService.list(1, UNITS_PAGE_SIZE, { isActive: true }),
+      warehouses: this.warehousesService.list({ isActive: true }),
     }).subscribe({
-      next: ({ products, units }) => {
+      next: ({ products, units, warehouses }) => {
         this.products.set(products.items);
         this.units.set(units.items);
+        this.warehouses.set(warehouses);
         this.loading.set(false);
       },
       error: () => {
-        this.errorMessage.set('No se pudieron cargar productos/unidades.');
+        this.errorMessage.set('No se pudieron cargar productos/unidades/almacenes.');
         this.loading.set(false);
       },
     });
@@ -279,7 +287,8 @@ export class ProductionOrderRegisterModal implements OnInit {
     const payload: SaveProductionOrderRequest = {
       lotCode: this.lotCode(),
       date: this.date(),
-      warehouseId: null,
+      sourceWarehouseId: this.sourceWarehouseId() || null,
+      destinationWarehouseId: this.destinationWarehouseId() || null,
       productId: ptProduct.id,
       unitOfMeasureId: ptProduct.unitOfMeasureId ?? '',
       quantityProduced: producedQty,

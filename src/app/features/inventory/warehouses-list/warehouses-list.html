@@ -49,6 +49,10 @@
   <app-data-table [columns]="columns()" [rows]="warehouses()" emptyMessage="No hay almacenes registrados todavía." />
 }
 
+<ng-template #typeTpl let-warehouse>
+  {{ typeLabel(warehouse.warehouseType) }}
+</ng-template>
+
 <ng-template #defaultTpl let-warehouse>
   @if (warehouse.isDefault) {
     <span class="rounded-full bg-gr-info-bg px-3 py-1 text-xs font-medium text-gr-info">Predeterminado</span>
